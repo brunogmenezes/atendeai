@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 536.59 79.98">
+  <defs>
+    <style>
+      .texto {
+        fill: #ffffff; /* Branco sólido */
+        font-family: 'Montserrat', sans-serif; /* Fonte moderna */
+        font-weight: 700; /* Negrito */
+        font-size: 60px; /* Tamanho maior (original era ~50px) */
+        stroke-width: 0px;
+      }
+    </style>
+  </defs>
+
+  <!-- Texto "AtendeAí" centralizado e ampliado -->
+  <text class="texto" x="50%" y="65" text-anchor="middle" dominant-baseline="middle">AtendeAí</text>
+</svg>
