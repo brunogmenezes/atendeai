@@ -1,0 +1,30 @@
+<?php
+    include("config.php");
+    include("funcoes.php");
+    
+    require_once 'auth.php';
+verificarSessao();
+
+    // Verificando se o ID foi passado via POST
+    if (isset($_POST['id']))
+    {
+        $idConta = $_POST['id'];
+    
+        // Excluindo o produto
+        $query = "DELETE FROM tipopagamento WHERE id = :id";
+        $stmt = $pdo->prepare($query);
+        $stmt->execute([':id' => $idConta]);
+    
+        // Registra a auditoria
+                registrarAuditoria(
+                    $_SESSION['user_id'],
+                    'Excluiu uma conta',
+                    $_SERVER['REMOTE_ADDR'],
+                    ['idConta' => $_POST['id'], 'username' => $_SESSION['username']]
+                );
+    
+        // Redirecionando ap�s a exclus�o
+        header('Location: index.php?page=ListarTipoPagamento');
+        exit;
+    }
+?>
