@@ -1,9 +1,13 @@
 <?php
-	include("config.php");
-	include("funcoes.php");
-    require_once 'auth.php';
+include("config.php");
+include("funcoes.php");
+require_once 'auth.php';
 verificarSessao();
-    
+
+// Validação de parâmetros GET
+$dia = isset($_GET['dia']) && is_numeric($_GET['dia']) ? (int)$_GET['dia'] : null;
+$mes = isset($_GET['mes']) && is_numeric($_GET['mes']) ? (int)$_GET['mes'] : null;
+$ano = isset($_GET['ano']) && is_numeric($_GET['ano']) ? (int)$_GET['ano'] : null;
 ?>
 <div class="row">
     
@@ -13,15 +17,15 @@ verificarSessao();
                 <hr>
                 <div class="d-flex justify-content-between">
                     <span>Total de Vendas no dia:</span>
-                    <strong><?= contarNumeroPorVendas($_GET['dia'] ?? null, $_GET['mes'] ?? null, $_GET['ano'] ?? null) ?? 0; ?></strong>
+                    <strong><?= contarNumeroPorVendas($dia, $mes, $ano) ?? 0; ?></strong>
                 </div>
                 <div class="d-flex justify-content-between">
                     <span>Total em Vendas no dia:</span>
-                    <strong class="text-success">R$ <?= number_format(buscarTotalVendasnoPeriodo($_GET['dia'] ?? null, $_GET['mes'] ?? null, $_GET['ano'] ?? null) ?? 0, 2, ',', '.'); ?></strong>
+                    <strong class="text-success">R$ <?= number_format(buscarTotalVendasnoPeriodo($dia, $mes, $ano) ?? 0, 2, ',', '.'); ?></strong>
                 </div>
                 <div class="d-flex justify-content-between">
                     <span>Total em Vendas no mês:</span>
-                    <strong class="text-primary">R$ <?= number_format(buscarTotalVendasnoMes( $_GET['mes'] ?? null, $_GET['ano'] ?? null) ?? 0, 2, ',', '.'); ?></strong>
+                    <strong class="text-primary">R$ <?= number_format(buscarTotalVendasnoMes($mes, $ano) ?? 0, 2, ',', '.'); ?></strong>
                 </div>
             </div>
         </div>
@@ -84,40 +88,45 @@ verificarSessao();
 	<div class="card">
         <div class="card-header d-flex align-items-center justify-content-between">
             <h4 class="card-title mb-0">Listar Vendas</h4>
-            <a href="gerar_pdf_vendas.php?dia=<?=$_GET['dia'] ?? ''?>&mes=<?=$_GET['mes'] ?? ''?>&ano=<?=$_GET['ano'] ?? ''?>" class="btn btn-primary btn-round ml-auto" target="_blank">
-                <i class="fas fa-file-pdf"></i> Gerar PDF
+            <a href="gerar_pdf_vendas.php?dia=<?= $dia ?? '' ?>&mes=<?= $mes ?? '' ?>&ano=<?= $ano ?? '' ?>" class="btn btn-primary btn-sm" target="_blank">
+                <i class="fas fa-file-pdf me-2"></i>Gerar PDF
             </a>
         </div>
-        <form action="index.php?page=ListarVendas" method="_GET" class="row g-2 mb-4">
+        <form action="index.php?page=ListarVendas" method="GET" class="row g-2 mb-4">
             <input type="hidden" name="page" value="ListarVendas">
-            <div class="col-auto">
-                <label for="dia">Dia</label>
-                <select name="dia" class="form-select">
+            <div class="col-12 col-sm-6 col-md-3">
+                <label for="dia" class="form-label">Dia</label>
+                <select name="dia" id="dia" class="form-select">
+                    <option value="">Selecionar...</option>
                     <?php for ($i = 1; $i <= 31; $i++): ?>
-                        <option value="<?= $i ?>" <?= ($i == ($_GET['dia'] ?? '')) ? 'selected' : '' ?>><?= $i ?></option>
+                        <option value="<?= $i ?>" <?= ($i == $dia) ? 'selected' : '' ?>><?= str_pad($i, 2, '0', STR_PAD_LEFT) ?></option>
                     <?php endfor; ?>
                 </select>
             </div>
-            <div class="col-auto">
-                <label for="mes">Mês</label>
-                <select name="mes" class="form-select">
+            <div class="col-12 col-sm-6 col-md-3">
+                <label for="mes" class="form-label">Mês</label>
+                <select name="mes" id="mes" class="form-select">
+                    <option value="">Selecionar...</option>
                     <?php
                         $meses = [1 => 'Janeiro', 2 => 'Fevereiro', 3 => 'Março', 4 => 'Abril', 5 => 'Maio', 6 => 'Junho', 7 => 'Julho', 8 => 'Agosto', 9 => 'Setembro', 10 => 'Outubro', 11 => 'Novembro', 12 => 'Dezembro'];
                         foreach ($meses as $num => $nome): ?>
-                            <option value="<?= $num ?>" <?= ($num == ($_GET['mes'] ?? '')) ? 'selected' : '' ?>><?= $nome ?></option>
+                            <option value="<?= $num ?>" <?= ($num == $mes) ? 'selected' : '' ?>><?= $nome ?></option>
                         <?php endforeach; ?>
                 </select>
             </div>
-            <div class="col-auto">
-                <label for="ano">Ano</label>
-                <select name="ano" class="form-select">
+            <div class="col-12 col-sm-6 col-md-3">
+                <label for="ano" class="form-label">Ano</label>
+                <select name="ano" id="ano" class="form-select">
+                    <option value="">Selecionar...</option>
                     <?php for ($i = 2025; $i <= 2030; $i++): ?>
-                        <option value="<?= $i ?>" <?= ($i == ($_GET['ano'] ?? '')) ? 'selected' : '' ?>><?= $i ?></option>
+                        <option value="<?= $i ?>" <?= ($i == $ano) ? 'selected' : '' ?>><?= $i ?></option>
                     <?php endfor; ?>
                 </select>
             </div>
-            <div class="col-auto align-self-end">
-                <button type="submit" class="btn btn-success">Filtrar</button>
+            <div class="col-12 col-sm-6 col-md-3 d-flex align-items-end">
+                <button type="submit" class="btn btn-success w-100">
+                    <i class="fas fa-search me-2"></i>Filtrar
+                </button>
             </div>
         </form>
 	</div>
@@ -130,8 +139,8 @@ verificarSessao();
 							<th>Total</th>
                             <th>Tipo de Pagamento</th>
                             <th>Vendedor</th>
-                            <th style="width: 20%">Data</th>
-                            <th style="width: 10%"></th>
+                            <th>Data</th>
+                            <th class="text-center" style="width: 80px;">Ações</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -153,37 +162,34 @@ verificarSessao();
                 			{
                     			foreach ($query as $retorno)
                     			{
-                                    if($retorno['estornado'] == true)
+                            if($retorno['estornado'] == true)
                                     {
-                                        $style = 'style="font-style: italic; text-decoration: line-through; background: #ffbbbb;"';
+                                        $rowClass = 'class="table-danger text-muted"';
                                     }
                                     else
                                     {
-                                        $style = '';
+                                        $rowClass = '';
                                     }
                     	?>
-									<tr <?=$style;?>>
-										<td <?=$style;?>><?=$retorno['id'];?></td>
-										<td <?=$style;?>>R$ <?=number_format($retorno['total'], 2, ',', '.');?></td>
-                                        <td <?=$style;?>><?=$retorno['tipos_pagamento'];?></td>
-                                        <td <?=$style;?>><?=$retorno['usuariovendedor'];?></td>
-										<td <?=$style;?>><?=date('d/m/Y H:i:s', strtotime($retorno['data_venda']));?></td>
-										<td <?=$style;?>>
-											<div class="form-button-action">
-												<button type="button" class="btn btn-link btn-primary" onclick="imprimir(<?=htmlspecialchars($retorno['id'], ENT_QUOTES, 'UTF-8')?>);"  data-id="<?=htmlspecialchars($retorno['id'], ENT_QUOTES, 'UTF-8')?>">
+									<tr <?=$rowClass;?>>
+										<td><?=$retorno['id'];?></td>
+										<td><strong>R$ <?=number_format($retorno['total'], 2, ',', '.');?></strong></td>
+                                        <td><?=$retorno['tipos_pagamento'];?></td>
+                                        <td><?=$retorno['usuariovendedor'];?></td>
+										<td><?=date('d/m/Y H:i:s', strtotime($retorno['data_venda']));?></td>
+										<td>
+											<div class="btn-group btn-group-sm">
+												<button type="button" class="btn btn-link btn-primary" onclick="imprimir(<?=htmlspecialchars($retorno['id'], ENT_QUOTES, 'UTF-8')?>);" title="Imprimir">
     												<i class="fa fa-print"></i>
 												</button>
                                                 <?php
-                                                if($user['isAdmin']==true)
+                                                if($user['isAdmin']==true && $retorno['estornado'] == false)
                                                 {
-                                                    if($retorno['estornado'] == false)
-                                                    {
-                                                    ?>
-												        <button type="button" class="btn btn-link btn-danger open-delete-modal" data-id="<?=$retorno['id'];?>" data-bs-toggle="modal" data-bs-target="#confirmDeleteModal">
-												    	   <i class="fa fa-retweet"></i>
-												        </button>
-                                                    <?php
-                                                    }
+                                                ?>
+												<button type="button" class="btn btn-link btn-danger open-delete-modal" data-id="<?=$retorno['id'];?>" data-bs-toggle="modal" data-bs-target="#confirmDeleteModal" title="Estornar venda">
+												    <i class="fa fa-retweet"></i>
+												</button>
+                                                <?php
                                                 }
                                                 ?>
 											</div>
@@ -192,6 +198,10 @@ verificarSessao();
 						<?php
 								}
 							}
+                            else
+                            {
+                                echo '<tr><td colspan="5" class="text-center text-muted py-4"><i class="fas fa-inbox me-2"></i> Nenhuma venda encontrada para o período selecionado</td></tr>';
+                            }
 						?>
 					</tbody>
                     <tfoot>
@@ -293,44 +303,28 @@ verificarSessao();
 
 
 <script>
-
 	function imprimir(id) {
-    // Validar o ID
-    if (!id || isNaN(id)) {
-        console.error('ID inválido');
-        return;
-    }
-    
-    // Abrir janela de impressão segura
-    const url = `imprimirVenda.php?id=${encodeURIComponent(id)}`;
-    window.open(url, '_blank');
-}
-    // Abrir o modal e definir o ID do produto
-    document.addEventListener('DOMContentLoaded', function () {
-        const deleteButtons = document.querySelectorAll('.open-delete-modal');
-        const productIdInput = document.getElementById('productIdToDelete');
+		// Validar o ID
+		if (!id || isNaN(id)) {
+			console.error('ID inválido');
+			return;
+		}
+		
+		// Abrir janela de impressão segura
+		const url = `imprimirVenda.php?id=${encodeURIComponent(id)}`;
+		window.open(url, '_blank');
+	}
 
-        deleteButtons.forEach(button => {
-            button.addEventListener('click', function () {
-                const productId = this.getAttribute('data-imagem');
-                productIdInput.value = productId; // Definir o ID no campo oculto
-            });
-        });
-    });
+	document.addEventListener('DOMContentLoaded', function () {
+		const deleteButtons = document.querySelectorAll('.open-delete-modal');
+		const productIdInput = document.getElementById('productIdToDelete');
 
-    document.addEventListener('DOMContentLoaded', function ()
-    {
-        // Script para exclusão
-        const deleteButtons = document.querySelectorAll('.open-delete-modal');
-        const productIdInput = document.getElementById('productIdToDelete');
-
-        deleteButtons.forEach(button => {
-            button.addEventListener('click', function () {
-                const productId = this.getAttribute('data-id');
-                productIdInput.value = productId;
-            });
-        });
-
-    });
+		deleteButtons.forEach(button => {
+			button.addEventListener('click', function () {
+				const productId = this.getAttribute('data-id');
+				productIdInput.value = productId;
+			});
+		});
+	});
 </script>
 
