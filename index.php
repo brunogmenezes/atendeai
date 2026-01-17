@@ -12,7 +12,7 @@
 ?>
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
     <head>
         <meta http-equiv="X-UA-Compatible" content="IE=edge" />
         <title>Atende Ai - Sistema de Vendas e controle de estoque</title>
@@ -445,8 +445,7 @@
         <!-- jQuery Scrollbar -->
         <script src="assets/js/plugin/jquery-scrollbar/jquery.scrollbar.min.js"></script>
     
-        <!-- Chart JS -->
-        <script src="assets/js/plugin/chart.js/chart.min.js"></script>
+        <!-- Chart JS (versão CDN para sempre atualizada) -->
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-matrix@latest"></script>
     
