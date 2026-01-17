@@ -1,147 +1,182 @@
 <?php
-    ini_set('memory_limit', '512M');
-    require_once 'dompdf/dompdf/vendor/autoload.php';
-    include("config.php");
-    include("funcoes.php");
+ini_set('memory_limit', '512M');
+require_once 'dompdf/dompdf/vendor/autoload.php';
+include("config.php");
+include("funcoes.php");
 
-    use Dompdf\Dompdf;
-    use Dompdf\Options;
+use Dompdf\Dompdf;
+use Dompdf\Options;
 
-    $startData = $_GET['start'] ?? null;
-    $endData = $_GET['end'] ?? null;
+// Validação de parâmetros
+$tipo = isset($_GET['tipo']) && in_array($_GET['tipo'], ['estoque', 'financeiro-mensal']) ? $_GET['tipo'] : null;
+$startData = isset($_GET['start']) && strtotime($_GET['start']) ? $_GET['start'] : null;
+$endData = isset($_GET['end']) && strtotime($_GET['end']) ? $_GET['end'] : null;
 
-    $options = new Options();
-    $options->set('isRemoteEnabled', true);
-    $options->set('defaultFont', 'Arial');
+if (!$tipo) {
+    die('❌ Tipo de relatório inválido');
+}
 
-    $dompdf = new Dompdf($options);
+$options = new Options();
+$options->set('isRemoteEnabled', false);
+$options->set('defaultFont', 'Helvetica');
+$options->set('dpi', 96);
+
+$dompdf = new Dompdf($options);
 
     $html = '
-            <!DOCTYPE html>
-                <html>
-                    <head>
-                    <meta charset="UTF-8">
-                    <title>Relatório</title>
-                    <style>
-                        body
-                        {
-                            font-family: Arial, sans-serif;
-                            margin: 40px;
-                            color: #333;
-                        }
-                        h1
-                        {
-                            text-align: center;
-                            margin-bottom: 0;
-                            font-size: 24px;
-                            color: #2c3e50;
-                        }
-                        h2
-                        {
-                            text-align: center;
-                            font-size: 14px;
-                            margin-top: 5px;
-                            color: #7f8c8d;
-                        }
-                        .info
-                        {
-                            margin-top: 20px;
-                            padding: 10px 20px;
-                            border: 1px solid #ddd;
-                            background-color: #f4f6f7;
-                            border-radius: 5px;
-                        }
-                        .info p
-                        {
-                            margin: 4px 0;
-                            font-size: 13px;
-                        }
-                        table
-                        {
-                            width: 100%;
-                            border-collapse: collapse;
-                            margin-top: 25px;
-                            font-size: 12px;
-                        }
-                        thead
-                        {
-                            background-color: #3498db;
-                            color: white;
-                        }
-                        th, td
-                        {
-                            border: 1px solid #ccc;
-                            padding: 8px;
-                            text-align: left;
-                        }
-                        tbody tr:nth-child(even)
-                        {
-                            background-color: #f9f9f9;
-                        }
-                        .estornado
-                        {
-                            font-style: italic;
-                            text-decoration: line-through;
-                            background-color: #f8d7da !important;
-                        }
-                        .right
-                        {
-                            text-align: right;
-                        }
-                        .footer
-                        {
-                            margin-top: 30px;
-                            text-align: center;
-                            font-size: 10px;
-                            color: #999;
-                        }
-                        .resumo-pagamentos
-                        {
-                            margin-top: 20px;
-                            padding: 15px;
-                            background-color: #f8f9fa;
-                            border-radius: 5px;
-                            border: 1px solid #dee2e6;
-                        }
-
-                        .resumo-pagamentos h3
-                        {
-                            margin-top: 0;
-                            color: #495057;
-                            border-bottom: 1px solid #dee2e6;
-                            padding-bottom: 8px;
-                        }
-
-                        .dados-pagamentos
-                        {
-                            display: grid;
-                            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-                            gap: 10px;
-                        }
-
-                        .dados-pagamentos p
-                        {
-                            margin: 5px 0;
-                            padding: 8px;
-                            background-color: white;
-                            border-radius: 4px;
-                            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-                        }
-                            .resumo-pagamentos {
-            margin-top: 15px;
-            padding: 10px;
-            background-color: #f9f9f9;
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relatório</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Helvetica, Arial, sans-serif;
+            color: #2c3e50;
+            line-height: 1.6;
+            background-color: #fff;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 5px;
+            font-weight: 700;
+        }
+        .header p {
+            font-size: 13px;
+            opacity: 0.9;
+        }
+        .info-section {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            padding: 25px;
+            border-left: 4px solid #667eea;
+            border-radius: 6px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        .info-section h3 {
+            font-size: 16px;
+            margin-bottom: 15px;
+            color: #2c3e50;
+            font-weight: 700;
+        }
+        .dados-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        .dados-item {
+            background: white;
+            padding: 12px;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        .dados-item label {
+            display: block;
+            font-size: 11px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+        .dados-item .value {
+            font-size: 16px;
+            font-weight: 700;
+            color: #667eea;
+        }
+        .resumo-pagamentos {
+            background: white;
+            padding: 15px;
             border-radius: 4px;
         }
         .pagamento-item {
             display: flex;
             justify-content: space-between;
-            padding: 5px 0;
+            padding: 8px 0;
             border-bottom: 1px dashed #eee;
+            font-size: 12px;
         }
-                    </style>
-                </head>
-                ';
+        .pagamento-item:last-child {
+            border-bottom: none;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            font-size: 11px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        thead {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        th {
+            padding: 12px 15px;
+            text-align: left;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            font-size: 10px;
+        }
+        td {
+            padding: 10px 15px;
+            border-bottom: 1px solid #ecf0f1;
+        }
+        tbody tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+        tbody tr:hover {
+            background-color: #f0f2f5;
+        }
+        .estornado {
+            opacity: 0.6;
+            font-style: italic;
+            text-decoration: line-through;
+            background-color: #ffebee !important;
+        }
+        .text-right {
+            text-align: right;
+        }
+        .text-center {
+            text-align: center;
+        }
+        .footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 2px solid #ecf0f1;
+            text-align: center;
+            font-size: 10px;
+            color: #95a5a6;
+        }
+        @media print {
+            body {
+                margin: 0;
+                padding: 0;
+            }
+            .header {
+                margin-bottom: 20px;
+            }
+        }
+    </style>
+</head>';
 
                 if($_GET['tipo']=='estoque')
                 {
@@ -153,139 +188,212 @@
 
                 $html .='
                 <body>
-                    <h1>Relatório de Estoque</h1>
-                    <h2>Emitido em ' . date('d/m/Y H:i') . '</h2>
+                    <div class="header">
+                        <h1>📦 Relatório de Estoque</h1>
+                        <p>Emitido em ' . date('d/m/Y H:i:s') . '</p>
+                    </div>
 
-                    <div class="info">
-                        <div class="resumo-estoque">
-                            <h3>Resumo do Estoque</h3>
-                            <div class="dados-estoque">
-                                <p><strong>Total de Itens no Estoque:</strong> ' . number_format($totalItensEstoque, 0, ',', '.') . '</p>
-                                <p><strong>Média Preço Custo por Item:</strong> R$ ' . number_format($mediaCustoItemEstoque, 2, ',', '.') . '</p>
-                                <p><strong>Média Preço Venda por Item:</strong> R$ ' . number_format($mediaVendaItemEstoque, 2, ',', '.') . '</p>
-                                <p><strong>Média Lucro por Item:</strong> R$ ' . number_format($lucroMedioItemEstoque, 2, ',', '.') . ' ('. number_format(($mediaVendaItemEstoque - $mediaCustoItemEstoque) / $mediaCustoItemEstoque * 100, 2, ',', '.') .'%)</p>
-                                <p><strong>Valor total em Estoque (Custo):</strong> R$ ' . number_format($valoresEstoque['total_custo'], 2, ',', '.') . '</p>
-                                <p><strong>Valor total em Estoque (Venda):</strong> R$ ' . number_format($valoresEstoque['total_venda'], 2, ',', '.') . '</p>
-                                <p><strong>Lucro Potencial Total:</strong> R$ ' . number_format(($valoresEstoque['total_venda'] - $valoresEstoque['total_custo']), 2, ',', '.') . ' ('. number_format(($valoresEstoque['total_venda'] - $valoresEstoque['total_custo']) / $valoresEstoque['total_custo'] * 100, 2, ',', '.') .')%</p>
+                    <div class="info-section">
+                        <h3>Resumo do Estoque</h3>
+                        <div class="dados-grid">
+                            <div class="dados-item">
+                                <label>Total de Itens</label>
+                                <div class="value">' . number_format($totalItensEstoque, 0, ',', '.') . ' un</div>
+                            </div>
+                            <div class="dados-item">
+                                <label>Preço Médio Custo</label>
+                                <div class="value">R$ ' . number_format($mediaCustoItemEstoque, 2, ',', '.') . '</div>
+                            </div>
+                            <div class="dados-item">
+                                <label>Preço Médio Venda</label>
+                                <div class="value">R$ ' . number_format($mediaVendaItemEstoque, 2, ',', '.') . '</div>
+                            </div>
+                            <div class="dados-item">
+                                <label>Lucro Médio por Item</label>
+                                <div class="value">R$ ' . number_format($lucroMedioItemEstoque, 2, ',', '.') . '</div>
+                            </div>
+                            <div class="dados-item">
+                                <label>Valor Estoque (Custo)</label>
+                                <div class="value">R$ ' . number_format($valoresEstoque['total_custo'], 2, ',', '.') . '</div>
+                            </div>
+                            <div class="dados-item">
+                                <label>Valor Estoque (Venda)</label>
+                                <div class="value">R$ ' . number_format($valoresEstoque['total_venda'], 2, ',', '.') . '</div>
+                            </div>
+                            <div class="dados-item">
+                                <label>Lucro Potencial Total</label>
+                                <div class="value">R$ ' . number_format(($valoresEstoque['total_venda'] - $valoresEstoque['total_custo']), 2, ',', '.') . '</div>
+                            </div>
+                            <div class="dados-item">
+                                <label>Margem Lucrativa</label>
+                                <div class="value">' . ($valoresEstoque['total_custo'] > 0 ? number_format(($valoresEstoque['total_venda'] - $valoresEstoque['total_custo']) / $valoresEstoque['total_custo'] * 100, 2, ',', '.') : '0') . '%</div>
                             </div>
                         </div>
+                    </div>
 
-    <div class="tabela-vendas">
-        <h3>Últimas Vendas</h3>
-        <table class="tabela-dados">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Nome</th>
-                    <th>QNT em Estoque</th>
-                    <th>Preço de Custo</th>
-                    <th>Preço de Venda</th>
-                </tr>
-            </thead>
-            <tbody>';
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nome do Produto</th>
+                                <th class="text-center">Quantidade</th>
+                                <th class="text-right">Preço Custo</th>
+                                <th class="text-right">Preço Venda</th>
+                            </tr>
+                        </thead>
+                        <tbody>';
 
             $produtos = buscarProdutosRelatorios();
-foreach ($produtos as $produto) {
-    $style = $produto['estornado'] ? 'class="estornado"' : '';
+            if (!empty($produtos)) {
+                foreach ($produtos as $produto) {
+                    $style = ($produto['estornado'] ?? false) ? 'class="estornado"' : '';
+                    $html .= '<tr ' . $style . '>';
+                    $html .= '<td class="text-center">#' . htmlspecialchars($produto['id']) . '</td>';
+                    $html .= '<td>' . htmlspecialchars($produto['nome']) . '</td>';
+                    $html .= '<td class="text-center">' . intval($produto['quantidade']) . ' un</td>';
+                    $html .= '<td class="text-right">R$ ' . number_format($produto['preco_custo'], 2, ',', '.') . '</td>';
+                    $html .= '<td class="text-right">R$ ' . number_format($produto['preco_venda'], 2, ',', '.') . '</td>';
+                    $html .= '</tr>';
+                }
+            } else {
+                $html .= '<tr><td colspan="5" class="text-center">Nenhum produto encontrado</td></tr>';
+            }
 
-    $html .= '<tr ' . $style . '>';
-    $html .= '<td>' . $produto['id'] . '</td>';
-    $html .= '<td>' . $produto['nome'] . '</td>';
-    $html .= '<td>' . $produto['quantidade'] . '</td>';
-    $html .= '<td>' . number_format($produto['preco_custo'], 2, ',', '.') . '</td>';
-    $html .= '<td>' . number_format($produto['preco_venda'], 2, ',', '.') . '</td>';
-    $html .= '</tr>';
-}
+            $html .= '</tbody>
+                    </table>
 
-$html .= '</tbody>
-    </table>
-
-</body>
-</html>';
+                    <div class="footer">
+                        <p>Relatório gerado automaticamente pelo sistema AtendAI</p>
+                        <p>Data de Emissão: ' . date('d/m/Y H:i:s') . '</p>
+                    </div>
+                </body>
+            </html>';
 
 $dompdf->loadHtml($html);
 $dompdf->setPaper('A4', 'portrait');
 $dompdf->render();
+
+// Headers para melhor performance
+header('Cache-Control: public, max-age=3600');
+header('Content-Type: application/pdf');
+header('Content-Disposition: inline; filename="relatorio_estoque_' . date('Y-m-d') . '.pdf"');
+
 $dompdf->stream("relatorio_estoque_" . date('Y-m-d') . ".pdf", ["Attachment" => false]);
 }
 
 if($_GET['tipo']=='financeiro-mensal')
 {
-$numeroVendasPeriodo = contarNumeroVendasPeriodo($startData, $endData);
-$totalnoperiodo = buscarTotalVendasnoPeriodoRelatorio($startData, $endData);
-$totaisPorPagamento = buscarTotalVendasPorTipoPagamentoPeriodo($startData, $endData);
-$vendas = buscarTabelaVendasRelatorio('vendas', '', '', 0, 0, 'DESC', $startData, $endData);
-$lucroMedio = BuscarLucroMedioProdutos('produtos', 'salario') ?? 0;
+    $numeroVendasPeriodo = contarNumeroVendasPeriodo($startData, $endData) ?? 0;
+    $totalnoperiodo = buscarTotalVendasnoPeriodoRelatorio($startData, $endData) ?? 0;
+    $totaisPorPagamento = buscarTotalVendasPorTipoPagamentoPeriodo($startData, $endData) ?? [];
+    $vendas = buscarTabelaVendasRelatorio('vendas', '', '', 0, 0, 'DESC', $startData, $endData) ?? [];
+    $lucroMedio = BuscarLucroMedioProdutos('produtos', 'salario') ?? 0;
 
+    $html .='
+    <body>
+        <div class="header">
+            <h1>💰 Relatório de Vendas no Período</h1>
+            <p>Emitido em ' . date('d/m/Y H:i:s') . '</p>
+        </div>
 
-$html .='
-<body>
-    <h1>Relatório de Vendas no período</h1>
-    <h2>Emitido em ' . date('d/m/Y H:i') . '</h2>
+        <div class="info-section">
+            <h3>Resumo do Período</h3>
+            <div class="dados-grid">
+                <div class="dados-item">
+                    <label>Período</label>
+                    <div class="value">De ' . date('d/m/Y', strtotime($startData)) . ' até ' . date('d/m/Y', strtotime($endData)) . '</div>
+                </div>
+                <div class="dados-item">
+                    <label>Total de Transações</label>
+                    <div class="value">' . $numeroVendasPeriodo . '</div>
+                </div>
+                <div class="dados-item">
+                    <label>Total Faturamento Bruto</label>
+                    <div class="value">R$ ' . number_format($totalnoperiodo, 2, ',', '.') . '</div>
+                </div>
+                <div class="dados-item">
+                    <label>Ticket Médio</label>
+                    <div class="value">R$ ' . ($numeroVendasPeriodo > 0 ? number_format($totalnoperiodo / $numeroVendasPeriodo, 2, ',', '.') : '0,00') . '</div>
+                </div>
+                <div class="dados-item">
+                    <label>Lucro Médio Geral</label>
+                    <div class="value">R$ ' . number_format($lucroMedio, 2, ',', '.') . '</div>
+                </div>
+            </div>
+        </div>';
 
-    <div class="info">
-        <p><strong>Período:</strong> ';
-
-$html .= 'De ';
-$html .= date('d/m/Y', strtotime($startData));
-$html .= ' até ';
-$html .= date('d/m/Y', strtotime($endData));
-
-$html .= '</p>
-        <p><strong>Número de Vendas:</strong> ' . $numeroVendasPeriodo . '</p>
-        <p><strong>Total Faturamento Bruto:</strong> R$ ' . number_format($totalnoperiodo, 2, ',', '.') . '</p>
-        <p><strong>Lucro médio geral:</strong> R$ ' . number_format($lucroMedio, 2, ',', '.') . '</p>
-        <div class="resumo-pagamentos">
-            <h3>Distribuição por Tipo de Pagamento</h3>';
-
-// Adiciona os tipos de pagamento
+// Distribuição por tipo de pagamento
 if (!empty($totaisPorPagamento)) {
+    $html .= '
+        <div class="info-section">
+            <h3>Distribuição por Tipo de Pagamento</h3>
+            <div class="resumo-pagamentos">';
+    
     foreach ($totaisPorPagamento as $pagamento) {
         $html .= '<div class="pagamento-item">
             <span>' . htmlspecialchars($pagamento['tipo_pagamento']) . '</span>
             <span>R$ ' . number_format($pagamento['total_vendas'], 2, ',', '.') . '</span>
         </div>';
     }
-} else {
-    $html .= '<p>Nenhum pagamento registrado neste período</p>';
+    
+    $html .= '</div>
+        </div>';
 }
 
-$html .= '</div>
-    </div>
+$html .= '
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Total</th>
+                    <th>Tipo de Pagamento</th>
+                    <th>Vendedor</th>
+                    <th>Data/Hora</th>
+                </tr>
+            </thead>
+            <tbody>';
 
-    <table>
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Total</th>
-                <th>Tipo de Pagamento</th>
-                <th>Vendedor</th>
-                <th>Data</th>
-            </tr>
-        </thead>
-        <tbody>';
 
 foreach ($vendas as $venda) {
     $style = $venda['estornado'] ? 'class="estornado"' : '';
-
     $html .= '<tr ' . $style . '>';
-    $html .= '<td>' . $venda['id'] . '</td>';
-    $html .= '<td>R$ ' . number_format($venda['total'], 2, ',', '.') . '</td>';
+    $html .= '<td class="text-center">#' . htmlspecialchars($venda['id']) . '</td>';
+    $html .= '<td class="text-right"><strong>R$ ' . number_format($venda['total'], 2, ',', '.') . '</strong></td>';
     $html .= '<td>' . htmlspecialchars($venda['tipos_pagamento']) . '</td>';
     $html .= '<td>' . htmlspecialchars($venda['usuariovendedor']) . '</td>';
-    $html .= '<td>' . date('d/m/Y H:i:s', strtotime($venda['data_venda'])) . '</td>';
+    $html .= '<td>' . date('d/m/Y H:i', strtotime($venda['data_venda'])) . '</td>';
     $html .= '</tr>';
 }
 
-$html .= '</tbody>
-    </table>
+if (empty($vendas)) {
+    $html .= '<tr><td colspan="5" class="text-center">Nenhuma venda encontrada para o período</td></tr>';
+}
 
-</body>
+$html .= '</tbody>
+            <tfoot style="background: #f8f9fa; font-weight: bold;">
+                <tr>
+                    <td colspan="2" class="text-right"><strong>TOTAL:</strong></td>
+                    <td colspan="3" class="text-right"><strong>R$ ' . number_format($totalnoperiodo, 2, ',', '.') . '</strong></td>
+                </tr>
+            </tfoot>
+        </table>
+
+        <div class="footer">
+            <p>Relatório gerado automaticamente pelo sistema AtendAI</p>
+            <p>Data de Emissão: ' . date('d/m/Y H:i:s') . '</p>
+        </div>
+    </body>
 </html>';
 
 $dompdf->loadHtml($html);
 $dompdf->setPaper('A4', 'portrait');
 $dompdf->render();
+
+// Headers para melhor performance
+header('Cache-Control: public, max-age=3600');
+header('Content-Type: application/pdf');
+header('Content-Disposition: inline; filename="relatorio_vendas_' . date('Y-m-d') . '.pdf"');
+
 $dompdf->stream("relatorio_vendas_" . date('Y-m-d') . ".pdf", ["Attachment" => false]);
 }
 ?>
