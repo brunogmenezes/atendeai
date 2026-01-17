@@ -112,22 +112,96 @@ if($user['isAdmin']==true)
 {
 ?>
     <div class="page-inner">
-    <div class="row">
-        <div class="col-sm-6 col-md-4">
-            <div class="card card-stats card-round">
-                <div class="card-body">
-                    <div class="row align-items-center">
-                        <div class="col-icon">
-                            <div class="icon-big text-center icon-primary bubble-shadow-small">
-                                <i class="fas fa-dollar-sign"></i>
+        <!-- Seção KPIs Principais -->
+        <div class="dashboard-header mb-4">
+            <h2 class="page-title">Dashboard de Vendas</h2>
+            <p class="text-muted">Acompanhe os indicadores do seu negócio</p>
+        </div>
+
+        <!-- Row 1: Principais Métricas -->
+        <div class="row mb-3">
+            <!-- Total de Vendas -->
+            <div class="col-sm-6 col-lg-3">
+                <div class="card card-stats card-round gradient-blue">
+                    <div class="card-body">
+                        <div class="row align-items-center">
+                            <div class="col-icon">
+                                <div class="icon-big text-center icon-primary bubble-shadow-small">
+                                    <i class="fas fa-receipt"></i>
+                                </div>
+                            </div>
+                            <div class="col col-stats ms-3">
+                                <div class="numbers">
+                                    <p class="card-category">Total de Vendas</p>
+                                    <h4 class="card-title"><?=$totalVendas;?></h4>
+                                    <span class="card-subtitle">Este mês</span>
+                                </div>
                             </div>
                         </div>
-                        <div class="col col-stats ms-3 ms-sm-0">
-                            <div class="numbers">
-                                <p class="card-category">Total vendas no mês atual</p>
-                                <h4 class="card-title"><?=$totalVendas;?></h4>
-                                <p class="card-category">Total itens vendidos no mês atual</p>
-                                <h4 class="card-title"><?=$totalItensVendidos;?></h4>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Valor Total Vendido -->
+            <div class="col-sm-6 col-lg-3">
+                <div class="card card-stats card-round gradient-green">
+                    <div class="card-body">
+                        <div class="row align-items-center">
+                            <div class="col-icon">
+                                <div class="icon-big text-center icon-success bubble-shadow-small">
+                                    <i class="fas fa-dollar-sign"></i>
+                                </div>
+                            </div>
+                            <div class="col col-stats ms-3">
+                                <div class="numbers">
+                                    <p class="card-category">Faturamento</p>
+                                    <h4 class="card-title">R$ <?=number_format($totalValorVendas, 2, ',', '.');?></h4>
+                                    <span class="card-subtitle">Mês atual</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Itens Vendidos -->
+            <div class="col-sm-6 col-lg-3">
+                <div class="card card-stats card-round gradient-orange">
+                    <div class="card-body">
+                        <div class="row align-items-center">
+                            <div class="col-icon">
+                                <div class="icon-big text-center icon-warning bubble-shadow-small">
+                                    <i class="fas fa-boxes"></i>
+                                </div>
+                            </div>
+                            <div class="col col-stats ms-3">
+                                <div class="numbers">
+                                    <p class="card-category">Itens Vendidos</p>
+                                    <h4 class="card-title"><?=$totalItensVendidos;?></h4>
+                                    <span class="card-subtitle">Unidades</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Saldo em Contas -->
+            <div class="col-sm-6 col-lg-3">
+                <div class="card card-stats card-round gradient-purple">
+                    <div class="card-body">
+                        <div class="row align-items-center">
+                            <div class="col-icon">
+                                <div class="icon-big text-center icon-info bubble-shadow-small">
+                                    <i class="fas fa-wallet"></i>
+                                </div>
+                            </div>
+                            <div class="col col-stats ms-3">
+                                <div class="numbers">
+                                    <p class="card-category">Saldo em Contas</p>
+                                    <h4 class="card-title">R$ <?=number_format($totalSaldoContas, 2, ',', '.');?></h4>
+                                    <span class="card-subtitle">Total</span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -135,91 +209,80 @@ if($user['isAdmin']==true)
             </div>
         </div>
 
-        <div class="col-sm-6 col-md-4" >
-            <div class="card card-stats card-round">
-                <div class="card-body">
-                        <div class="col col-stats ms-4 ms-sm-5">
-                            <div class="numbers">
-                                <p class="card-category" style="text-align: center">Meta Mensal<br/>Desejada | Alcançada</p>
-                                <h4 class="card-title" style="text-align: center">R$<?=number_format($MetaMensalDesejada, 2, ',', '.');?> | R$<?=number_format($totalValorVendas, 2, ',', '.');?></h4>
-                                <h6 style="text-align: center">
-                                <?php
-                                    if ($totalValorVendas<$MetaMensalDesejada)
-                                    {
-                                        echo "😢 ainda falta: R$";
-                                        echo number_format($MetaMensalDesejada - $totalValorVendas, 2, ',', '.');
-                                    }
-                                    elseif($totalValorVendas>$MetaMensalDesejada)
-                                    {
-                                        echo "🎉passou da meta: R$";
-                                        echo number_format($totalValorVendas - $MetaMensalDesejada, 2, ',', '.');
-                                    }
-                                ?>
-                            </h6>
-                            </div>
-                        </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="col-sm-6 col-md-4">
-            <div class="card card-stats card-round">
-                <div class="card-body">
-                    <div class="row align-items-center">
-                        <div class="col-icon">
-                            <div class="icon-big text-center icon-success bubble-shadow-small">
-                                <i class="fas fa-luggage-cart"></i>
-                            </div>
-                        </div>
-                        <div class="col col-stats ms-3 ms-sm-0">
-                            <div class="numbers">
-                                <p class="card-category">Produtos em Estoque</p>
-                                <h4 class="card-title"><?=$totalProdutos;?></h4>
-                            </div>
-                        </div>
+        <!-- Row 2: Meta e Status -->
+        <div class="row mb-3">
+            <div class="col-lg-6">
+                <div class="card card-round">
+                    <div class="card-header">
+                        <h5 class="card-title">Meta Mensal</h5>
                     </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-sm-6 col-md-3">
-            <div class="card card-stats card-round">
-                <div class="card-body">
-                    <div class="row align-items-center">
-                        <div class="col-icon">
-                            <div class="icon-big text-center icon-danger bubble-shadow-small">
-                                <i class="fas fa-luggage-cart"></i>
+                    <div class="card-body">
+                        <div class="progress-container">
+                            <div class="progress-info mb-3">
+                                <div class="progress-label">
+                                    <span>Progresso da Meta</span>
+                                </div>
+                                <div class="progress-value">
+                                    <span><?=number_format(($totalValorVendas / max($MetaMensalDesejada, 1)) * 100, 1, ',', '.');?>%</span>
+                                </div>
+                            </div>
+                            <div class="progress" style="height: 8px;">
+                                <div class="progress-bar" role="progressbar" 
+                                     style="width: <?=min(100, ($totalValorVendas / max($MetaMensalDesejada, 1)) * 100);?>%;" 
+                                     aria-valuenow="<?=min(100, ($totalValorVendas / max($MetaMensalDesejada, 1)) * 100);?>" 
+                                     aria-valuemin="0" aria-valuemax="100"></div>
                             </div>
                         </div>
-                        <div class="col col-stats ms-3 ms-sm-0">
-                            <div class="numbers">
-                                <p class="card-category">Estoque saldo Critco</p>
-                                <h4 class="card-title"><?=$totalCritico;?></h4>
+                        <div class="meta-info mt-4">
+                            <div class="meta-item">
+                                <span class="meta-label">Meta Desejada:</span>
+                                <span class="meta-value">R$ <?=number_format($MetaMensalDesejada, 2, ',', '.');?></span>
                             </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-sm-6 col-md-3">
-            <div class="card card-stats card-round">
-                <div class="card-body">
-                    <div class="row align-items-center">
-                        <div class="col-icon">
-                            <div class="icon-big text-center icon-danger bubble-shadow-small">
-                                <i class="fas fa-chart-area"></i>
+                            <div class="meta-item">
+                                <span class="meta-label">Alcançado:</span>
+                                <span class="meta-value text-success">R$ <?=number_format($totalValorVendas, 2, ',', '.');?></span>
                             </div>
-                        </div>
-                        <div class="col col-stats ms-3 ms-sm-0">
-                            <div class="numbers">
-                                <p class="card-category">Total Despesas Mensais</p>
-                                <h4 class="card-title">
+                            <div class="meta-item">
+                                <span class="meta-label">Diferença:</span>
+                                <span class="meta-value <?= $totalValorVendas >= $MetaMensalDesejada ? 'text-success' : 'text-danger'; ?>">
                                     <?php
-                                        
+                                        if ($totalValorVendas < $MetaMensalDesejada) {
+                                            echo "Faltam R$ " . number_format($MetaMensalDesejada - $totalValorVendas, 2, ',', '.');
+                                        } else {
+                                            echo "Excedido em R$ " . number_format($totalValorVendas - $MetaMensalDesejada, 2, ',', '.');
+                                        }
                                     ?>
-                                    R$ <?=number_format($totalCustoMensal, 2, ',', '.');?>
-                                </h4>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Estoque e Produtos -->
+            <div class="col-lg-6">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card card-round">
+                            <div class="card-body text-center">
+                                <div class="stat-icon mb-3">
+                                    <i class="fas fa-box fa-2x text-primary"></i>
+                                </div>
+                                <h5 class="card-title">Estoque Total</h5>
+                                <h2 class="stat-value"><?=$totalProdutos;?></h2>
+                                <p class="text-muted small">Unidades em estoque</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card card-round">
+                            <div class="card-body text-center <?= $totalCritico > 0 ? 'bg-light-danger' : ''; ?>">
+                                <div class="stat-icon mb-3">
+                                    <i class="fas fa-exclamation-triangle fa-2x text-danger"></i>
+                                </div>
+                                <h5 class="card-title">Nível Crítico</h5>
+                                <h2 class="stat-value text-danger"><?=$totalCritico;?></h2>
+                                <p class="text-muted small">Produtos abaixo do limite</p>
                             </div>
                         </div>
                     </div>
@@ -227,169 +290,145 @@ if($user['isAdmin']==true)
             </div>
         </div>
 
-        <div class="col-sm-6 col-md-3">
-            <div class="card card-stats card-round">
-                <div class="card-body">
-                    <div class="row align-items-center">
-                        <div class="col-icon">
-                            <div class="icon-big text-center icon-danger bubble-shadow-small">
-                                <i class="fas fa-donate"></i>
-                            </div>
+        <!-- Row 3: Análise Financeira -->
+        <div class="row mb-3">
+            <div class="col-lg-3 col-md-6">
+                <div class="card card-round">
+                    <div class="card-body">
+                        <div class="stat-icon mb-3">
+                            <i class="fas fa-money-bill-wave fa-lg text-warning"></i>
                         </div>
-                        <div class="col col-stats ms-3 ms-sm-0">
-                            <div class="numbers">
-                                <p class="card-category">Média Custo por Produto (simples)</p>
-                                <h4 class="card-title">
-                                    R$ <?= number_format($custoMedioProduto, 2, ',', '.'); ?>
-                                </h4>
-                            </div>
+                        <p class="card-category">Total Despesas</p>
+                        <h4 class="card-title">R$ <?=number_format($totalCustoMensal, 2, ',', '.');?></h4>
+                        <p class="text-muted small">Salários + Despesas</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6">
+                <div class="card card-round">
+                    <div class="card-body">
+                        <div class="stat-icon mb-3">
+                            <i class="fas fa-tags fa-lg text-info"></i>
+                        </div>
+                        <p class="card-category">Custo Médio</p>
+                        <h4 class="card-title">R$ <?= number_format($custoMedioProduto, 2, ',', '.'); ?></h4>
+                        <p class="text-muted small">Por unidade</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6">
+                <div class="card card-round">
+                    <div class="card-body">
+                        <div class="stat-icon mb-3">
+                            <i class="fas fa-arrow-up fa-lg text-success"></i>
+                        </div>
+                        <p class="card-category">Lucro Médio</p>
+                        <h4 class="card-title">R$ <?=number_format($lucroMedio, 2, ',', '.');?></h4>
+                        <p class="text-muted small">Por unidade</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6">
+                <div class="card card-round">
+                    <div class="card-body">
+                        <div class="stat-icon mb-3">
+                            <i class="fas fa-shopping-cart fa-lg text-danger"></i>
+                        </div>
+                        <p class="card-category">Unidades Break-Even</p>
+                        <h4 class="card-title"><?= $pecasAVender; ?></h4>
+                        <p class="text-muted small">Para cobrir custos</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Row 4: Gráficos de Análise de Vendas -->
+        <div class="row mb-3">
+            <div class="col-lg-6">
+                <div class="card card-round">
+                    <div class="card-header">
+                        <h5 class="card-title">
+                            <i class="fas fa-chart-pie me-2 text-primary"></i>Top 5 Produtos Mais Vendidos
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container" style="position: relative; height: 350px;">
+                            <canvas id="donutChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="card card-round">
+                    <div class="card-header">
+                        <h5 class="card-title">
+                            <i class="fas fa-credit-card me-2 text-success"></i>Formas de Pagamento
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container" style="position: relative; height: 350px;">
+                            <canvas id="donutChartTiposdePagamentos"></canvas>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="col-sm-6 col-md-3">
-            <div class="card card-stats card-round">
-                <div class="card-body">
-                    <div class="row align-items-center">
-                        <div class="col-icon">
-                            <div class="icon-big text-center icon-success bubble-shadow-small">
-                                <i class="fas fa-divide"></i>
-                            </div>
-                        </div>
-                        <div class="col col-stats ms-3 ms-sm-0">
-                            <div class="numbers">
-                                <p class="card-category">Média Lucro Bruto(simples)</p>
-                                <h4 class="card-title">
-                                    R$ <?=number_format($lucroMedio, 2, ',', '.');?>
-                                </h4>
-                            </div>
+        <!-- Row 5: Gráficos de Padrões de Vendas -->
+        <div class="row mb-3">
+            <div class="col-lg-6">
+                <div class="card card-round">
+                    <div class="card-header">
+                        <h5 class="card-title">
+                            <i class="fas fa-chart-bar me-2 text-warning"></i>Vendas por Dia da Semana
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container" style="position: relative; height: 350px;">
+                            <canvas id="BarDiaSemanaVendas"></canvas>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <div class="col-sm-6 col-md-3">
-            <div class="card card-stats card-round">
-                <div class="card-body">
-                    <div class="row align-items-center">
-                        <div class="col-icon">
-                            <div class="icon-big text-center icon-warning bubble-shadow-small">
-                                <i class="fas fa-chart-line"></i>
-                            </div>
-                        </div>
-                        <div class="col col-stats ms-3 ms-sm-0">
-                            <div class="numbers">
-                                <p class="card-category">Unidades à vender para Cobrir Custos</p>
-                                <h4 class="card-title">
-                                    <?= $pecasAVender; ?>
-                                </h4>
-                            </div>
+            <div class="col-lg-6">
+                <div class="card card-round">
+                    <div class="card-header">
+                        <h5 class="card-title">
+                            <i class="fas fa-fire me-2 text-danger"></i>Mapa de Calor - Vendas por Hora
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container" style="position: relative; height: 350px;">
+                            <canvas id="heatmapVendasHorario"></canvas>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="col-sm-6 col-md-3">
-            <div class="card card-stats card-round">
-                <div class="card-body">
-                    <div class="row align-items-center">
-                        <div class="col-icon">
-                            <div class="icon-big text-center icon-info bubble-shadow-small">
-                                <i class="fas fa-money-check-alt"></i>
-                            </div>
+
+        <!-- Row 6: Gráfico de Fluxo de Caixa -->
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="card card-round">
+                    <div class="card-header">
+                        <h5 class="card-title">
+                            <i class="fas fa-chart-line me-2 text-info"></i>Fluxo de Caixa Anual - Entradas/Saídas/Saldo
+                        </h5>
+                        <p class="text-muted small">Acompanhe as tendências financeiras ao longo do ano</p>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container" style="position: relative; height: 400px;">
+                            <canvas id="statisticsChart"></canvas>
                         </div>
-                        <div class="col col-stats ms-3 ms-sm-0">
-                            <div class="numbers">
-                                <p class="card-category">Saldo em Contas</p>
-                                <h4 class="card-title">R$ <?=number_format($totalSaldoContas, 2, ',', '.');?></h4>
-                            </div>
-                        </div>
+                        <div id="myChartLegend" class="mt-3"></div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-    <div class="row">
-
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header">
-                    <div class="card-title">TOP 5 Produtos Mais Vendidos</div>
-                </div>
-                <div class="card-body">
-                    <div class="chart-container">
-                        <canvas id="donutChart" style="width: 50%; height: 50%"></canvas>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header">
-                    <div class="card-title">TOP Tipos de Pagamentos</div>
-                </div>
-                <div class="card-body">
-                    <div class="chart-container">
-                        <canvas id="donutChartTiposdePagamentos" style="width: 50%; height: 50%"></canvas>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="row">
-
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header">
-                    <div class="card-title">Vendas por Dia</div>
-                </div>
-                <div class="card-body">
-                    <div class="chart-container">
-                        <canvas id="BarDiaSemanaVendas" style="width: 50%; height: 50%"></canvas>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header">
-                    <div class="card-title">Vendas por Hora (Mapa de Calor)</div>
-                </div>
-                <div class="card-body">
-                    <div class="chart-container">
-                        <canvas id="heatmapVendasHorario" style="width: 100%; height: 400px"></canvas>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="row">
-
-        <div class="col-sm-6 col-md-12">
-            <div class="card card-round">
-                <div class="card-header">
-                    <div class="card-head-row">
-                        <div class="card-title">
-                            Dados Entradas/Saídas
-                        </div>
-                    </div>
-                </div>
-                <div class="card-body">
-                    <div class="chart-container" style="min-height: 375px">
-                        <canvas id="statisticsChart"></canvas>
-                    </div>
-                    <div id="myChartLegend"></div>
-                </div>
-            </div>
-        </div>
-    </div>
 </div>
 <?php
 }
@@ -412,50 +451,42 @@ else
                     const ctx = document.getElementById('donutChart').getContext('2d');
                     
                     new Chart(ctx, {
-                        type: 'pie',
+                        type: 'doughnut',
                         data: {
                             labels: data.labels,
                             datasets: [{
                                 data: data.data,
                                 backgroundColor: data.backgroundColor,
-                                borderWidth: 0
+                                borderColor: '#fff',
+                                borderWidth: 2
                             }]
                         },
-                        options:
-                        {
+                        options: {
                             responsive: true,
                             maintainAspectRatio: false,
-                            legend:
-                            {
-                                position: "bottom",
-                                labels:
-                                {
-                                    fontColor: "rgb(154, 154, 154)",
-                                    fontSize: 11,
-                                    usePointStyle: true,
-                                    padding: 20,
+                            plugins: {
+                                legend: {
+                                    position: 'bottom',
+                                    labels: {
+                                        font: { size: 12 },
+                                        padding: 15,
+                                        usePointStyle: true,
+                                        color: '#666'
+                                    }
                                 },
-                        },
-                        pieceLabel: {
-                          render: "percentage",
-                          fontColor: "white",
-                          fontSize: 14,
-                        },
-                        tooltips: false,
-                        layout: {
-                          padding: {
-                            left: 20,
-                            right: 20,
-                            top: 20,
-                            bottom: 20,
-                          },
-                        },
-                    }
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            return context.label + ': ' + context.parsed + ' unid.';
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     });
                 })
                 .catch(error => console.error('Erro ao carregar dados:', error));
             });
-
 
             document.addEventListener('DOMContentLoaded', function()
             {
@@ -465,283 +496,273 @@ else
                     const ctx = document.getElementById('donutChartTiposdePagamentos').getContext('2d');
                     
                     new Chart(ctx, {
-                        type: 'pie',
+                        type: 'doughnut',
                         data: {
                             labels: data.labels,
                             datasets: [{
                                 data: data.data,
                                 backgroundColor: data.backgroundColor,
-                                borderWidth: 1
-                            }]
-                        },
-                        options:
-                        {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            legend:
-                            {
-                                position: "bottom",
-                                labels:
-                                {
-                                    fontColor: "rgb(154, 154, 154)",
-                                    fontSize: 11,
-                                    usePointStyle: true,
-                                    padding: 20,
-                                },
-                            },
-                            pieceLabel:
-                            {
-                                render: "percentage",
-                                fontColor: "white",
-                                fontSize: 14,
-                            },
-                            tooltips: false,
-                            layout:
-                            {
-                                padding:
-                                {
-                                    left: 20,
-                                    right: 20,
-                                    top: 20,
-                                    bottom: 20,
-                                },
-                            },
-                        }
-                    });
-                })
-                .catch(error => console.error('Erro ao carregar dados:', error));
-            });
-
-
-        document.addEventListener('DOMContentLoaded', function()
-        {
-            fetch('endpointDiasVendas.php')
-                .then(response => response.json())
-                .then(data => {
-                    const ctx = document.getElementById('BarDiaSemanaVendas').getContext('2d');
-                    
-                    new Chart(ctx, {
-                        type: 'bar',
-                        data: {
-                            labels: data.labels,
-                            datasets: [{
-                                label: 'Limpar',
-                                data: data.data,
-                                backgroundColor: data.backgroundColor,
+                                borderColor: '#fff',
                                 borderWidth: 2
                             }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    position: 'bottom',
+                                    labels: {
+                                        font: { size: 12 },
+                                        padding: 15,
+                                        usePointStyle: true,
+                                        color: '#666'
+                                    }
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            return context.label + ': ' + context.parsed + ' vendas';
+                                        }
+                                    }
+                                }
+                            }
                         }
                     });
                 })
                 .catch(error => console.error('Erro ao carregar dados:', error));
-        });
-
-        document.addEventListener('DOMContentLoaded', function() {
-    fetch('endpointVendasPorHora.php')
-        .then(response => response.json())
-        .then(data => {
-            const ctx = document.getElementById('heatmapVendasHorario').getContext('2d');
-            
-            new Chart(ctx, {
-                type: 'matrix',
-                data: {
-                    datasets: [{
-                        label: 'Vendas por Hora',
-                        data: data.data,
-                        backgroundColor: function(context) {
-                            const value = context.dataset.data[context.dataIndex].v;
-                            const alpha = Math.min(0.9, Math.max(0.1, value / data.maxValue));
-                            return `rgba(54, 162, 235, ${alpha})`;
-                        },
-                        borderWidth: 1,
-                        borderColor: '#fff',
-                        width: function(context) {
-                            const chart = context.chart;
-                            const {chartArea} = chart;
-                            if (!chartArea) {
-                                return 0;
-                            }
-                            return (chartArea.right - chartArea.left) / 7 - 1;
-                        },
-                        height: function(context) {
-                            const chart = context.chart;
-                            const {chartArea} = chart;
-                            if (!chartArea) {
-                                return 0;
-                            }
-                            return (chartArea.bottom - chartArea.top) / 24 - 1;
-                        }
-                    }]
-                },
-                options: {
-                    plugins: {
-                        tooltip: {
-                            callbacks: {
-                                title: function(context) {
-                                    return context[0].raw.x + ' às ' + context[0].raw.y + 'h';
-                                },
-                                label: function(context) {
-                                    return 'Vendas: ' + context.raw.v;
-                                }
-                            }
-                        },
-                        legend: {
-                            display: false
-                        }
-                    },
-                    scales: {
-                        x: {
-                            type: 'category',
-                            labels: data.diasSemana,
-                            offset: true,
-                            grid: {
-                                display: false
-                            }
-                        },
-                        y: {
-                            type: 'category',
-                            labels: data.horas,
-                            offset: true,
-                            reverse: true,
-                            grid: {
-                                display: false
-                            }
-                        }
-                    }
-                }
-            });
-        })
-        .catch(error => console.error('Erro ao carregar dados:', error));
-});
-
-
-document.addEventListener("DOMContentLoaded", function () {
-    var ctx = document.getElementById('statisticsChart').getContext('2d');
-
-    // Fazer a requisição ao endpoint
-    fetch('endpoint.php')
-        .then(response => response.json())
-        .then(data => {
-            var statisticsChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"],
-                    datasets: [
-                        {
-                            label: "Saídas",
-                            borderColor: '#f3545d',
-                            pointBackgroundColor: 'rgba(243, 84, 93, 0.6)',
-                            pointRadius: 0,
-                            backgroundColor: 'rgba(243, 84, 93, 0.4)',
-                            legendColor: '#f3545d',
-                            fill: true,
-                            borderWidth: 2,
-                            data: data.saidas
-                        }, 
-                        {
-                            label: "Entradas",
-                            borderColor: '#fdaf4b',
-                            pointBackgroundColor: 'rgba(253, 175, 75, 0.6)',
-                            pointRadius: 0,
-                            backgroundColor: 'rgba(253, 175, 75, 0.4)',
-                            legendColor: '#fdaf4b',
-                            fill: true,
-                            borderWidth: 2,
-                            data: data.entradas
-                        },
-                        {
-                            label: "Saldo Acumulado",
-                            borderColor: '#177dff',
-                            pointBackgroundColor: 'rgba(23, 125, 255, 0.6)',
-                            pointRadius: 3,
-                            backgroundColor: 'transparent',
-                            legendColor: '#177dff',
-                            fill: false,
-                            borderWidth: 3,
-                            borderDash: [5, 5],
-                            data: data.saldoAcumulado,
-                            yAxisID: 'y-axis-saldo' // Eixo Y separado para o saldo
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    legend: {
-                        display: false
-                    },
-                    tooltips: {
-                        bodySpacing: 4,
-                        mode: "nearest",
-                        intersect: 0,
-                        position: "nearest",
-                        xPadding: 10,
-                        yPadding: 10,
-                        caretPadding: 10
-                    },
-                    layout: {
-                        padding: { left: 5, right: 5, top: 15, bottom: 15 }
-                    },
-                    scales: {
-                        yAxes: [
-                            {
-                                id: 'y-axis-1',
-                                position: 'left',
-                                ticks: {
-                                    fontStyle: "500",
-                                    beginAtZero: false,
-                                    maxTicksLimit: 5,
-                                    padding: 10
-                                },
-                                gridLines: {
-                                    drawTicks: false,
-                                    display: true
-                                }
-                            },
-                            {
-                                id: 'y-axis-saldo',
-                                position: 'right',
-                                ticks: {
-                                    fontStyle: "500",
-                                    beginAtZero: false,
-                                    maxTicksLimit: 5,
-                                    padding: 10
-                                },
-                                gridLines: {
-                                    drawTicks: false,
-                                    display: false
-                                }
-                            }
-                        ],
-                        xAxes: [{
-                            gridLines: {
-                                zeroLineColor: "transparent"
-                            },
-                            ticks: {
-                                padding: 10,
-                                fontStyle: "500"
-                            }
-                        }]
-                    },
-                    legendCallback: function(chart) {
-                        var text = [];
-                        text.push('<ul class="' + chart.id + '-legend html-legend">');
-                        for (var i = 0; i < chart.data.datasets.length; i++) {
-                            text.push('<li><span style="background-color:' + chart.data.datasets[i].legendColor + '"></span>');
-                            if (chart.data.datasets[i].label) {
-                                text.push(chart.data.datasets[i].label);
-                            }
-                            text.push('</li>');
-                        }
-                        text.push('</ul>');
-                        return text.join('');
-                    }
-                }
             });
 
-            // Adiciona a legenda manualmente (se necessário)
-            document.getElementById('chart-legend').innerHTML = statisticsChart.generateLegend();
-        })
-        .catch(error => console.error('Erro ao carregar os dados:', error));
-});
-</script>
+            document.addEventListener('DOMContentLoaded', function()
+            {
+                fetch('endpointDiasVendas.php')
+                    .then(response => response.json())
+                    .then(data => {
+                        const ctx = document.getElementById('BarDiaSemanaVendas').getContext('2d');
+                        
+                        new Chart(ctx, {
+                            type: 'bar',
+                            data: {
+                                labels: data.labels,
+                                datasets: [{
+                                    label: 'Vendas por Dia',
+                                    data: data.data,
+                                    backgroundColor: 'rgba(255, 167, 38, 0.8)',
+                                    borderColor: 'rgba(255, 167, 38, 1)',
+                                    borderWidth: 2,
+                                    borderRadius: 4
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: {
+                                    legend: {
+                                        display: false
+                                    }
+                                },
+                                scales: {
+                                    y: {
+                                        beginAtZero: true,
+                                        grid: {
+                                            color: 'rgba(0,0,0,0.05)'
+                                        }
+                                    }
+                                }
+                            }
+                        });
+                    })
+                    .catch(error => console.error('Erro ao carregar dados:', error));
+            });
+
+            document.addEventListener('DOMContentLoaded', function() {
+                fetch('endpointVendasPorHora.php')
+                    .then(response => response.json())
+                    .then(data => {
+                        const ctx = document.getElementById('heatmapVendasHorario').getContext('2d');
+                        
+                        new Chart(ctx, {
+                            type: 'matrix',
+                            data: {
+                                datasets: [{
+                                    label: 'Vendas por Hora',
+                                    data: data.data,
+                                    backgroundColor: function(context) {
+                                        const value = context.dataset.data[context.dataIndex].v;
+                                        const alpha = Math.min(0.9, Math.max(0.2, value / data.maxValue));
+                                        return `rgba(255, 99, 132, ${alpha})`;
+                                    },
+                                    borderWidth: 1,
+                                    borderColor: '#fff',
+                                    width: function(context) {
+                                        const chart = context.chart;
+                                        const {chartArea} = chart;
+                                        if (!chartArea) {
+                                            return 0;
+                                        }
+                                        return (chartArea.right - chartArea.left) / 7 - 1;
+                                    },
+                                    height: function(context) {
+                                        const chart = context.chart;
+                                        const {chartArea} = chart;
+                                        if (!chartArea) {
+                                            return 0;
+                                        }
+                                        return (chartArea.bottom - chartArea.top) / 24 - 1;
+                                    }
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: {
+                                    tooltip: {
+                                        callbacks: {
+                                            title: function(context) {
+                                                const dias = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+                                                return dias[context[0].raw.x] + ' às ' + context[0].raw.y + ':00h';
+                                            },
+                                            label: function(context) {
+                                                return 'Vendas: ' + context.raw.v;
+                                            }
+                                        }
+                                    },
+                                    legend: {
+                                        display: false
+                                    }
+                                },
+                                scales: {
+                                    x: {
+                                        type: 'category',
+                                        labels: data.diasSemana,
+                                        offset: true,
+                                        grid: {
+                                            display: false
+                                        }
+                                    },
+                                    y: {
+                                        type: 'category',
+                                        labels: data.horas,
+                                        offset: true,
+                                        reverse: true,
+                                        grid: {
+                                            display: false
+                                        }
+                                    }
+                                }
+                            }
+                        });
+                    })
+                    .catch(error => console.error('Erro ao carregar dados:', error));
+            });
+
+            document.addEventListener("DOMContentLoaded", function () {
+                var ctx = document.getElementById('statisticsChart').getContext('2d');
+
+                fetch('endpoint.php')
+                    .then(response => response.json())
+                    .then(data => {
+                        var statisticsChart = new Chart(ctx, {
+                            type: 'line',
+                            data: {
+                                labels: ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"],
+                                datasets: [
+                                    {
+                                        label: "Saídas",
+                                        borderColor: '#f3545d',
+                                        pointBackgroundColor: 'rgba(243, 84, 93, 1)',
+                                        pointBorderColor: '#fff',
+                                        pointRadius: 4,
+                                        pointHoverRadius: 6,
+                                        backgroundColor: 'rgba(243, 84, 93, 0.2)',
+                                        fill: true,
+                                        borderWidth: 2,
+                                        tension: 0.4,
+                                        data: data.saidas
+                                    }, 
+                                    {
+                                        label: "Entradas",
+                                        borderColor: '#fdaf4b',
+                                        pointBackgroundColor: 'rgba(253, 175, 75, 1)',
+                                        pointBorderColor: '#fff',
+                                        pointRadius: 4,
+                                        pointHoverRadius: 6,
+                                        backgroundColor: 'rgba(253, 175, 75, 0.2)',
+                                        fill: true,
+                                        borderWidth: 2,
+                                        tension: 0.4,
+                                        data: data.entradas
+                                    },
+                                    {
+                                        label: "Saldo Acumulado",
+                                        borderColor: '#177dff',
+                                        pointBackgroundColor: 'rgba(23, 125, 255, 1)',
+                                        pointBorderColor: '#fff',
+                                        pointRadius: 4,
+                                        pointHoverRadius: 6,
+                                        backgroundColor: 'transparent',
+                                        fill: false,
+                                        borderWidth: 3,
+                                        borderDash: [5, 5],
+                                        tension: 0.4,
+                                        data: data.saldoAcumulado,
+                                        yAxisID: 'y-axis-saldo'
+                                    }
+                                ]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: {
+                                    legend: {
+                                        display: false
+                                    },
+                                    tooltip: {
+                                        mode: 'index',
+                                        intersect: false,
+                                        backgroundColor: 'rgba(0,0,0,0.8)',
+                                        padding: 10,
+                                        titleFont: { size: 12 },
+                                        bodyFont: { size: 12 }
+                                    }
+                                },
+                                scales: {
+                                    y: {
+                                        position: 'left',
+                                        ticks: {
+                                            font: { size: 11 },
+                                            callback: function(value) {
+                                                return 'R$ ' + value.toLocaleString('pt-BR');
+                                            }
+                                        },
+                                        grid: {
+                                            color: 'rgba(0,0,0,0.05)'
+                                        }
+                                    },
+                                    'y-axis-saldo': {
+                                        position: 'right',
+                                        ticks: {
+                                            font: { size: 11 },
+                                            callback: function(value) {
+                                                return 'R$ ' + value.toLocaleString('pt-BR');
+                                            }
+                                        },
+                                        grid: {
+                                            drawOnChartArea: false
+                                        }
+                                    },
+                                    x: {
+                                        grid: {
+                                            display: false
+                                        }
+                                    }
+                                }
+                            }
+                        });
+
+                        // Gera a legenda
+                        document.getElementById('myChartLegend').innerHTML = statisticsChart.generateLegend();
+                    })
+                    .catch(error => console.error('Erro ao carregar os dados:', error));
+            });
+        </script>

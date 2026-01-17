@@ -1,0 +1,477 @@
+/* ============================================
+   Dashboard Enhanced Styles
+   ============================================ */
+
+:root {
+    --primary-color: #177dff;
+    --success-color: #2dce89;
+    --warning-color: #ffa727;
+    --danger-color: #f3545d;
+    --info-color: #11cdef;
+    --secondary-color: #a3a6c4;
+    --light-gray: #f4f7fc;
+    --border-radius: 8px;
+    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.08);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.12);
+    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+/* ============================================
+   Dashboard Header
+   ============================================ */
+.dashboard-header {
+    margin-bottom: 2rem;
+}
+
+.dashboard-header h2 {
+    font-size: 1.875rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 0.5rem;
+}
+
+.dashboard-header p {
+    font-size: 0.875rem;
+    color: #64748b;
+    margin: 0;
+}
+
+/* ============================================
+   Card Styles
+   ============================================ */
+.card {
+    border: none;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-md);
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-2px);
+}
+
+.card-round {
+    border-radius: 12px;
+}
+
+.card-header {
+    border-bottom: 1px solid #e8eef5;
+    background-color: #f8fafc;
+    border-radius: 12px 12px 0 0;
+}
+
+.card-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin: 0;
+    display: flex;
+    align-items: center;
+}
+
+/* ============================================
+   Card Stats Gradient
+   ============================================ */
+.card-stats {
+    overflow: hidden;
+    position: relative;
+}
+
+.gradient-blue {
+    background: linear-gradient(135deg, #177dff 0%, #0c63e4 100%);
+    color: white;
+}
+
+.gradient-blue .card-category {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.gradient-blue .card-title,
+.gradient-blue .card-subtitle {
+    color: white;
+}
+
+.gradient-blue .icon-primary {
+    background: rgba(255, 255, 255, 0.2) !important;
+}
+
+.gradient-green {
+    background: linear-gradient(135deg, #2dce89 0%, #1fa864 100%);
+    color: white;
+}
+
+.gradient-green .card-category {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.gradient-green .card-title,
+.gradient-green .card-subtitle {
+    color: white;
+}
+
+.gradient-green .icon-success {
+    background: rgba(255, 255, 255, 0.2) !important;
+}
+
+.gradient-orange {
+    background: linear-gradient(135deg, #ffa727 0%, #f07b39 100%);
+    color: white;
+}
+
+.gradient-orange .card-category {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.gradient-orange .card-title,
+.gradient-orange .card-subtitle {
+    color: white;
+}
+
+.gradient-orange .icon-warning {
+    background: rgba(255, 255, 255, 0.2) !important;
+}
+
+.gradient-purple {
+    background: linear-gradient(135deg, #6f42c1 0%, #5a32a3 100%);
+    color: white;
+}
+
+.gradient-purple .card-category {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.gradient-purple .card-title,
+.gradient-purple .card-subtitle {
+    color: white;
+}
+
+.gradient-purple .icon-info {
+    background: rgba(255, 255, 255, 0.2) !important;
+}
+
+/* ============================================
+   Numbers Section
+   ============================================ */
+.numbers {
+    margin: 0;
+}
+
+.numbers .card-category {
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.5rem;
+    opacity: 0.9;
+}
+
+.numbers .card-title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+}
+
+.numbers .card-subtitle {
+    font-size: 0.75rem;
+    opacity: 0.75;
+    margin: 0;
+}
+
+/* ============================================
+   Icon Styling
+   ============================================ */
+.icon-big {
+    width: 60px;
+    height: 60px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.875rem;
+}
+
+.icon-primary {
+    background: linear-gradient(135deg, #177dff 0%, #0c63e4 100%);
+    color: white;
+}
+
+.icon-success {
+    background: linear-gradient(135deg, #2dce89 0%, #1fa864 100%);
+    color: white;
+}
+
+.icon-warning {
+    background: linear-gradient(135deg, #ffa727 0%, #f07b39 100%);
+    color: white;
+}
+
+.icon-danger {
+    background: linear-gradient(135deg, #f3545d 0%, #e63946 100%);
+    color: white;
+}
+
+.icon-info {
+    background: linear-gradient(135deg, #11cdef 0%, #0fa3cc 100%);
+    color: white;
+}
+
+/* ============================================
+   Stat Icon
+   ============================================ */
+.stat-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 60px;
+    height: 60px;
+    border-radius: 8px;
+    background-color: var(--light-gray);
+}
+
+.stat-icon.text-primary {
+    color: var(--primary-color);
+}
+
+.stat-icon.text-success {
+    color: var(--success-color);
+}
+
+.stat-icon.text-warning {
+    color: var(--warning-color);
+}
+
+.stat-icon.text-danger {
+    color: var(--danger-color);
+}
+
+.stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0;
+}
+
+/* ============================================
+   Progress Container
+   ============================================ */
+.progress-container {
+    margin-bottom: 1.5rem;
+}
+
+.progress-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+}
+
+.progress-label {
+    font-weight: 500;
+    color: #475569;
+    font-size: 0.875rem;
+}
+
+.progress-value {
+    font-weight: 700;
+    color: var(--primary-color);
+    font-size: 0.875rem;
+}
+
+.progress {
+    background-color: #e8eef5;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.progress-bar {
+    background: linear-gradient(90deg, var(--primary-color) 0%, #0c63e4 100%);
+    transition: width 0.6s ease;
+}
+
+/* ============================================
+   Meta Info
+   ============================================ */
+.meta-info {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.meta-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem;
+    background-color: var(--light-gray);
+    border-radius: 6px;
+    border-left: 3px solid var(--primary-color);
+}
+
+.meta-label {
+    font-weight: 500;
+    color: #64748b;
+    font-size: 0.875rem;
+}
+
+.meta-value {
+    font-weight: 700;
+    color: #1e293b;
+    font-size: 0.875rem;
+}
+
+/* ============================================
+   Chart Container
+   ============================================ */
+.chart-container {
+    position: relative;
+    width: 100%;
+    padding: 1rem 0;
+}
+
+/* ============================================
+   Bubble Shadow
+   ============================================ */
+.bubble-shadow-small {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12) !important;
+}
+
+/* ============================================
+   Text Utilities
+   ============================================ */
+.text-muted {
+    color: #64748b;
+}
+
+.text-success {
+    color: var(--success-color);
+}
+
+.text-danger {
+    color: var(--danger-color);
+}
+
+.text-warning {
+    color: var(--warning-color);
+}
+
+.text-info {
+    color: var(--info-color);
+}
+
+/* ============================================
+   Background Utilities
+   ============================================ */
+.bg-light-danger {
+    background-color: rgba(243, 84, 93, 0.08);
+}
+
+.bg-light-success {
+    background-color: rgba(45, 206, 137, 0.08);
+}
+
+.bg-light-warning {
+    background-color: rgba(255, 167, 38, 0.08);
+}
+
+/* ============================================
+   Responsive Design
+   ============================================ */
+@media (max-width: 1200px) {
+    .dashboard-header h2 {
+        font-size: 1.625rem;
+    }
+
+    .stat-value {
+        font-size: 1.75rem;
+    }
+
+    .numbers .card-title {
+        font-size: 1.5rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .dashboard-header {
+        margin-bottom: 1.5rem;
+    }
+
+    .dashboard-header h2 {
+        font-size: 1.375rem;
+    }
+
+    .meta-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.25rem;
+    }
+
+    .stat-value {
+        font-size: 1.5rem;
+    }
+
+    .numbers .card-title {
+        font-size: 1.25rem;
+    }
+
+    .icon-big {
+        width: 50px;
+        height: 50px;
+        font-size: 1.5rem;
+    }
+}
+
+/* ============================================
+   Animation
+   ============================================ */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.card {
+    animation: fadeIn 0.3s ease-out;
+}
+
+/* ============================================
+   Legend Styles
+   ============================================ */
+#myChartLegend {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    margin-top: 1rem;
+}
+
+#myChartLegend ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+#myChartLegend li {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    color: #475569;
+    font-weight: 500;
+}
+
+#myChartLegend span {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+}

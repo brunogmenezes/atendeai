@@ -49,6 +49,9 @@
 
         <!-- CSS Just for demo purpose, don't include it in your project -->
         <link rel="stylesheet" href="assets/css/demo.css" />
+        
+        <!-- Dashboard Enhanced CSS -->
+        <link rel="stylesheet" href="css/dashboard-enhanced.css" />
     </head>
     <body>
         <div class="wrapper">
