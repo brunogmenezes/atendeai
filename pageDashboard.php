@@ -760,8 +760,17 @@ else
                             }
                         });
 
-                        // Gera a legenda
-                        document.getElementById('myChartLegend').innerHTML = statisticsChart.generateLegend();
+                        // Gera a legenda manualmente (Chart.js v3+ não tem generateLegend())
+                        const legendContainer = document.getElementById('myChartLegend');
+                        if (legendContainer && statisticsChart.options.plugins.legend) {
+                            const items = statisticsChart.legend.legendItems;
+                            let legendHtml = '<ul style="list-style: none; padding: 0;">';
+                            items.forEach(item => {
+                                legendHtml += `<li style="margin: 5px 0;"><span style="display: inline-block; width: 12px; height: 12px; background-color: ${item.fillStyle}; margin-right: 8px;"></span>${item.text}</li>`;
+                            });
+                            legendHtml += '</ul>';
+                            legendContainer.innerHTML = legendHtml;
+                        }
                     })
                     .catch(error => console.error('Erro ao carregar os dados:', error));
             });

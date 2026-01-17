@@ -6,7 +6,7 @@
     require_once 'auth.php';
     verificarSessao();
 
-    require '../api_pix/vendor/autoload.php';
+    require 'api_pix/vendor/autoload.php';
 
     use \App\Pix\Payload;
     use Mpdf\QrCode\QrCode;
