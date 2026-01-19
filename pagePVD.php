@@ -135,7 +135,7 @@ try {
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="finalizarVendaLabel">Total: R$ <span id="total-compra">0,00</span></h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <button type="button" class="close" data-dismiss="modal" data-bs-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
@@ -179,7 +179,7 @@ try {
                     </div>
                     
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-danger" data-dismiss="modal">Cancelar</button>
+                        <button type="button" class="btn btn-danger" data-dismiss="modal" data-bs-dismiss="modal">Cancelar</button>
                         <button type="submit" class="btn btn-success btn-lg">
                             <i class="fa fa-cash-register"></i> Finalizar Venda
                         </button>

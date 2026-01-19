@@ -42,25 +42,24 @@ verificarSessao();
     function buscarProdutos($filtro = '', $valor = '', $limite = 10, $offset = 0)
     {
         global $pdo; // Usa o PDO configurado no `config.php`
-        $query = "SELECT * FROM produtos ORDER BY id ASC";
+        // Monta a consulta com WHERE antes do ORDER BY para manter SQL válido
+        $query = "SELECT * FROM produtos";
+
+        $params = [
+            ':limite' => $limite,
+            ':offset' => $offset
+        ];
 
         if ($filtro && $valor)
         {
             $query .= " WHERE " . $filtro . " ILIKE :valor";
+            $params[':valor'] = "%$valor%";
         }
-    
-        $query .= " LIMIT :limite OFFSET :offset";
+
+        $query .= " ORDER BY id ASC LIMIT :limite OFFSET :offset";
     
         $stmt = $pdo->prepare($query);
-
-        if ($filtro && $valor)
-        {
-            $stmt->execute([':valor' => "%$valor%", ':limite' => $limite, ':offset' => $offset]);
-        }
-        else
-        {
-            $stmt->execute([':limite' => $limite, ':offset' => $offset]);
-        }
+        $stmt->execute($params);
 
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
@@ -1408,7 +1407,8 @@ function buscarFechamentoDoDia($data = null)
     function BuscarporTabela($tabela = '')
     {
         global $pdo; // Usa o PDO configurado no `config.php`
-        $query = "SELECT * FROM ".$tabela."";
+        // Ordena pelo id para garantir listagens consistentes (ex.: PDV)
+        $query = "SELECT * FROM " . $tabela . " ORDER BY id ASC";
         $stmt = $pdo->prepare($query);
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
