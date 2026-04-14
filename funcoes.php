@@ -278,7 +278,7 @@ function buscarConversas()
         $data_fim = date('Y-m-d', strtotime($data_inicio . ' +1 day'));
     
         $query = "
-            SELECT COALESCE(SUM(vnd.total), 0) as total_vendas_periodo
+            SELECT COALESCE(SUM(vnd.total * (1 - COALESCE(vnd.desconto, 0) / 100.0)), 0) as total_vendas_periodo
             FROM vendas vnd 
             WHERE vnd.data_venda >= :data_inicio 
             AND estornado = 'f'
@@ -542,7 +542,7 @@ function calcularValorTotalEstoqueRelatorio()
     }
 
     $query = "
-        SELECT COALESCE(SUM(vnd.total), 0) as total_vendas_periodo
+        SELECT COALESCE(SUM(vnd.total * (1 - COALESCE(vnd.desconto, 0) / 100.0)), 0) as total_vendas_periodo
         FROM vendas vnd 
         WHERE vnd.data_venda >= :data_inicio 
         AND vnd.data_venda < :data_fim

@@ -162,6 +162,8 @@ $ano = isset($_GET['ano']) && is_numeric($_GET['ano']) ? (int)$_GET['ano'] : nul
                 			{
                     			foreach ($query as $retorno)
                     			{
+                            $descontoVenda = (float)($retorno['desconto'] ?? 0);
+                            $totalLiquidoVenda = (float)$retorno['total'] * (1 - ($descontoVenda / 100));
                             if($retorno['estornado'] == true)
                                     {
                                         $rowClass = 'class="table-danger text-muted"';
@@ -173,7 +175,7 @@ $ano = isset($_GET['ano']) && is_numeric($_GET['ano']) ? (int)$_GET['ano'] : nul
                     	?>
 									<tr <?=$rowClass;?>>
 										<td><?=$retorno['id'];?></td>
-										<td><strong>R$ <?=number_format($retorno['total'], 2, ',', '.');?></strong></td>
+                                        <td><strong>R$ <?=number_format($totalLiquidoVenda, 2, ',', '.');?></strong></td>
                                         <td><?=$retorno['tipos_pagamento'];?></td>
                                         <td><?=$retorno['usuariovendedor'];?></td>
 										<td><?=date('d/m/Y H:i:s', strtotime($retorno['data_venda']));?></td>

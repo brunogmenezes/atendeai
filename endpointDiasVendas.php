@@ -27,7 +27,7 @@ verificarSessao();
             SELECT 
                 DATE(data_venda) AS dia,
                 COUNT(*) AS quantidade_vendas,
-                SUM(total) AS valor_total_vendas
+                SUM(total * (1 - COALESCE(desconto, 0) / 100.0)) AS valor_total_vendas
             FROM 
                 vendas
             WHERE 
@@ -66,7 +66,7 @@ verificarSessao();
         foreach ($resultados as $row)
         {
             $labels[] = $row['dia'];
-            $data[] = (int)$row['valor_total_vendas'];
+            $data[] = (float)$row['valor_total_vendas'];
         }
     
         // Monta a resposta de sucesso
