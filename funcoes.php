@@ -469,6 +469,51 @@ function buscarConversas()
         }
     }
 
+    function buscarDadosFluxoCaixa($startData, $endData)
+    {
+        global $pdo;
+        
+        $query = "
+            SELECT 
+                d.data,
+                COALESCE(v.total_vendas, 0) as vendas,
+                COALESCE(f.entradas, 0) as outras_entradas,
+                COALESCE(f.saidas, 0) as despesas,
+                (COALESCE(v.total_vendas, 0) + COALESCE(f.entradas, 0)) as total_entradas,
+                COALESCE(f.saidas, 0) as total_saidas,
+                ((COALESCE(v.total_vendas, 0) + COALESCE(f.entradas, 0)) - COALESCE(f.saidas, 0)) as saldo_dia
+            FROM (
+                SELECT generate_series(:start::date, :end::date, '1 day'::interval)::date as data
+            ) d
+            LEFT JOIN (
+                SELECT data_venda::date as data, SUM(total * (1 - COALESCE(desconto, 0) / 100.0)) as total_vendas
+                FROM vendas WHERE estornado = 'f' AND data_venda >= :start AND data_venda < :end_exclusive
+                GROUP BY 1
+            ) v ON v.data = d.data
+            LEFT JOIN (
+                SELECT data_lancamento::date as data, 
+                       SUM(CASE WHEN tipo = 1 THEN valor ELSE 0 END) as entradas,
+                       SUM(CASE WHEN tipo = 2 THEN valor ELSE 0 END) as saidas
+                FROM financeiro WHERE data_lancamento >= :start AND data_lancamento < :end_exclusive
+                GROUP BY 1
+            ) f ON f.data = d.data
+            ORDER BY d.data ASC
+        ";
+
+        try {
+            $endExclusive = date('Y-m-d', strtotime($endData . ' +1 day'));
+            $stmt = $pdo->prepare($query);
+            $stmt->bindValue(':start', $startData);
+            $stmt->bindValue(':end', $endData);
+            $stmt->bindValue(':end_exclusive', $endExclusive);
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log("Erro ao buscar dados de fluxo de caixa: " . $e->getMessage());
+            return [];
+        }
+    }
+
     
 
     function buscarTotalemEstoqueRelatorio()

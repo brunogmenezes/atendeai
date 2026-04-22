@@ -8,7 +8,7 @@ use Dompdf\Dompdf;
 use Dompdf\Options;
 
 // Validação de parâmetros
-$tipo = isset($_GET['tipo']) && in_array($_GET['tipo'], ['estoque', 'financeiro-mensal']) ? $_GET['tipo'] : null;
+$tipo = isset($_GET['tipo']) && in_array($_GET['tipo'], ['estoque', 'financeiro-mensal', 'fluxo-caixa']) ? $_GET['tipo'] : null;
 $startData = isset($_GET['start']) && strtotime($_GET['start']) ? $_GET['start'] : null;
 $endData = isset($_GET['end']) && strtotime($_GET['end']) ? $_GET['end'] : null;
 
@@ -74,7 +74,7 @@ $html = '
                 $html .='
                 <body>
                     <div class="header">
-                        <h1>📦 Relatório de Estoque</h1>
+                        <h1>Relatório de Estoque</h1>
                         <p>Emitido em ' . date('d/m/Y H:i:s') . '</p>
                     </div>
 
@@ -303,6 +303,125 @@ if (!empty($totaisPorPagamento)) {
 
 
     $dompdf->stream("relatorio_vendas_" . date('Y-m-d') . ".pdf", ["Attachment" => false]);
+    exit;
+}
+else if($tipo=='fluxo-caixa')
+{
+    $fluxo = buscarDadosFluxoCaixa($startData, $endData) ?? [];
+    
+    $totalEntradas = 0;
+    $totalSaidas = 0;
+    $vendasTotal = 0;
+    $outrasEntradasTotal = 0;
+
+    foreach ($fluxo as $dia) {
+        $totalEntradas += $dia['total_entradas'];
+        $totalSaidas += $dia['total_saidas'];
+        $vendasTotal += $dia['vendas'];
+        $outrasEntradasTotal += $dia['outras_entradas'];
+    }
+    $saldoFinal = $totalEntradas - $totalSaidas;
+
+    $html .='
+    <body>
+        <div class="header">
+            <h1>Relatório de Fluxo de Caixa</h1>
+            <p>Emitido em ' . date('d/m/Y H:i:s') . '</p>
+        </div>
+
+        <div class="info-section">
+            <h3>Visão Geral do Período (' . date('d/m/Y', strtotime($startData)) . ' - ' . date('d/m/Y', strtotime($endData)) . ')</h3>
+            <div class="dados-grid">
+                <div class="dados-item">
+                    <label>Total de Entradas</label>
+                    <div class="value">R$ ' . number_format($totalEntradas, 2, ',', '.') . '</div>
+                </div>
+                <div class="dados-item">
+                    <label>Total de Saídas</label>
+                    <div class="value">R$ ' . number_format($totalSaidas, 2, ',', '.') . '</div>
+                </div>
+                <div class="dados-item">
+                    <label>Saldo Líquido</label>
+                    <div class="value">R$ ' . number_format($saldoFinal, 2, ',', '.') . '</div>
+                </div>
+                <div class="dados-item">
+                    <label>Total em Vendas</label>
+                    <div class="value">R$ ' . number_format($vendasTotal, 2, ',', '.') . '</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="info-section">
+            <h3>Composição das Entradas</h3>
+            <div class="resumo-pagamentos">
+                <div class="pagamento-item">
+                    <span>Vendas Diretas (PDV)</span>
+                    <span>R$ ' . number_format($vendasTotal, 2, ',', '.') . '</span>
+                </div>
+                <div class="pagamento-item">
+                    <span>Outros Lançamentos</span>
+                    <span>R$ ' . number_format($outrasEntradasTotal, 2, ',', '.') . '</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="legend">
+            <div class="legend-title">Legenda das Colunas:</div>
+            <strong>Vendas:</strong> Faturamento do PDV no dia | 
+            <strong>Outras Entr.:</strong> Entradas manuais no financeiro | 
+            <strong>Saídas:</strong> Total de despesas do dia | 
+            <strong>Saldo Dia:</strong> Resultado líquido diário
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Data</th>
+                    <th class="text-right">Vendas</th>
+                    <th class="text-right">Outras Entr.</th>
+                    <th class="text-right">Saídas</th>
+                    <th class="text-right">Saldo Dia</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr style="background: #f1f4f9; font-style: italic; font-size: 8px; color: #7f8c8d;">
+                    <td>Data do Mov.</td>
+                    <td class="text-right">Entradas PDV</td>
+                    <td class="text-right">Outros Créditos</td>
+                    <td class="text-right">Débitos totais</td>
+                    <td class="text-right">Líquido Diário</td>
+                </tr>';
+
+    foreach ($fluxo as $dia) {
+        if ($dia['total_entradas'] == 0 && $dia['total_saidas'] == 0) continue; // Pula dias sem movimento
+
+        $html .= '<tr>';
+        $html .= '<td>' . date('d/m/Y', strtotime($dia['data'])) . '</td>';
+        $html .= '<td class="text-right">R$ ' . number_format($dia['vendas'], 2, ',', '.') . '</td>';
+        $html .= '<td class="text-right">R$ ' . number_format($dia['outras_entradas'], 2, ',', '.') . '</td>';
+        $html .= '<td class="text-right">R$ ' . number_format($dia['total_saidas'], 2, ',', '.') . '</td>';
+        $html .= '<td class="text-right" style="font-weight: bold;">R$ ' . number_format($dia['saldo_dia'], 2, ',', '.') . '</td>';
+        $html .= '</tr>';
+    }
+
+    $html .= '</tbody>
+        </table>
+
+        <div class="footer">
+            <p>Relatório de Fluxo de Caixa - AtendAI</p>
+            <p>Data de Emissão: ' . date('d/m/Y H:i:s') . '</p>
+        </div>
+    </body>
+    </html>';
+
+    $dompdf->loadHtml($html);
+    $dompdf->setPaper('A4', 'portrait');
+    $dompdf->render();
+
+    header('Cache-Control: public, max-age=3600');
+    header('Content-Type: application/pdf');
+    header('Content-Disposition: inline; filename="fluxo_caixa_' . date('Y-m-d') . '.pdf"');
+    $dompdf->stream("fluxo_caixa_" . date('Y-m-d') . ".pdf", ["Attachment" => false]);
     exit;
 }
 
