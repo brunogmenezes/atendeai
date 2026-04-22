@@ -365,34 +365,30 @@ function buscarConversas()
 
     // Formata as datas corretamente
     $startDateFormatted = date('Y-m-d 00:00:00', strtotime($startData));
-    $endDateFormatted = date('Y-m-d 23:59:59', strtotime($endData));
+    $endDateExclusive = date('Y-m-d 00:00:00', strtotime($endData . ' +1 day'));
 
     $query = "
+        WITH vendas_filtradas AS (
+            SELECT id
+            FROM vendas
+            WHERE estornado = 'f'
+              AND data_venda >= :startData
+              AND data_venda < :endDateExclusive
+        )
         SELECT 
-            COALESCE(tp.nome, 'Sem tipo') AS tipo_pagamento, 
+            COALESCE(tp.nome, 'Sem tipo') AS tipo_pagamento,
             SUM(v.valor) AS total_vendas
-        FROM 
-            pagamentos_venda v
-        LEFT JOIN 
-            tipopagamento tp ON v.forma_pagamento_id = tp.id
-        LEFT JOIN
-            vendas vnd ON v.venda_id = vnd.id
-        WHERE 
-            v.data_pagamento >= :startData 
-        AND
-            v.data_pagamento <= :endData
-        AND
-            vnd.estornado = 'f'
-        GROUP BY 
-            tp.nome
-        ORDER BY 
-            total_vendas DESC
+        FROM pagamentos_venda v
+        JOIN vendas_filtradas vf ON vf.id = v.venda_id
+        LEFT JOIN tipopagamento tp ON v.forma_pagamento_id = tp.id
+        GROUP BY tp.nome
+        ORDER BY total_vendas DESC
     ";
 
     try {
         $stmt = $pdo->prepare($query);
         $stmt->bindParam(':startData', $startDateFormatted, PDO::PARAM_STR);
-        $stmt->bindParam(':endData', $endDateFormatted, PDO::PARAM_STR);
+        $stmt->bindParam(':endDateExclusive', $endDateExclusive, PDO::PARAM_STR);
         $stmt->execute();
 
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -420,20 +416,20 @@ function buscarConversas()
 
         // Formata as datas corretamente
         $startDateFormatted = date('Y-m-d 00:00:00', strtotime($startData));
-        $endDateFormatted = date('Y-m-d 23:59:59', strtotime($endData));
+        $endDateExclusive = date('Y-m-d 00:00:00', strtotime($endData . ' +1 day'));
     
         $query = "
-            SELECT COALESCE(SUM(vnd.total), 0) as total_vendas_periodo
+            SELECT COALESCE(SUM(vnd.total * (1 - COALESCE(vnd.desconto, 0) / 100.0)), 0) as total_vendas_periodo
             FROM vendas vnd 
             WHERE vnd.data_venda >= :startData 
             AND estornado = 'f'
-            AND data_venda BETWEEN :startData AND :endData
+            AND vnd.data_venda < :endDateExclusive
             ";
         try
         {
             $stmt = $pdo->prepare($query);
             $stmt->bindParam(':startData', $startDateFormatted, PDO::PARAM_STR);
-            $stmt->bindParam(':endData', $endDateFormatted, PDO::PARAM_STR);
+            $stmt->bindParam(':endDateExclusive', $endDateExclusive, PDO::PARAM_STR);
             $stmt->execute();
 
             return $stmt->fetchColumn();
@@ -442,6 +438,34 @@ function buscarConversas()
         {
             error_log("Erro ao contar vendas: " . $e->getMessage());
             return 0;
+        }
+    }
+
+    function buscarTotaisVendasPeriodoRelatorio($startData = null, $endData = null)
+    {
+        global $pdo;
+        $startDateFormatted = date('Y-m-d 00:00:00', strtotime($startData));
+        $endDateExclusive = date('Y-m-d 00:00:00', strtotime($endData . ' +1 day'));
+
+        $query = "
+            SELECT 
+                COALESCE(SUM(total), 0) as total_bruto,
+                COALESCE(SUM(total * (1 - COALESCE(desconto, 0) / 100.0)), 0) as total_liquido
+            FROM vendas 
+            WHERE data_venda >= :startData 
+            AND estornado = 'f'
+            AND data_venda < :endDateExclusive
+        ";
+        
+        try {
+            $stmt = $pdo->prepare($query);
+            $stmt->bindParam(':startData', $startDateFormatted, PDO::PARAM_STR);
+            $stmt->bindParam(':endDateExclusive', $endDateExclusive, PDO::PARAM_STR);
+            $stmt->execute();
+            return $stmt->fetch(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log("Erro ao buscar totais de vendas: " . $e->getMessage());
+            return ['total_bruto' => 0, 'total_liquido' => 0];
         }
     }
 
@@ -710,33 +734,54 @@ function buscarTabelaVendasRelatorio($tabela = '', $filtro = '', $valor = '', $l
     global $pdo;
 
     $query = "
-        SELECT
-            vnd.id,
-            vnd.total,
-            vnd.data_venda,
-            vnd.estornado,
-            u.username AS usuariovendedor,
-            STRING_AGG(tppgmt.nome, ', ' ORDER BY tppgmt.nome) AS tipos_pagamento
-        FROM
-            vendas vnd
-        JOIN usuarios u ON vnd.vendedor = u.ID
-        JOIN pagamentos_venda pgmtvnd ON vnd.ID = pgmtvnd.venda_id
-        JOIN tipopagamento tppgmt ON pgmtvnd.forma_pagamento_id = tppgmt.ID
+        WITH vendas_filtradas AS (
+            SELECT
+                vnd.id,
+                vnd.total,
+                vnd.desconto,
+                vnd.data_venda,
+                vnd.estornado,
+                vnd.vendedor
+            FROM vendas vnd
+            WHERE vnd.estornado = 'f'
     ";
 
-    $where = ["vnd.estornado = 'f'"];
+    $where = [];
     $params = [];
 
-    // Filtro de data somente se os parâmetros foram fornecidos
     if ($startData !== null && $endData !== null) {
-        $where[] = "vnd.data_venda BETWEEN :startData AND :endData";
-        $params[':startData'] = $startData;
-        $params[':endData'] = $endData . ' 23:59:59';
+        $query .= " AND vnd.data_venda >= :startData AND vnd.data_venda < :endDateExclusive";
+        $params[':startData'] = $startData . ' 00:00:00';
+        $params[':endDateExclusive'] = date('Y-m-d 00:00:00', strtotime($endData . ' +1 day'));
     }
+
+    $query .= "
+        )
+        SELECT
+            vf.id,
+            vf.total,
+            vf.desconto,
+            (vf.total * (1 - COALESCE(vf.desconto, 0) / 100.0)) AS total_liquido,
+            vf.data_venda,
+            vf.estornado,
+            u.username AS usuariovendedor,
+            COALESCE(pg.tipos_pagamento, 'Sem tipo') AS tipos_pagamento
+        FROM vendas_filtradas vf
+        JOIN usuarios u ON vf.vendedor = u.ID
+        LEFT JOIN (
+            SELECT
+                pgmtvnd.venda_id,
+                STRING_AGG(DISTINCT tppgmt.nome, ', ' ORDER BY tppgmt.nome) AS tipos_pagamento
+            FROM pagamentos_venda pgmtvnd
+            JOIN tipopagamento tppgmt ON pgmtvnd.forma_pagamento_id = tppgmt.ID
+            JOIN vendas_filtradas vf2 ON vf2.id = pgmtvnd.venda_id
+            GROUP BY pgmtvnd.venda_id
+        ) pg ON pg.venda_id = vf.id
+    ";
 
     // Filtros adicionais (se necessário)
     if (!empty($filtro) && !empty($valor)) {
-        $where[] = "$filtro = :valor";
+        $where[] = "vf.$filtro = :valor";
         $params[':valor'] = $valor;
     }
 
@@ -744,11 +789,8 @@ function buscarTabelaVendasRelatorio($tabela = '', $filtro = '', $valor = '', $l
         $query .= " WHERE " . implode(" AND ", $where);
     }
 
-    // GROUP BY com todas as colunas não agregadas
-    $query .= " GROUP BY vnd.id, vnd.total, vnd.data_venda, vnd.estornado, u.username";
-
     // Ordenação por data (mais útil para relatórios)
-    $query .= " ORDER BY vnd.data_venda " . ($orderby === 'ASC' ? 'ASC' : 'DESC');
+    $query .= " ORDER BY vf.data_venda " . ($orderby === 'ASC' ? 'ASC' : 'DESC');
 
     // Paginação
     if ($limite > 0) {
