@@ -158,7 +158,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Evento: Limpar carrinho
     if (clearCartBtn) {
         clearCartBtn.addEventListener('click', function() {
-            if (cart.length > 0 && confirm('Deseja realmente limpar o carrinho?')) {
+            if (cart.length > 0) {
                 cart = [];
                 updateCart();
                 showToast('Carrinho limpo');
