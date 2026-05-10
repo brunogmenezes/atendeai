@@ -5,99 +5,265 @@ require_once 'auth.php';
 verificarSessao();
 ?>
 <style>
-    .report-card {
-        cursor: pointer;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        height: 100%;
-        border: 2px solid transparent;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    :root {
+        --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        --success-gradient: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        --info-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        --glass-bg: rgba(255, 255, 255, 0.95);
+    }
+
+    .report-container {
+        padding: 20px 0;
+    }
+
+    .section-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 30px;
+        padding: 20px;
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+    }
+
+    .section-header i {
+        width: 50px;
+        height: 50px;
+        background: var(--primary-gradient);
         color: white;
-        padding: 30px 20px;
         border-radius: 12px;
-        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
-        text-decoration: none;
-        display: block;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        margin-right: 20px;
+        box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
     }
-    .report-card:hover {
-        transform: translateY(-8px);
-        box-shadow: 0 12px 30px rgba(102, 126, 234, 0.4);
-        border-color: rgba(255, 255, 255, 0.3);
-    }
-    .report-card.secondary {
-        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-        box-shadow: 0 4px 15px rgba(245, 87, 108, 0.2);
-    }
-    .report-card.secondary:hover {
-        box-shadow: 0 12px 30px rgba(245, 87, 108, 0.4);
-    }
-    .report-icon {
-        font-size: 3rem;
-        margin-bottom: 15px;
-        display: inline-block;
-    }
-    .report-card h4 {
-        font-weight: 700;
-        margin: 15px 0 8px;
-        font-size: 1.1rem;
-    }
-    .report-card p {
-        font-size: 0.9rem;
-        opacity: 0.9;
+
+    .section-header h2 {
         margin: 0;
-    }
-    .section-title {
         font-size: 1.5rem;
         font-weight: 700;
         color: #2c3e50;
-        margin-bottom: 25px;
-        margin-top: 30px;
-        padding-left: 10px;
-        border-left: 4px solid #667eea;
     }
-    .period-btn.active {
-        background-color: #667eea;
+
+    .report-card {
+        cursor: pointer;
+        transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+        height: 100%;
+        border: none;
+        background: white;
+        padding: 40px 25px;
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        text-decoration: none !important;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        position: relative;
+        overflow: hidden;
+        z-index: 1;
+    }
+
+    .report-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: var(--primary-gradient);
+        opacity: 0;
+        transition: opacity 0.4s ease;
+        z-index: -1;
+    }
+
+    .report-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 20px 40px rgba(102, 126, 234, 0.15);
+    }
+
+    .report-card:hover::before {
+        opacity: 1;
+    }
+
+    .report-card:hover .report-icon,
+    .report-card:hover h4,
+    .report-card:hover p {
+        color: white !important;
+    }
+
+    .report-card.secondary::before {
+        background: var(--secondary-gradient);
+    }
+    
+    .report-card.secondary:hover {
+        box-shadow: 0 20px 40px rgba(245, 87, 108, 0.15);
+    }
+
+    .report-icon {
+        font-size: 3.5rem;
+        margin-bottom: 20px;
+        transition: transform 0.4s ease;
+        background: #f8f9fa;
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: inset 0 0 10px rgba(0,0,0,0.02);
+    }
+
+    .report-card:hover .report-icon {
+        transform: scale(1.1) rotate(5deg);
+        background: rgba(255, 255, 255, 0.2);
+    }
+
+    .report-card h4 {
+        font-weight: 700;
+        margin-bottom: 10px;
+        color: #2c3e50;
+        font-size: 1.25rem;
+        transition: color 0.3s ease;
+    }
+
+    .report-card p {
+        font-size: 0.95rem;
+        color: #7f8c8d;
+        margin: 0;
+        text-align: center;
+        transition: color 0.3s ease;
+    }
+
+    .report-badge {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        padding: 5px 12px;
+        background: rgba(102, 126, 234, 0.1);
+        color: #667eea;
+        border-radius: 20px;
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .report-card:hover .report-badge {
+        background: rgba(255, 255, 255, 0.2);
         color: white;
-        border-color: #667eea;
     }
+
+    .modal-content {
+        border-radius: 25px;
+        border: none;
+        overflow: hidden;
+        box-shadow: 0 25px 50px rgba(0,0,0,0.2);
+    }
+
     .modal-header {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
+        background: var(--primary-gradient);
+        padding: 30px;
+        border: none;
     }
-    .modal-header .btn-close {
-        filter: brightness(0) invert(1);
+
+    .modal-title {
+        font-weight: 800;
+        letter-spacing: -0.5px;
+    }
+
+    .modal-body {
+        padding: 40px;
+    }
+
+    .form-control {
+        border-radius: 12px;
+        padding: 12px 15px;
+        border: 2px solid #eee;
+        transition: all 0.3s ease;
+    }
+
+    .form-control:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+    }
+
+    .period-btn {
+        border-radius: 12px;
+        padding: 10px;
+        font-weight: 600;
+        border: 2px solid #eee;
+        transition: all 0.3s ease;
+    }
+
+    .period-btn:hover {
+        background: #f8f9fa;
+        border-color: #667eea;
+        color: #667eea;
+    }
+
+    .period-btn.active {
+        background: var(--primary-gradient) !important;
+        border-color: transparent !important;
+        color: white !important;
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+    }
+
+    .btn-primary {
+        background: var(--primary-gradient);
+        border: none;
+        border-radius: 12px;
+        padding: 12px 30px;
+        font-weight: 700;
+        box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        transition: all 0.3s ease;
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 15px 25px rgba(102, 126, 234, 0.4);
     }
 </style>
-<div class="col-md-12">
-    <div class="card">
-        <div class="card-header">
-            <h4 class="card-title mb-0">
-                <i class="fas fa-chart-bar me-2"></i>Relatórios
-            </h4>
-        </div>
+<div class="report-container">
+    <div class="section-header">
+        <i class="fas fa-hand-holding-usd"></i>
+        <h2>Gestão Financeira</h2>
     </div>
 
-    <div class="row mt-4">
+    <div class="row">
         <div class="col-12 col-sm-6 col-lg-4 mb-4">
             <div class="report-card" data-bs-toggle="modal" data-bs-target="#periodModal" data-report="Vendas no Periodo">
-                <div class="text-center">
-                    <div class="report-icon">💰</div>
-                    <h4>Vendas por Período</h4>
-                    <p>Análise completa de vendas</p>
-                </div>
+                <span class="report-badge">Financeiro</span>
+                <div class="report-icon">💰</div>
+                <h4>Vendas por Período</h4>
+                <p>Análise detalhada de faturamento, tickets e pagamentos.</p>
+            </div>
+        </div>
+        
+        <div class="col-12 col-sm-6 col-lg-4 mb-4">
+            <div class="report-card" data-bs-toggle="modal" data-bs-target="#periodModal" data-report="Fluxo de Caixa" style="border-left: 5px solid #4facfe;">
+                <span class="report-badge">Financeiro</span>
+                <div class="report-icon">📊</div>
+                <h4>Fluxo de Caixa</h4>
+                <p>Análise diária de entradas, saídas e saldo líquido.</p>
             </div>
         </div>
     </div>
 
-    <h2 class="section-title"><i class="fas fa-tasks me-2"></i>Relatórios Operacionais</h2>
+    <div class="section-header mt-4">
+        <i class="fas fa-boxes"></i>
+        <h2>Controle Operacional</h2>
+    </div>
     
     <div class="row">
         <div class="col-12 col-sm-6 col-lg-4 mb-4">
             <a href="relatorios.php?tipo=estoque" target="_blank" class="report-card secondary">
-                <div class="text-center">
-                    <div class="report-icon">📦</div>
-                    <h4>Estoque de Produtos</h4>
-                    <p>Movimentação e controle</p>
-                </div>
+                <span class="report-badge">Logística</span>
+                <div class="report-icon">📦</div>
+                <h4>Estoque Atual</h4>
+                <p>Posição consolidada, custos e lucro potencial do estoque.</p>
             </a>
         </div>
     </div>
@@ -211,7 +377,8 @@ verificarSessao();
             
             // Mapeamento dos tipos de relatório
             const reportMapping = {
-                'Vendas no Periodo': 'financeiro-mensal'
+                'Vendas no Periodo': 'financeiro-mensal',
+                'Fluxo de Caixa': 'fluxo-caixa'
             };
             
             const reportType = reportMapping[reportName] || 'default';

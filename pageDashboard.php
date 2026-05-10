@@ -25,7 +25,7 @@ function fetchDashboardData($pdo)
         AND data_venda >= :inicio_mes 
         AND data_venda < :inicio_mes_seguinte) AS total_vendas,
 
-        (SELECT SUM(total) 
+                (SELECT SUM(total * (1 - COALESCE(desconto, 0) / 100.0)) 
          FROM vendas 
          WHERE estornado = 'f' 
            AND data_venda >= :inicio_mes 
@@ -415,10 +415,22 @@ if($user['isAdmin']==true)
             <div class="col-lg-12">
                 <div class="card card-round">
                     <div class="card-header">
-                        <h5 class="card-title">
-                            <i class="fas fa-chart-line me-2 text-info"></i>Fluxo de Caixa Anual - Entradas/Saídas/Saldo
-                        </h5>
-                        <p class="text-muted small">Acompanhe as tendências financeiras ao longo do ano</p>
+                        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+                            <div>
+                                <h5 class="card-title mb-1">
+                                    <i class="fas fa-chart-line me-2 text-info"></i>Fluxo de Caixa Anual - Entradas/Saídas/Saldo
+                                </h5>
+                                <p class="text-muted small mb-0">Acompanhe as tendências financeiras por ano e compare períodos</p>
+                            </div>
+                            <div class="cashflow-year-picker">
+                                <label for="cashflow-year-select" class="form-label mb-1">Ano(s)</label>
+                                <div class="cashflow-select-shell">
+                                    <i class="fas fa-calendar-alt"></i>
+                                    <select id="cashflow-year-select" class="form-select form-select-sm" multiple></select>
+                                </div>
+                                <small id="cashflow-year-helper" class="cashflow-year-helper">Selecione um ou mais anos para comparar</small>
+                            </div>
+                        </div>
                     </div>
                     <div class="card-body">
                         <div class="chart-container" style="position: relative; height: 400px;">
@@ -441,6 +453,86 @@ else
 <?php
 }
 ?>
+
+        <style>
+            .cashflow-year-picker {
+                min-width: 300px;
+                max-width: 360px;
+            }
+
+            .cashflow-year-picker .form-label {
+                font-size: 0.78rem;
+                font-weight: 700;
+                letter-spacing: 0.03em;
+                color: #4a5b72;
+                text-transform: uppercase;
+                margin-bottom: 0.35rem;
+            }
+
+            .cashflow-select-shell {
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+                padding: 0.45rem 0.65rem;
+                border-radius: 12px;
+                border: 1px solid #d6e0ef;
+                background: linear-gradient(135deg, #f8fbff 0%, #eef4fb 100%);
+                box-shadow: 0 8px 22px rgba(23, 125, 255, 0.08);
+                transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+            }
+
+            .cashflow-select-shell:focus-within {
+                border-color: #177dff;
+                box-shadow: 0 10px 24px rgba(23, 125, 255, 0.18);
+                transform: translateY(-1px);
+            }
+
+            .cashflow-select-shell i {
+                color: #177dff;
+                font-size: 0.9rem;
+                opacity: 0.9;
+            }
+
+            #cashflow-year-select {
+                border: 0;
+                background: transparent;
+                min-height: 68px;
+                font-size: 0.92rem;
+                font-weight: 600;
+                color: #2f3c52;
+                box-shadow: none !important;
+                padding: 0.1rem 0.25rem;
+            }
+
+            #cashflow-year-select option {
+                padding: 6px 8px;
+                border-radius: 6px;
+            }
+
+            #cashflow-year-select option:checked {
+                background: linear-gradient(135deg, #177dff 0%, #36a3ff 100%);
+                color: #ffffff;
+            }
+
+            .cashflow-year-helper {
+                display: block;
+                margin-top: 0.4rem;
+                color: #5b6f8a;
+                font-size: 0.76rem;
+                font-weight: 500;
+            }
+
+            @media (max-width: 768px) {
+                .cashflow-year-picker {
+                    min-width: 100%;
+                    max-width: 100%;
+                }
+
+                #cashflow-year-select {
+                    min-height: 62px;
+                }
+            }
+        </style>
 
         <script>
             document.addEventListener('DOMContentLoaded', function()
@@ -657,121 +749,230 @@ else
             });
 
             document.addEventListener("DOMContentLoaded", function () {
-                var ctx = document.getElementById('statisticsChart').getContext('2d');
+                const monthsLabels = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+                const yearSelect = document.getElementById('cashflow-year-select');
+                const yearHelper = document.getElementById('cashflow-year-helper');
+                const legendContainer = document.getElementById('myChartLegend');
+                const ctx = document.getElementById('statisticsChart').getContext('2d');
+                let statisticsChart = null;
 
-                fetch('endpoint.php')
-                    .then(response => response.json())
-                    .then(data => {
-                        var statisticsChart = new Chart(ctx, {
-                            type: 'line',
-                            data: {
-                                labels: ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"],
-                                datasets: [
-                                    {
-                                        label: "Saídas",
-                                        borderColor: '#f3545d',
-                                        pointBackgroundColor: 'rgba(243, 84, 93, 1)',
-                                        pointBorderColor: '#fff',
-                                        pointRadius: 4,
-                                        pointHoverRadius: 6,
-                                        backgroundColor: 'rgba(243, 84, 93, 0.2)',
-                                        fill: true,
-                                        borderWidth: 2,
-                                        tension: 0.4,
-                                        data: data.saidas
-                                    }, 
-                                    {
-                                        label: "Entradas",
-                                        borderColor: '#fdaf4b',
-                                        pointBackgroundColor: 'rgba(253, 175, 75, 1)',
-                                        pointBorderColor: '#fff',
-                                        pointRadius: 4,
-                                        pointHoverRadius: 6,
-                                        backgroundColor: 'rgba(253, 175, 75, 0.2)',
-                                        fill: true,
-                                        borderWidth: 2,
-                                        tension: 0.4,
-                                        data: data.entradas
-                                    },
-                                    {
-                                        label: "Saldo Acumulado",
-                                        borderColor: '#177dff',
-                                        pointBackgroundColor: 'rgba(23, 125, 255, 1)',
-                                        pointBorderColor: '#fff',
-                                        pointRadius: 4,
-                                        pointHoverRadius: 6,
-                                        backgroundColor: 'transparent',
-                                        fill: false,
-                                        borderWidth: 3,
-                                        borderDash: [5, 5],
-                                        tension: 0.4,
-                                        data: data.saldoAcumulado,
-                                        yAxisID: 'y-axis-saldo'
-                                    }
-                                ]
-                            },
-                            options: {
-                                responsive: true,
-                                maintainAspectRatio: false,
-                                plugins: {
-                                    legend: {
-                                        display: false
-                                    },
-                                    tooltip: {
-                                        mode: 'index',
-                                        intersect: false,
-                                        backgroundColor: 'rgba(0,0,0,0.8)',
-                                        padding: 10,
-                                        titleFont: { size: 12 },
-                                        bodyFont: { size: 12 }
-                                    }
+                const entradaColors = ['#fdaf4b', '#f8961e', '#f9844a', '#f9c74f', '#f6bd60'];
+                const saidaColors = ['#f3545d', '#d90429', '#ef476f', '#ff6b6b', '#c1121f'];
+                const saldoColors = ['#177dff', '#4361ee', '#3a0ca3', '#00b4d8', '#0077b6'];
+
+                function rgbaFromHex(hexColor, alpha) {
+                    const hex = hexColor.replace('#', '');
+                    const bigint = parseInt(hex, 16);
+                    const r = (bigint >> 16) & 255;
+                    const g = (bigint >> 8) & 255;
+                    const b = bigint & 255;
+                    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+                }
+
+                function renderLegend(chart) {
+                    if (!legendContainer || !chart || !chart.legend) {
+                        return;
+                    }
+
+                    const items = chart.legend.legendItems || [];
+                    let legendHtml = '<ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 10px 16px;">';
+                    items.forEach(item => {
+                        const color = item.strokeStyle || item.fillStyle || '#999';
+                        legendHtml += `<li style="display:flex; align-items:center;"><span style="display:inline-block; width:12px; height:12px; background:${color}; border-radius:2px; margin-right:8px;"></span>${item.text}</li>`;
+                    });
+                    legendHtml += '</ul>';
+                    legendContainer.innerHTML = legendHtml;
+                }
+
+                function buildDatasets(series) {
+                    const datasets = [];
+
+                    series.forEach((item, index) => {
+                        const entradaColor = entradaColors[index % entradaColors.length];
+                        const saidaColor = saidaColors[index % saidaColors.length];
+                        const saldoColor = saldoColors[index % saldoColors.length];
+                        const ano = item.ano;
+
+                        datasets.push({
+                            label: `Entradas ${ano}`,
+                            borderColor: entradaColor,
+                            pointBackgroundColor: entradaColor,
+                            pointBorderColor: '#fff',
+                            pointRadius: 3,
+                            pointHoverRadius: 5,
+                            backgroundColor: rgbaFromHex(entradaColor, 0.12),
+                            fill: false,
+                            borderWidth: 2,
+                            tension: 0.35,
+                            data: item.entradas
+                        });
+
+                        datasets.push({
+                            label: `Saídas ${ano}`,
+                            borderColor: saidaColor,
+                            pointBackgroundColor: saidaColor,
+                            pointBorderColor: '#fff',
+                            pointRadius: 3,
+                            pointHoverRadius: 5,
+                            backgroundColor: rgbaFromHex(saidaColor, 0.12),
+                            fill: false,
+                            borderWidth: 2,
+                            tension: 0.35,
+                            data: item.saidas
+                        });
+
+                        datasets.push({
+                            label: `Saldo ${ano}`,
+                            borderColor: saldoColor,
+                            pointBackgroundColor: saldoColor,
+                            pointBorderColor: '#fff',
+                            pointRadius: 2,
+                            pointHoverRadius: 4,
+                            backgroundColor: 'transparent',
+                            fill: false,
+                            borderWidth: 2,
+                            borderDash: [6, 4],
+                            tension: 0.35,
+                            data: item.saldoAcumulado,
+                            yAxisID: 'y-axis-saldo'
+                        });
+                    });
+
+                    return datasets;
+                }
+
+                function renderChart(payload) {
+                    const datasets = buildDatasets(payload.series || []);
+
+                    if (statisticsChart) {
+                        statisticsChart.destroy();
+                    }
+
+                    statisticsChart = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: monthsLabels,
+                            datasets: datasets
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    display: false
                                 },
-                                scales: {
-                                    y: {
-                                        position: 'left',
-                                        ticks: {
-                                            font: { size: 11 },
-                                            callback: function(value) {
-                                                return 'R$ ' + value.toLocaleString('pt-BR');
-                                            }
-                                        },
-                                        grid: {
-                                            color: 'rgba(0,0,0,0.05)'
-                                        }
-                                    },
-                                    'y-axis-saldo': {
-                                        position: 'right',
-                                        ticks: {
-                                            font: { size: 11 },
-                                            callback: function(value) {
-                                                return 'R$ ' + value.toLocaleString('pt-BR');
-                                            }
-                                        },
-                                        grid: {
-                                            drawOnChartArea: false
-                                        }
-                                    },
-                                    x: {
-                                        grid: {
-                                            display: false
+                                tooltip: {
+                                    mode: 'index',
+                                    intersect: false,
+                                    backgroundColor: 'rgba(0,0,0,0.8)',
+                                    padding: 10,
+                                    titleFont: { size: 12 },
+                                    bodyFont: { size: 12 },
+                                    callbacks: {
+                                        label: function(context) {
+                                            return `${context.dataset.label}: R$ ${Number(context.parsed.y).toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
                                         }
                                     }
                                 }
+                            },
+                            scales: {
+                                y: {
+                                    position: 'left',
+                                    ticks: {
+                                        font: { size: 11 },
+                                        callback: function(value) {
+                                            return 'R$ ' + Number(value).toLocaleString('pt-BR');
+                                        }
+                                    },
+                                    grid: {
+                                        color: 'rgba(0,0,0,0.05)'
+                                    }
+                                },
+                                'y-axis-saldo': {
+                                    position: 'right',
+                                    ticks: {
+                                        font: { size: 11 },
+                                        callback: function(value) {
+                                            return 'R$ ' + Number(value).toLocaleString('pt-BR');
+                                        }
+                                    },
+                                    grid: {
+                                        drawOnChartArea: false
+                                    }
+                                },
+                                x: {
+                                    grid: {
+                                        display: false
+                                    }
+                                }
                             }
+                        }
+                    });
+
+                    renderLegend(statisticsChart);
+                }
+
+                function getSelectedYears() {
+                    return Array.from(yearSelect.selectedOptions).map(option => option.value).filter(Boolean);
+                }
+
+                function updateYearHelper(selectedYears) {
+                    if (!yearHelper) {
+                        return;
+                    }
+
+                    if (!selectedYears || selectedYears.length === 0) {
+                        yearHelper.textContent = 'Selecione um ou mais anos para comparar';
+                        return;
+                    }
+
+                    if (selectedYears.length === 1) {
+                        yearHelper.textContent = `Ano selecionado: ${selectedYears[0]}`;
+                        return;
+                    }
+
+                    yearHelper.textContent = `${selectedYears.length} anos selecionados: ${selectedYears.join(', ')}`;
+                }
+
+                function loadChartBySelectedYears() {
+                    const years = getSelectedYears();
+                    updateYearHelper(years);
+                    const query = years.length ? `?years=${encodeURIComponent(years.join(','))}` : '';
+
+                    fetch(`endpoint.php${query}`)
+                        .then(response => response.json())
+                        .then(payload => {
+                            renderChart(payload);
+                        })
+                        .catch(error => console.error('Erro ao carregar os dados:', error));
+                }
+
+                fetch('endpoint.php')
+                    .then(response => response.json())
+                    .then(payload => {
+                        const anos = payload.yearsAvailable || [];
+                        const selecionados = new Set((payload.selectedYears || []).map(String));
+
+                        yearSelect.innerHTML = '';
+                        anos.forEach(ano => {
+                            const option = document.createElement('option');
+                            option.value = String(ano);
+                            option.textContent = String(ano);
+                            option.selected = selecionados.has(String(ano));
+                            yearSelect.appendChild(option);
                         });
 
-                        // Gera a legenda manualmente (Chart.js v3+ não tem generateLegend())
-                        const legendContainer = document.getElementById('myChartLegend');
-                        if (legendContainer && statisticsChart.options.plugins.legend) {
-                            const items = statisticsChart.legend.legendItems;
-                            let legendHtml = '<ul style="list-style: none; padding: 0;">';
-                            items.forEach(item => {
-                                legendHtml += `<li style="margin: 5px 0;"><span style="display: inline-block; width: 12px; height: 12px; background-color: ${item.fillStyle}; margin-right: 8px;"></span>${item.text}</li>`;
-                            });
-                            legendHtml += '</ul>';
-                            legendContainer.innerHTML = legendHtml;
-                        }
+                        updateYearHelper(Array.from(selecionados));
+                        renderChart(payload);
                     })
-                    .catch(error => console.error('Erro ao carregar os dados:', error));
+                    .catch(error => console.error('Erro ao carregar anos do fluxo de caixa:', error));
+
+                yearSelect.addEventListener('change', function() {
+                    if (yearSelect.selectedOptions.length === 0 && yearSelect.options.length > 0) {
+                        yearSelect.options[0].selected = true;
+                    }
+                    updateYearHelper(getSelectedYears());
+                    loadChartBySelectedYears();
+                });
             });
         </script>

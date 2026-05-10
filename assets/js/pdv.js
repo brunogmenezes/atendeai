@@ -270,6 +270,22 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             updateRemainingAmount();
         });
+
+        // Garantir fechamento do modal (Bootstrap 4 ou 5)
+        const closeButtons = document.querySelectorAll('#finalizarVenda [data-dismiss="modal"], #finalizarVenda [data-bs-dismiss="modal"], #finalizarVenda .close');
+        closeButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                if (window.bootstrap && bootstrap.Modal) {
+                    const instance = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+                    instance.hide();
+                } else if (window.$) {
+                    $('#finalizarVenda').modal('hide');
+                } else {
+                    modalEl.classList.remove('show');
+                    modalEl.setAttribute('aria-hidden', 'true');
+                }
+            });
+        });
     }
 
     // Evento: Atualizar valor restante quando input muda
