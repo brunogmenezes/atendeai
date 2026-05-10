@@ -223,18 +223,6 @@ verificarSessao();
 </div>
 
 <script>
-    // Abrir o modal e definir o ID do produto
-    document.addEventListener('DOMContentLoaded', function () {
-        const deleteButtons = document.querySelectorAll('.open-delete-modal');
-        const productIdInput = document.getElementById('productIdToDelete');
-
-        deleteButtons.forEach(button => {
-            button.addEventListener('click', function () {
-                const productId = this.getAttribute('data-imagem');
-                productIdInput.value = productId; // Definir o ID no campo oculto
-            });
-        });
-    });
 
     document.addEventListener('DOMContentLoaded', function () {
         // Script para exclusão

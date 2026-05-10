@@ -8,9 +8,9 @@ verificarSessao();
 <div class="col-md-12">
 	<div class="card">
 		<div class="card-header">
-			<div class="d-flex align-items-center">
-				<h4 class="card-title">Listar Produtos</h4>
-				<button class="btn btn-primary btn-round ms-auto" data-bs-toggle="modal" data-bs-target="#addRowModal">
+			<div class="d-flex flex-column flex-sm-row align-items-center">
+				<h4 class="card-title mb-2 mb-sm-0">Listar Produtos</h4>
+				<button class="btn btn-primary btn-round ms-sm-auto w-100 w-sm-auto" data-bs-toggle="modal" data-bs-target="#addRowModal">
 					<i class="fa fa-plus"></i>
 					Cadastrar Produto
 				</button>
@@ -18,14 +18,14 @@ verificarSessao();
 		</div>
 		<div class="card-body">
 			<div class="table-responsive">
-				<table id="add-row" class="display table table-striped table-hover">
+				<table id="add-row" class="display table table-striped table-hover table-mobile-cards">
 					<thead>
 						<tr>
-							<th>ID</th>
+							<th class="d-none d-md-table-cell">ID</th>
 							<th>Nome</th>
                             <th>QNT Estoque</th>
-                            <th>QNT Estoque Crítico</th>
-                            <th>Preço de Custo</th>
+                            <th class="d-none d-lg-table-cell">QNT Estoque Crítico</th>
+                            <th class="d-none d-md-table-cell">Preço de Custo</th>
                             <th>Preço de Venda</th>
                             <th style="width: 10%">Ação</th>
 						</tr>
@@ -49,21 +49,21 @@ verificarSessao();
                     			{
                     	?>
 									<tr>
-										<td><?=$produto['id'];?><div></td>
-										<td><?=$produto['nome'];?></td>
-										<td><?=$produto['quantidade'];?></td>
-										<td><?=$produto['quantidade_critico'];?></td>
-										<td>R$ <?=number_format($produto['preco_custo'], 2, ',', '.');?></td>
-										<td>R$ <?=number_format($produto['preco_venda'], 2, ',', '.');?></td>
-										<td>
+										<td class="d-none d-md-table-cell" data-label="ID"><?=$produto['id'];?></td>
+										<td data-label="Nome"><?=$produto['nome'];?></td>
+										<td data-label="Estoque"><?=$produto['quantidade'];?></td>
+										<td class="d-none d-lg-table-cell" data-label="Crítico"><?=$produto['quantidade_critico'];?></td>
+										<td class="d-none d-md-table-cell" data-label="Custo">R$ <?=number_format($produto['preco_custo'], 2, ',', '.');?></td>
+										<td data-label="Venda">R$ <?=number_format($produto['preco_venda'], 2, ',', '.');?></td>
+										<td data-label="Ação">
 											<div class="form-button-action">
-												<button type="button" class="btn btn-link btn-primary open-verFoto-modal" data-imagem="<?=$produto['imagem'];?>" data-bs-toggle="modal" data-bs-target="#verFotoProductModal">
+												<button type="button" class="btn btn-link btn-primary open-verFoto-modal" data-imagem="<?=$produto['imagem'];?>" data-bs-toggle="modal" data-bs-target="#verFotoProductModal" title="Ver Foto">
 													<i class="fa fa-camera"></i>
 												</button>
-												<button type="button" class="btn btn-link btn-primary open-edit-modal" data-id="<?=$produto['id'];?>" data-nome="<?=$produto['nome'];?>" data-descricao="<?=$produto['descricao'];?>" data-preco_custo="<?=$produto['preco_custo'];?>" data-preco_venda="<?=$produto['preco_venda'];?>" data-quantidade="<?=$produto['quantidade'];?>" data-quantidade_critico="<?=$produto['quantidade_critico'];?>" data-bs-toggle="modal" data-bs-target="#editProductModal">
+												<button type="button" class="btn btn-link btn-primary open-edit-modal" data-id="<?=$produto['id'];?>" data-nome="<?=$produto['nome'];?>" data-descricao="<?=$produto['descricao'];?>" data-preco_custo="<?=$produto['preco_custo'];?>" data-preco_venda="<?=$produto['preco_venda'];?>" data-quantidade="<?=$produto['quantidade'];?>" data-quantidade_critico="<?=$produto['quantidade_critico'];?>" data-bs-toggle="modal" data-bs-target="#editProductModal" title="Editar">
 													<i class="fa fa-edit"></i>
 												</button>
-												<button type="button" class="btn btn-link btn-danger open-delete-modal" data-id="<?=$produto['id'];?>" data-bs-toggle="modal" data-bs-target="#confirmDeleteModal">
+												<button type="button" class="btn btn-link btn-danger open-delete-modal" data-id="<?=$produto['id'];?>" data-bs-toggle="modal" data-bs-target="#confirmDeleteModal" title="Excluir">
 													<i class="fa fa-times"></i>
 												</button>
 											</div>
@@ -76,19 +76,15 @@ verificarSessao();
 					</tbody>
 				</table>
 			</div>
-			<div class="col-md-12">
-				<div class="card">
-					<div class="card-body">
-						<div class="demo">
-							<ul class="pagination pg-primary">
-                        		<?php for ($i = 1; $i <= $totalPaginas; $i++): ?>
-                        			<li class="page-item <?php echo ($pagina == $i) ? 'active' : ''; ?>">
-                          				<a class="page-link" href="?page=<?php echo htmlspecialchars($_GET['page'] ?? ''); ?>&pagina=<?php echo $i; ?>&filtro=<?php echo urlencode($filtro); ?>&valor=<?php echo urlencode($valor); ?>"><?php echo $i; ?></a>
-                        			</li>
-                        		<?php endfor; ?>
-							</ul>
-						</div>
-					</div>
+			<div class="col-md-12 mt-3">
+				<div class="demo d-flex justify-content-center">
+					<ul class="pagination pg-primary">
+						<?php for ($i = 1; $i <= $totalPaginas; $i++): ?>
+							<li class="page-item <?php echo ($pagina == $i) ? 'active' : ''; ?>">
+								<a class="page-link" href="?page=<?php echo htmlspecialchars($_GET['page'] ?? ''); ?>&pagina=<?php echo $i; ?>&filtro=<?php echo urlencode($filtro); ?>&valor=<?php echo urlencode($valor); ?>"><?php echo $i; ?></a>
+							</li>
+						<?php endfor; ?>
+					</ul>
 				</div>
 			</div>
 		</div>
@@ -321,18 +317,6 @@ document.addEventListener('DOMContentLoaded', toggleComboFields);
         }
     });
 
-    // Abrir o modal e definir o ID do produto
-    document.addEventListener('DOMContentLoaded', function () {
-        const deleteButtons = document.querySelectorAll('.open-delete-modal');
-        const productIdInput = document.getElementById('productIdToDelete');
-
-        deleteButtons.forEach(button => {
-            button.addEventListener('click', function () {
-                const productId = this.getAttribute('data-imagem');
-                productIdInput.value = productId; // Definir o ID no campo oculto
-            });
-        });
-    });
 </script>
 <script>
     document.addEventListener('DOMContentLoaded', function () {

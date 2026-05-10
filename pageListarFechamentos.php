@@ -21,9 +21,9 @@
 <div class="col-md-12">
 	<div class="card">
 		<div class="card-header">
-            <div class="d-flex align-items-center">
-                <h4 class="card-title">Listar Fechamentos de caixa</h4>
-                <button class="btn btn-primary btn-round ms-auto" data-bs-toggle="modal" data-bs-target="#addRowModal">
+            <div class="d-flex flex-column flex-sm-row align-items-center">
+                <h4 class="card-title mb-2 mb-sm-0">Listar Fechamentos de caixa</h4>
+                <button class="btn btn-primary btn-round ms-sm-auto w-100 w-sm-auto" data-bs-toggle="modal" data-bs-target="#addRowModal">
                     <i class="fa fa-plus"></i>
                     Cadastrar Fechamento
                 </button>
@@ -31,13 +31,13 @@
         </div>
 		<div class="card-body">
 			<div class="table-responsive">
-				<table id="add-row" class="display table table-striped table-hover">
+				<table id="add-row" class="display table table-striped table-hover table-mobile-cards">
 					<thead>
 						<tr>
 							<th style="width: 5%">ID</th>
 							<th>Usuário</th>
-                            <th style="width: 15%">Entradas</th>
-                            <th style="width: 15%">Saídas</th>
+                             <th class="d-none d-md-table-cell" style="width: 15%">Entradas</th>
+                            <th class="d-none d-md-table-cell" style="width: 15%">Saídas</th>
                             <th style="width: 15%">Saldo Total</th>
                             <th style="width: 15%">Data Fechamento</th>
                             <th style="width: 10%">Ações</th>
@@ -59,14 +59,14 @@
                     			{
                     	?>
 									<tr>
-										<td>#<?=$fechamento['id'];?></td>
-										<td><?=$fechamento['usuario'];?></td>
-										<td>R$ <?=number_format($fechamento['entrada'], 2, ',', '.');?></td>
-										<td>R$ <?=number_format($fechamento['saida'], 2, ',', '.');?></td>
-										<td>R$ <?=number_format($fechamento['saldo_total'], 2, ',', '.');?></td>
-                                        <td><?= date('d/m/Y', strtotime($fechamento['dia_fechamento'])) ?></td>
-                                        <td>
-                                            <button type="button" class="btn btn-info btn-sm" 
+										<td data-label="ID">#<?=$fechamento['id'];?></td>
+										<td data-label="Usuário"><?=$fechamento['usuario'];?></td>
+										<td class="d-none d-md-table-cell" data-label="Entradas">R$ <?=number_format($fechamento['entrada'], 2, ',', '.');?></td>
+										<td class="d-none d-md-table-cell" data-label="Saídas">R$ <?=number_format($fechamento['saida'], 2, ',', '.');?></td>
+										<td data-label="Saldo Total">R$ <?=number_format($fechamento['saldo_total'], 2, ',', '.');?></td>
+                                        <td data-label="Data"><?= date('d/m/Y', strtotime($fechamento['dia_fechamento'])) ?></td>
+                                        <td data-label="Ação">
+                                            <button type="button" class="btn btn-info btn-sm w-100" 
                                                     onclick="visualizarDetalhes(<?=$fechamento['id'];?>)">
                                                 <i class="fa fa-eye"></i> Detalhes
                                             </button>
@@ -85,58 +85,40 @@
 			</div>
             
             <!-- Paginação -->
-            <div class="col-md-12">
-                <div class="card">
-                    <div class="card-body">
-                        <div class="demo">
-                            <ul class="pagination pg-primary">
-                                <?php if ($totalPaginas > 1): ?>
-                                <!-- Link para primeira página -->
-                                <li class="page-item <?= ($pagina == 1) ? 'disabled' : '' ?>">
-                                    <a class="page-link" href="?page=ListarFechamentos&pagina=1">
-                                        &laquo;
-                                    </a>
-                                </li>
-                        
-                                <!-- Link para página anterior -->
-                                <li class="page-item <?= ($pagina == 1) ? 'disabled' : '' ?>">
-                                    <a class="page-link" href="?page=ListarFechamentos&pagina=<?= max(1, $pagina - 1) ?>">
-                                        &lsaquo;
-                                    </a>
-                                </li>
-                        
-                                <?php 
-                                $paginas_visiveis = 5;
-                                $inicio = max(1, $pagina - floor($paginas_visiveis/2));
-                                $fim = min($totalPaginas, $inicio + $paginas_visiveis - 1);
-                                $inicio = max(1, $fim - $paginas_visiveis + 1);
-                        
-                                for ($i = $inicio; $i <= $fim; $i++): 
-                                ?>
-                                    <li class="page-item <?= ($pagina == $i) ? 'active' : '' ?>">
-                                        <a class="page-link" href="?page=ListarFechamentos&pagina=<?= $i ?>">
-                                            <?= $i ?>
-                                        </a>
-                                    </li>
-                                <?php endfor; ?>
-                        
-                                <!-- Link para próxima página -->
-                                <li class="page-item <?= ($pagina == $totalPaginas) ? 'disabled' : '' ?>">
-                                    <a class="page-link" href="?page=ListarFechamentos&pagina=<?= min($totalPaginas, $pagina + 1) ?>">
-                                        &rsaquo;
-                                    </a>
-                                </li>
-                        
-                                <!-- Link para última página -->
-                                <li class="page-item <?= ($pagina == $totalPaginas) ? 'disabled' : '' ?>">
-                                    <a class="page-link" href="?page=ListarFechamentos&pagina=<?= $totalPaginas ?>">
-                                        &raquo;
-                                    </a>
-                                </li>
-                                <?php endif; ?>
-                            </ul>
-                        </div>
-                    </div>
+            <div class="col-md-12 mt-3">
+                <div class="demo d-flex justify-content-center">
+                    <ul class="pagination pg-primary">
+                        <?php if ($totalPaginas > 1): ?>
+                        <li class="page-item <?= ($pagina == 1) ? 'disabled' : '' ?>">
+                            <a class="page-link" href="?page=ListarFechamentos&pagina=1">&laquo;</a>
+                        </li>
+                
+                        <li class="page-item <?= ($pagina == 1) ? 'disabled' : '' ?>">
+                            <a class="page-link" href="?page=ListarFechamentos&pagina=<?= max(1, $pagina - 1) ?>">&lsaquo;</a>
+                        </li>
+                
+                        <?php 
+                        $paginas_visiveis = 5;
+                        $inicio = max(1, $pagina - floor($paginas_visiveis/2));
+                        $fim = min($totalPaginas, $inicio + $paginas_visiveis - 1);
+                        $inicio = max(1, $fim - $paginas_visiveis + 1);
+                
+                        for ($i = $inicio; $i <= $fim; $i++): 
+                        ?>
+                            <li class="page-item <?= ($pagina == $i) ? 'active' : '' ?>">
+                                <a class="page-link" href="?page=ListarFechamentos&pagina=<?= $i ?>"><?= $i ?></a>
+                            </li>
+                        <?php endfor; ?>
+                
+                        <li class="page-item <?= ($pagina == $totalPaginas) ? 'disabled' : '' ?>">
+                            <a class="page-link" href="?page=ListarFechamentos&pagina=<?= min($totalPaginas, $pagina + 1) ?>">&rsaquo;</a>
+                        </li>
+                
+                        <li class="page-item <?= ($pagina == $totalPaginas) ? 'disabled' : '' ?>">
+                            <a class="page-link" href="?page=ListarFechamentos&pagina=<?= $totalPaginas ?>">&raquo;</a>
+                        </li>
+                        <?php endif; ?>
+                    </ul>
                 </div>
             </div>
 		</div>
@@ -220,22 +202,24 @@ function visualizarDetalhes(fechamentoId) {
                 <input type="hidden" name="valor_entrada" value="<?=$totalEntrada;?>"/>
                 <input type="hidden" name="valor_saida" value="<?=$totalSaida;?>"/>
                 
-                <table class="display table table-striped table-hover">
-				    <thead>
-					    <tr>
-						    <th style="width: 5%">Entradas</th>
-                            <th style="width: 5%">Saídas</th>
-							<th style="width: 5%">Performance</th>
-						</tr>
-					</thead>
-					<tbody>
-                        <tr>
-						    <td>R$ <?=number_format($totalEntrada, 2, ',', '.'); ?></td>
-                            <td>R$ <?= number_format($totalSaida, 2, ',', '.'); ?></td>
-							<td>R$ <?= number_format($performance, 2, ',', '.'); ?></td>
-						</tr>
-					</tbody>
-				</table>
+                <div class="table-responsive">
+                    <table class="display table table-striped table-hover table-mobile-cards">
+                        <thead>
+                            <tr>
+                                <th>Entradas</th>
+                                <th>Saídas</th>
+                                <th>Performance</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td data-label="Entradas">R$ <?=number_format($totalEntrada, 2, ',', '.'); ?></td>
+                                <td data-label="Saídas">R$ <?= number_format($totalSaida, 2, ',', '.'); ?></td>
+                                <td data-label="Performance">R$ <?= number_format($performance, 2, ',', '.'); ?></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
 
                <table class="table table-sm table-striped mb-0">
                             <thead class="table-light">
@@ -279,49 +263,48 @@ function visualizarDetalhes(fechamentoId) {
                             <?php endif; ?>
                         </table>
 
-                <table class="display table table-striped table-hover">
-					<thead>
-						<tr>
-							<th style="width: 20%">Conta</th>
-                            <th></th>
-                            <th style="width: 5%">Saldo</th>
-						</tr>
-					</thead>
-                    <tfoot>
-                        <tr>
-                            <th></th>
-                            <th style="width: 20%">Total:</th>
-                            <th>
-                                <?php
-                                    $somaSaldoContas = BuscarSomaSaldoContas();
-                                ?>
-                                R$ <?=$somaSaldoContas !== null ? number_format($somaSaldoContas, 2, ',', '.') : '0,00';?>
-                            </th>
-                            <input type="hidden" name="saldo_total" value="<?=$somaSaldoContas;?>"/>
-                        </tr>
-                    </tfoot>
-					<tbody>
-						<?php
-                			$contas = buscarContas('', '', 100, 0); // Buscar todas as contas
-                			if ($contas)
-                			{
-                    			foreach ($contas as $conta)
-                    			{
-                    	?>
-                            <input type="hidden" name="ids_contas[]" value="<?=$conta['id'];?>"/>
-                            <input type="hidden" name="saldos_contas[]" value="<?=$conta['saldo'];?>"/>
-                            
-									<tr>
-										<td><?=$conta['nome'];?></td>
-                                        <td></td>
-										<td>R$ <?=number_format($conta['saldo'], 2, ',', '.');?></td>
-									</tr>
-						<?php
-								}
-							}
-						?>
-					</tbody>
-				</table>
+                  <div class="table-responsive mt-3">
+                    <table class="display table table-striped table-hover table-mobile-cards">
+                        <thead>
+                            <tr>
+                                <th style="width: 20%">Conta</th>
+                                <th>Saldo</th>
+                            </tr>
+                        </thead>
+                        <tfoot>
+                            <tr>
+                                <th class="d-none d-md-table-cell">Total:</th>
+                                <th>
+                                    <?php
+                                        $somaSaldoContas = BuscarSomaSaldoContas();
+                                    ?>
+                                    R$ <?=$somaSaldoContas !== null ? number_format($somaSaldoContas, 2, ',', '.') : '0,00';?>
+                                </th>
+                                <input type="hidden" name="saldo_total" value="<?=$somaSaldoContas;?>"/>
+                            </tr>
+                        </tfoot>
+                        <tbody>
+                            <?php
+                                $contas = buscarContas('', '', 100, 0); // Buscar todas as contas
+                                if ($contas)
+                                {
+                                    foreach ($contas as $conta)
+                                    {
+                            ?>
+                                <input type="hidden" name="ids_contas[]" value="<?=$conta['id'];?>"/>
+                                <input type="hidden" name="saldos_contas[]" value="<?=$conta['saldo'];?>"/>
+                                
+                                        <tr>
+                                            <td data-label="Conta"><?=$conta['nome'];?></td>
+                                            <td data-label="Saldo">R$ <?=number_format($conta['saldo'], 2, ',', '.');?></td>
+                                        </tr>
+                            <?php
+                                    }
+                                }
+                            ?>
+                        </tbody>
+                    </table>
+                </div>
 					
                     <div class="modal-footer border-0">
                         <button type="submit" class="btn btn-primary">Salvar Fechamento</button>

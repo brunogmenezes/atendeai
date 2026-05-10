@@ -475,3 +475,114 @@
     height: 12px;
     border-radius: 3px;
 }
+
+/* ============================================
+   Mobile Table Utilities
+   ============================================ */
+@media (max-width: 576px) {
+    .table-responsive {
+        border: 0;
+    }
+    
+    .card-body {
+        padding: 1rem 0.5rem !important;
+    }
+    
+    .card-header {
+        padding: 1rem !important;
+    }
+
+    /* Stack buttons in form-button-action */
+    .form-button-action {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+        justify-content: center;
+    }
+    
+    .form-button-action .btn {
+        padding: 0.5rem !important;
+    }
+    
+    /* Pagination responsiveness */
+    .pagination {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .pagination .page-link {
+        padding: 0.5rem 0.75rem;
+        margin: 2px;
+    }
+}
+
+/* Custom "Card View" for tables on extra small screens */
+@media (max-width: 576px) {
+    .table-mobile-cards thead {
+        display: none !important;
+    }
+    
+    .table-mobile-cards tr {
+        display: block !important;
+        margin-bottom: 1rem !important;
+        border: 1px solid #e8eef5 !important;
+        border-radius: 8px !important;
+        background: #fff !important;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05) !important;
+    }
+    
+    .table-mobile-cards td {
+        display: block !important;
+        text-align: right !important;
+        padding: 0.75rem 1rem !important;
+        border-bottom: 1px solid #f1f5f9 !important;
+        position: relative !important;
+        min-height: 45px;
+    }
+    
+    .table-mobile-cards td:last-child {
+        border-bottom: 0 !important;
+        text-align: center !important;
+        background: #f8fafc !important;
+    }
+    
+    .table-mobile-cards td::before {
+        content: attr(data-label);
+        position: absolute;
+        left: 1rem;
+        width: 45%;
+        text-align: left;
+        font-weight: 700;
+        color: #64748b;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+    }
+
+    /* Hide the label for the Action column to avoid overlap with buttons */
+    .table-mobile-cards td[data-label="Ação"]::before,
+    .table-mobile-cards td[data-label="Acao"]::before,
+    .table-mobile-cards td[data-label="Ação"]::before {
+        display: none !important;
+    }
+    
+    .table-mobile-cards td[data-label="Ação"],
+    .table-mobile-cards td[data-label="Acao"],
+    .table-mobile-cards td[data-label="Ação"] {
+        text-align: center !important;
+    }
+}
+
+
+/* Global Navbar/Sidebar Fixes for Mobile */
+@media (max-width: 991px) {
+    .main-header .navbar-header {
+        padding-left: 15px !important;
+        padding-right: 15px !important;
+    }
+    
+    .main-panel .page-inner {
+        padding-right: 15px !important;
+        padding-left: 15px !important;
+    }
+}
+

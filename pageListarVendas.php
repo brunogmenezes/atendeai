@@ -9,17 +9,17 @@ $dia = isset($_GET['dia']) && is_numeric($_GET['dia']) ? (int)$_GET['dia'] : nul
 $mes = isset($_GET['mes']) && is_numeric($_GET['mes']) ? (int)$_GET['mes'] : null;
 $ano = isset($_GET['ano']) && is_numeric($_GET['ano']) ? (int)$_GET['ano'] : null;
 ?>
-<div class="row">
+<div class="row g-3">
     
-    <div class="col-md-6">
-            <div class="alert alert-light border">
+    <div class="col-12 col-lg-6">
+            <div class="alert alert-light border h-100 mb-0">
                 <h6 class="alert-heading"><i class="fas fa-chart-bar"></i> Resumo do Dia</h6>
                 <hr>
-                <div class="d-flex justify-content-between">
+                <div class="d-flex justify-content-between mb-2">
                     <span>Total de Vendas no dia:</span>
                     <strong><?= contarNumeroPorVendas($dia, $mes, $ano) ?? 0; ?></strong>
                 </div>
-                <div class="d-flex justify-content-between">
+                <div class="d-flex justify-content-between mb-2">
                     <span>Total em Vendas no dia:</span>
                     <strong class="text-success">R$ <?= number_format(buscarTotalVendasnoPeriodo($dia, $mes, $ano) ?? 0, 2, ',', '.'); ?></strong>
                 </div>
@@ -31,9 +31,9 @@ $ano = isset($_GET['ano']) && is_numeric($_GET['ano']) ? (int)$_GET['ano'] : nul
         </div>
     
 
-    <div class="col-md-6">
-            <div class="card mb-4">
-                <div class="card-header bg-success text-white">
+    <div class="col-12 col-lg-6">
+            <div class="card mb-0 h-100">
+                <div class="card-header bg-success text-white py-2">
                     <h6 class="mb-0"><i class="fas fa-credit-card"></i> Vendas por Tipo de Pagamento</h6>
                 </div>
                 <div class="card-body p-0">
@@ -84,11 +84,11 @@ $ano = isset($_GET['ano']) && is_numeric($_GET['ano']) ? (int)$_GET['ano'] : nul
             </div>
         </div>
 </div>
-<div class="col-md-12">
+<div class="col-md-12 mt-4">
 	<div class="card">
-        <div class="card-header d-flex align-items-center justify-content-between">
-            <h4 class="card-title mb-0">Listar Vendas</h4>
-            <a href="gerar_pdf_vendas.php?dia=<?= $dia ?? '' ?>&mes=<?= $mes ?? '' ?>&ano=<?= $ano ?? '' ?>" class="btn btn-primary btn-sm" target="_blank">
+        <div class="card-header d-flex flex-column flex-sm-row align-items-center justify-content-between">
+            <h4 class="card-title mb-2 mb-sm-0">Listar Vendas</h4>
+            <a href="gerar_pdf_vendas.php?dia=<?= $dia ?? '' ?>&mes=<?= $mes ?? '' ?>&ano=<?= $ano ?? '' ?>" class="btn btn-primary btn-sm w-100 w-sm-auto" target="_blank">
                 <i class="fas fa-file-pdf me-2"></i>Gerar PDF
             </a>
         </div>
@@ -132,15 +132,15 @@ $ano = isset($_GET['ano']) && is_numeric($_GET['ano']) ? (int)$_GET['ano'] : nul
 	</div>
 		<div class="card-body">
 			<div class="table-responsive">
-				<table id="add-row" class="display table table-striped table-hover">
+				<table id="add-row" class="display table table-striped table-hover table-mobile-cards">
 					<thead>
 						<tr>
-							<th style="width: 5%">ID</th>
+							<th class="d-none d-md-table-cell" style="width: 5%">ID</th>
 							<th>Total</th>
-                            <th>Tipo de Pagamento</th>
-                            <th>Vendedor</th>
+                            <th class="d-none d-sm-table-cell">Tipo de Pagamento</th>
+                            <th class="d-none d-md-table-cell">Vendedor</th>
                             <th>Data</th>
-                            <th class="text-center" style="width: 80px;">Ações</th>
+                            <th class="text-center">Ações</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -172,26 +172,21 @@ $ano = isset($_GET['ano']) && is_numeric($_GET['ano']) ? (int)$_GET['ano'] : nul
                                     }
                     	?>
 									<tr <?=$rowClass;?>>
-										<td><?=$retorno['id'];?></td>
-										<td><strong>R$ <?=number_format($retorno['total'], 2, ',', '.');?></strong></td>
-                                        <td><?=$retorno['tipos_pagamento'];?></td>
-                                        <td><?=$retorno['usuariovendedor'];?></td>
-										<td><?=date('d/m/Y H:i:s', strtotime($retorno['data_venda']));?></td>
-										<td>
-											<div class="btn-group btn-group-sm">
-												<button type="button" class="btn btn-link btn-primary" onclick="imprimir(<?=htmlspecialchars($retorno['id'], ENT_QUOTES, 'UTF-8')?>);" title="Imprimir">
-    												<i class="fa fa-print"></i>
+										<td class="d-none d-md-table-cell" data-label="ID"><?=$retorno['id'];?></td>
+										<td data-label="Total"><strong>R$ <?=number_format($retorno['total'], 2, ',', '.');?></strong></td>
+                                        <td class="d-none d-sm-table-cell" data-label="Pagamento"><?=$retorno['tipos_pagamento'];?></td>
+                                        <td class="d-none d-md-table-cell" data-label="Vendedor"><?=$retorno['usuariovendedor'];?></td>
+										<td data-label="Data"><?=date('d/m/Y H:i', strtotime($retorno['data_venda']));?></td>
+										<td data-label="Ação">
+											<div class="d-flex justify-content-center gap-2">
+												<button type="button" class="btn btn-primary btn-sm flex-fill" onclick="imprimir(<?=htmlspecialchars($retorno['id'], ENT_QUOTES, 'UTF-8')?>);" title="Imprimir">
+    												<i class="fa fa-print"></i> <span class="d-sm-none">Imprimir</span>
 												</button>
-                                                <?php
-                                                if($user['isAdmin']==true && $retorno['estornado'] == false)
-                                                {
-                                                ?>
-												<button type="button" class="btn btn-link btn-danger open-delete-modal" data-id="<?=$retorno['id'];?>" data-bs-toggle="modal" data-bs-target="#confirmDeleteModal" title="Estornar venda">
-												    <i class="fa fa-retweet"></i>
-												</button>
-                                                <?php
-                                                }
-                                                ?>
+                                                <?php if($user['isAdmin']==true && $retorno['estornado'] == false): ?>
+                                                    <button type="button" class="btn btn-danger btn-sm flex-fill open-delete-modal" data-id="<?=$retorno['id'];?>" data-bs-toggle="modal" data-bs-target="#confirmDeleteModal" title="Estornar venda">
+                                                        <i class="fa fa-retweet"></i> <span class="d-sm-none">Estornar</span>
+                                                    </button>
+                                                <?php endif; ?>
 											</div>
 										</td>
 									</tr>
@@ -215,62 +210,40 @@ $ano = isset($_GET['ano']) && is_numeric($_GET['ano']) ? (int)$_GET['ano'] : nul
                     </tfoot>
 				</table>
 			</div>
-			<div class="col-md-12">
-    <div class="card">
-        <div class="card-body">
-            <div class="demo">
-                <ul class="pagination pg-primary">
-                    <?php if ($totalPaginas > 1): ?>
-                        <!-- Link para primeira página -->
-                        <li class="page-item <?php echo ($pagina == 1) ? 'disabled' : ''; ?>">
-                            <a class="page-link" href="?page=<?php echo htmlspecialchars($_GET['page'] ?? ''); ?>&pagina=1&filtro=<?php echo urlencode($filtro); ?>&valor=<?php echo urlencode($valor); ?>&dia=<?=$_GET['dia'];?>&mes=<?=$_GET['mes'];?>&ano=<?=$_GET['ano'];?>">
-                                &laquo;
-                            </a>
-                        </li>
-                        
-                        <!-- Link para página anterior -->
-                        <li class="page-item <?php echo ($pagina == 1) ? 'disabled' : ''; ?>">
-                            <a class="page-link" href="?page=<?php echo htmlspecialchars($_GET['page'] ?? ''); ?>&pagina=<?php echo ($pagina - 1); ?>&filtro=<?php echo urlencode($filtro); ?>&valor=<?php echo urlencode($valor); ?>&dia=<?=$_GET['dia'];?>&mes=<?=$_GET['mes'];?>&ano=<?=$_GET['ano'];?>">
-                                &lsaquo;
-                            </a>
-                        </li>
-                        
-                        <?php 
-                        // Definir quantas páginas mostrar antes e depois da atual
-                        $paginas_visiveis = 5;
-                        $inicio = max(1, $pagina - floor($paginas_visiveis/2));
-                        $fim = min($totalPaginas, $inicio + $paginas_visiveis - 1);
-                        
-                        // Ajustar se estiver no final
-                        $inicio = max(1, $fim - $paginas_visiveis + 1);
-                        
-                        // Mostrar páginas próximas
-                        for ($i = $inicio; $i <= $fim; $i++): 
-                        ?>
-                            <li class="page-item <?php echo ($pagina == $i) ? 'active' : ''; ?>">
-                                <a class="page-link" href="?page=<?php echo htmlspecialchars($_GET['page'] ?? ''); ?>&pagina=<?php echo $i; ?>&filtro=<?php echo urlencode($filtro); ?>&valor=<?php echo urlencode($valor); ?>&dia=<?=$_GET['dia'];?>&mes=<?=$_GET['mes'];?>&ano=<?=$_GET['ano'];?>">
-                                    <?php echo $i; ?>
-                                </a>
-                            </li>
-                        <?php endfor; ?>
-                        
-                        <!-- Link para próxima página -->
-                        <li class="page-item <?php echo ($pagina == $totalPaginas) ? 'disabled' : ''; ?>">
-                            <a class="page-link" href="?page=<?php echo htmlspecialchars($_GET['page'] ?? ''); ?>&pagina=<?php echo ($pagina + 1); ?>&filtro=<?php echo urlencode($filtro); ?>&valor=<?php echo urlencode($valor); ?>&dia=<?=$_GET['dia'];?>&mes=<?=$_GET['mes'];?>&ano=<?=$_GET['ano'];?>">
-                                &rsaquo;
-                            </a>
-                        </li>
-                        
-                        <!-- Link para última página -->
-                        <li class="page-item <?php echo ($pagina == $totalPaginas) ? 'disabled' : ''; ?>">
-                            <a class="page-link" href="?page=<?php echo htmlspecialchars($_GET['page'] ?? ''); ?>&pagina=<?php echo $totalPaginas; ?>&filtro=<?php echo urlencode($filtro); ?>&valor=<?php echo urlencode($valor); ?>&dia=<?=$_GET['dia'];?>&mes=<?=$_GET['mes'];?>&ano=<?=$_GET['ano'];?>">
-                                &raquo;
-                            </a>
-                        </li>
-                    <?php endif; ?>
-                </ul>
-            </div>
-        </div>
+			<div class="col-md-12 mt-3">
+    <div class="demo d-flex justify-content-center">
+        <ul class="pagination pg-primary">
+            <?php if ($totalPaginas > 1): ?>
+                <li class="page-item <?php echo ($pagina == 1) ? 'disabled' : ''; ?>">
+                    <a class="page-link" href="?page=<?php echo htmlspecialchars($_GET['page'] ?? ''); ?>&pagina=1&filtro=<?php echo urlencode($filtro); ?>&valor=<?php echo urlencode($valor); ?>&dia=<?=$_GET['dia'];?>&mes=<?=$_GET['mes'];?>&ano=<?=$_GET['ano'];?>">&laquo;</a>
+                </li>
+                
+                <li class="page-item <?php echo ($pagina == 1) ? 'disabled' : ''; ?>">
+                    <a class="page-link" href="?page=<?php echo htmlspecialchars($_GET['page'] ?? ''); ?>&pagina=<?php echo ($pagina - 1); ?>&filtro=<?php echo urlencode($filtro); ?>&valor=<?php echo urlencode($valor); ?>&dia=<?=$_GET['dia'];?>&mes=<?=$_GET['mes'];?>&ano=<?=$_GET['ano'];?>">&lsaquo;</a>
+                </li>
+                
+                <?php 
+                $paginas_visiveis = 5;
+                $inicio = max(1, $pagina - floor($paginas_visiveis/2));
+                $fim = min($totalPaginas, $inicio + $paginas_visiveis - 1);
+                $inicio = max(1, $fim - $paginas_visiveis + 1);
+                
+                for ($i = $inicio; $i <= $fim; $i++): 
+                ?>
+                    <li class="page-item <?php echo ($pagina == $i) ? 'active' : ''; ?>">
+                        <a class="page-link" href="?page=<?php echo htmlspecialchars($_GET['page'] ?? ''); ?>&pagina=<?php echo $i; ?>&filtro=<?php echo urlencode($filtro); ?>&valor=<?php echo urlencode($valor); ?>&dia=<?=$_GET['dia'];?>&mes=<?=$_GET['mes'];?>&ano=<?=$_GET['ano'];?>"><?php echo $i; ?></a>
+                    </li>
+                <?php endfor; ?>
+                
+                <li class="page-item <?php echo ($pagina == $totalPaginas) ? 'disabled' : ''; ?>">
+                    <a class="page-link" href="?page=<?php echo htmlspecialchars($_GET['page'] ?? ''); ?>&pagina=<?php echo ($pagina + 1); ?>&filtro=<?php echo urlencode($filtro); ?>&valor=<?php echo urlencode($valor); ?>&dia=<?=$_GET['dia'];?>&mes=<?=$_GET['mes'];?>&ano=<?=$_GET['ano'];?>">&rsaquo;</a>
+                </li>
+                
+                <li class="page-item <?php echo ($pagina == $totalPaginas) ? 'disabled' : ''; ?>">
+                    <a class="page-link" href="?page=<?php echo htmlspecialchars($_GET['page'] ?? ''); ?>&pagina=<?php echo $totalPaginas; ?>&filtro=<?php echo urlencode($filtro); ?>&valor=<?php echo urlencode($valor); ?>&dia=<?=$_GET['dia'];?>&mes=<?=$_GET['mes'];?>&ano=<?=$_GET['ano'];?>">&raquo;</a>
+                </li>
+            <?php endif; ?>
+        </ul>
     </div>
 </div>
 		</div>

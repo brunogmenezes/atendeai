@@ -18,9 +18,9 @@ verificarSessao();
 <div class="col-md-12">
 	<div class="card">
 		<div class="card-header">
-            <div class="d-flex align-items-center">
-                <h4 class="card-title">Listar Lançamentos</h4>
-                <button class="btn btn-primary btn-round ms-auto" data-bs-toggle="modal" data-bs-target="#addRowModal">
+            <div class="d-flex flex-column flex-sm-row align-items-center">
+                <h4 class="card-title mb-2 mb-sm-0">Listar Lançamentos</h4>
+                <button class="btn btn-primary btn-round ms-sm-auto w-100 w-sm-auto" data-bs-toggle="modal" data-bs-target="#addRowModal">
                     <i class="fa fa-plus"></i>
                     Cadastrar Lançamento
                 </button>
@@ -56,26 +56,26 @@ verificarSessao();
                             <input type="text" name="valor" class="form-control" value="<?= htmlspecialchars($_GET['valor'] ?? '') ?>">
                         </div>
                     </div>
-                    <div class="col-md-2 d-flex align-items-end">
-                        <button type="submit" class="btn btn-primary">Filtrar</button>
-                        <a href="?page=<?= htmlspecialchars($_GET['page'] ?? '') ?>" class="btn btn-secondary ms-2">Limpar</a>
+                    <div class="col-md-2 d-flex align-items-end gap-2 mt-2 mt-md-0">
+                        <button type="submit" class="btn btn-primary flex-fill">Filtrar</button>
+                        <a href="?page=<?= htmlspecialchars($_GET['page'] ?? '') ?>" class="btn btn-secondary flex-fill">Limpar</a>
                     </div>
                 </div>
             </form>
         </div>
 		<div class="card-body">
 			<div class="table-responsive">
-				<table id="add-row" class="display table table-striped table-hover">
+				<table id="add-row" class="display table table-striped table-hover table-mobile-cards">
 					<thead>
 						<tr>
-							<th style="width: 5%">ID</th>
+							<th class="d-none d-md-table-cell" style="width: 5%">ID</th>
                             <th style="width: 5%">Tipo</th>
 							<th>Nome</th>
-                            <th style="width: 20%">Valor</th>
-                            <th style="width: 20%">Conta</th>
-                            <th style="width: 10%">Data Vencimento</th>
-                            <th style="width: 5%"></th>
-                            <th style="width: 5%"></th>
+                            <th>Valor</th>
+                            <th class="d-none d-sm-table-cell" style="width: 20%">Conta</th>
+                            <th class="d-none d-md-table-cell" style="width: 10%">Vencimento</th>
+                            <th style="width: 5%">Pago</th>
+                            <th style="width: 5%">Ação</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -98,36 +98,32 @@ verificarSessao();
                     			{
                     	?>
 									<tr>
-										<td><?=$financeiro['id'];?></td>
-                                        <td>
+									<tr>
+										<td class="d-none d-md-table-cell" data-label="ID"><?=$financeiro['id'];?></td>
+                                        <td data-label="Tipo">
                                             <i class=" 
                                                 <?php 
-                                                        echo ($financeiro['tipo'] == '1') ? 'fas fa-arrow-up text-success me-3' : 
-                                                        (($financeiro['tipo'] == '2') ? 'fas fa-arrow-down text-danger me-3' : 
-                                                        (($financeiro['tipo'] == '3') ? 'fas fa-arrow-left text-warning me-3' : ''));
+                                                        echo ($financeiro['tipo'] == '1') ? 'fas fa-arrow-up text-success' : 
+                                                        (($financeiro['tipo'] == '2') ? 'fas fa-arrow-down text-danger' : 
+                                                        (($financeiro['tipo'] == '3') ? 'fas fa-arrow-left text-warning' : ''));
                                                 ?>">
                                             </i>
+                                            <span class="d-md-none ms-2">
+                                                <?= ($financeiro['tipo'] == '1') ? 'Entrada' : (($financeiro['tipo'] == '2') ? 'Saída' : 'Estorno') ?>
+                                            </span>
                                         </td>
-										<td><?=$financeiro['descricao'];?></td>
-										<td>R$ <?=number_format($financeiro['valor'], 2, ',', '.');?></td>
-                                        <td><?=$financeiro['nome_conta'];?></td>
-                                        <td><?= date('d/m/Y', strtotime($financeiro['data_vencimento'])) ?></td>
-                                        <td><?=$financeiro['pago']; ?></td>
-                                        <td>
-                                            <?php
-                                                if ($financeiro['criado_manual']==true)
-                                                {
-                                                 
-                                            ?>
-                                                    <button type="button" class="btn btn-link btn-danger open-delete-modal" data-id="<?=$financeiro['id'];?>" data-tipo="<?=$financeiro['tipo'];?>" data-conta="<?=$financeiro['conta'];?>" data-valor="<?=$financeiro['valor'];?>" data-bs-toggle="modal" data-bs-target="#confirmDeleteModal">
-                                                        <i class="fa fa-times"></i>
-                                                    </button>
-                                            <?php
-                                                }
-                                            ?>
+										<td data-label="Descrição"><?=$financeiro['descricao'];?></td>
+										<td data-label="Valor">R$ <?=number_format($financeiro['valor'], 2, ',', '.');?></td>
+                                        <td class="d-none d-sm-table-cell" data-label="Conta"><?=$financeiro['nome_conta'];?></td>
+                                        <td class="d-none d-md-table-cell" data-label="Vencimento"><?= date('d/m/Y', strtotime($financeiro['data_vencimento'])) ?></td>
+                                        <td data-label="Pago"><?=$financeiro['pago']; ?></td>
+                                        <td data-label="Ação">
+                                            <?php if ($financeiro['criado_manual']==true): ?>
+                                                <button type="button" class="btn btn-link btn-danger open-delete-modal p-0" data-id="<?=$financeiro['id'];?>" data-tipo="<?=$financeiro['tipo'];?>" data-conta="<?=$financeiro['conta'];?>" data-valor="<?=$financeiro['valor'];?>" data-bs-toggle="modal" data-bs-target="#confirmDeleteModal">
+                                                    <i class="fa fa-times"></i> Excluir
+                                                </button>
+                                            <?php endif; ?>
                                         </td>
-											</div>
-										</td>
 									</tr>
 						<?php
 								}
@@ -136,67 +132,40 @@ verificarSessao();
 					</tbody>
 				</table>
 			</div>
-<div class="col-md-12">
-    <div class="card">
-        <div class="card-body">
-            <div class="demo">
-                <ul class="pagination pg-primary">
-                    <?php if ($totalPaginas > 1): ?>
-                        <!-- Link para primeira página -->
-                        <li class="page-item <?= ($pagina == 1) ? 'disabled' : '' ?>">
-                            <a class="page-link" 
-                               href="?page=<?= htmlspecialchars($_GET['page'] ?? '') ?>&pagina=1&filtro=<?= urlencode($filtro) ?>&valor=<?= urlencode($valor) ?>&tipo_lancamento=<?= urlencode($tipo_lancamento) ?>">
-                                &laquo;
-                            </a>
-                        </li>
-                        
-                        <!-- Link para página anterior -->
-                        <li class="page-item <?= ($pagina == 1) ? 'disabled' : '' ?>">
-                            <a class="page-link" 
-                               href="?page=<?= htmlspecialchars($_GET['page'] ?? '') ?>&pagina=<?= ($pagina - 1) ?>&filtro=<?= urlencode($filtro) ?>&valor=<?= urlencode($valor) ?>&tipo_lancamento=<?= urlencode($tipo_lancamento) ?>">
-                                &lsaquo;
-                            </a>
-                        </li>
-                        
-                        <?php 
-                        // Definir quantas páginas mostrar antes e depois da atual
-                        $paginas_visiveis = 5;
-                        $inicio = max(1, $pagina - floor($paginas_visiveis/2));
-                        $fim = min($totalPaginas, $inicio + $paginas_visiveis - 1);
-                        
-                        // Ajustar se estiver no final
-                        $inicio = max(1, $fim - $paginas_visiveis + 1);
-                        
-                        // Mostrar páginas próximas
-                        for ($i = $inicio; $i <= $fim; $i++): 
-                        ?>
-                            <li class="page-item <?= ($pagina == $i) ? 'active' : '' ?>">
-                                <a class="page-link" 
-                                   href="?page=<?= htmlspecialchars($_GET['page'] ?? '') ?>&pagina=<?= $i ?>&filtro=<?= urlencode($filtro) ?>&valor=<?= urlencode($valor) ?>&tipo_lancamento=<?= urlencode($tipo_lancamento) ?>">
-                                    <?= $i ?>
-                                </a>
-                            </li>
-                        <?php endfor; ?>
-                        
-                        <!-- Link para próxima página -->
-                        <li class="page-item <?= ($pagina == $totalPaginas) ? 'disabled' : '' ?>">
-                            <a class="page-link" 
-                               href="?page=<?= htmlspecialchars($_GET['page'] ?? '') ?>&pagina=<?= ($pagina + 1) ?>&filtro=<?= urlencode($filtro) ?>&valor=<?= urlencode($valor) ?>&tipo_lancamento=<?= urlencode($tipo_lancamento) ?>">
-                                &rsaquo;
-                            </a>
-                        </li>
-                        
-                        <!-- Link para última página -->
-                        <li class="page-item <?= ($pagina == $totalPaginas) ? 'disabled' : '' ?>">
-                            <a class="page-link" 
-                               href="?page=<?= htmlspecialchars($_GET['page'] ?? '') ?>&pagina=<?= $totalPaginas ?>&filtro=<?= urlencode($filtro) ?>&valor=<?= urlencode($valor) ?>&tipo_lancamento=<?= urlencode($tipo_lancamento) ?>">
-                                &raquo;
-                            </a>
-                        </li>
-                    <?php endif; ?>
-                </ul>
-            </div>
-        </div>
+<div class="col-md-12 mt-3">
+    <div class="demo d-flex justify-content-center">
+        <ul class="pagination pg-primary">
+            <?php if ($totalPaginas > 1): ?>
+                <li class="page-item <?= ($pagina == 1) ? 'disabled' : '' ?>">
+                    <a class="page-link" href="?page=<?= htmlspecialchars($_GET['page'] ?? '') ?>&pagina=1&filtro=<?= urlencode($filtro) ?>&valor=<?= urlencode($valor) ?>&tipo_lancamento=<?= urlencode($tipo_lancamento) ?>">&laquo;</a>
+                </li>
+                
+                <li class="page-item <?= ($pagina == 1) ? 'disabled' : '' ?>">
+                    <a class="page-link" href="?page=<?= htmlspecialchars($_GET['page'] ?? '') ?>&pagina=<?= ($pagina - 1) ?>&filtro=<?= urlencode($filtro) ?>&valor=<?= urlencode($valor) ?>&tipo_lancamento=<?= urlencode($tipo_lancamento) ?>">&lsaquo;</a>
+                </li>
+                
+                <?php 
+                $paginas_visiveis = 5;
+                $inicio = max(1, $pagina - floor($paginas_visiveis/2));
+                $fim = min($totalPaginas, $inicio + $paginas_visiveis - 1);
+                $inicio = max(1, $fim - $paginas_visiveis + 1);
+                
+                for ($i = $inicio; $i <= $fim; $i++): 
+                ?>
+                    <li class="page-item <?= ($pagina == $i) ? 'active' : '' ?>">
+                        <a class="page-link" href="?page=<?= htmlspecialchars($_GET['page'] ?? '') ?>&pagina=<?= $i ?>&filtro=<?= urlencode($filtro) ?>&valor=<?= urlencode($valor) ?>&tipo_lancamento=<?= urlencode($tipo_lancamento) ?>"><?= $i ?></a>
+                    </li>
+                <?php endfor; ?>
+                
+                <li class="page-item <?= ($pagina == $totalPaginas) ? 'disabled' : '' ?>">
+                    <a class="page-link" href="?page=<?= htmlspecialchars($_GET['page'] ?? '') ?>&pagina=<?= ($pagina + 1) ?>&filtro=<?= urlencode($filtro) ?>&valor=<?= urlencode($valor) ?>&tipo_lancamento=<?= urlencode($tipo_lancamento) ?>">&rsaquo;</a>
+                </li>
+                
+                <li class="page-item <?= ($pagina == $totalPaginas) ? 'disabled' : '' ?>">
+                    <a class="page-link" href="?page=<?= htmlspecialchars($_GET['page'] ?? '') ?>&pagina=<?= $totalPaginas ?>&filtro=<?= urlencode($filtro) ?>&valor=<?= urlencode($valor) ?>&tipo_lancamento=<?= urlencode($tipo_lancamento) ?>">&raquo;</a>
+                </li>
+            <?php endif; ?>
+        </ul>
     </div>
 </div>
 		</div>
@@ -353,7 +322,6 @@ verificarSessao();
 </div>
 
 <script>
-    // Abrir o modal e definir o ID do produto
     document.addEventListener('DOMContentLoaded', function ()
     {
         const deleteButtons = document.querySelectorAll('.open-delete-modal');
@@ -373,19 +341,6 @@ verificarSessao();
                 tipoLancamentoInput.value = valortipoLancamento;
                 contaLancamentoInput.value = idContaLancamento;
                 valorLancamentoInput.value = valorContaLancamento;
-            });
-        });
-    });
-
-    document.addEventListener('DOMContentLoaded', function () {
-        // Script para exclusão
-        const deleteButtons = document.querySelectorAll('.open-delete-modal');
-        const productIdInput = document.getElementById('productIdToDelete');
-
-        deleteButtons.forEach(button => {
-            button.addEventListener('click', function () {
-                const productId = this.getAttribute('data-id');
-                productIdInput.value = productId;
             });
         });
 
