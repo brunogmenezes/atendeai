@@ -21,25 +21,24 @@ verificarSessao();
 <div class="col-md-12">
 	<div class="card">
 		<div class="card-header">
-            <div class="d-flex align-items-center">
-                <h4 class="card-title">Listar Transferências entre Contas</h4>
-                <button class="btn btn-primary btn-round ms-auto" data-bs-toggle="modal" data-bs-target="#addRowModal">
+            <div class="d-flex flex-column flex-sm-row align-items-center">
+                <h4 class="card-title mb-2 mb-sm-0">Listar Transferências entre Contas</h4>
+                <button class="btn btn-primary btn-round ms-sm-auto w-100 w-sm-auto" data-bs-toggle="modal" data-bs-target="#addRowModal">
                     <i class="fa fa-plus"></i>
                     Cadastrar Transferência
                 </button>
             </div>
-            
         </div>
 		<div class="card-body">
 			<div class="table-responsive">
-				<table id="add-row" class="display table table-striped table-hover">
+				<table id="add-row" class="display table table-striped table-hover table-mobile-cards">
 					<thead>
 						<tr>
-							<th style="width: 5%">ID</th>
-							<th>Nome</th>
+							<th class="d-none d-md-table-cell" style="width: 5%">ID</th>
+							<th>Transferência</th>
                             <th style="width: 20%">Valor</th>
-                            <th style="width: 10%">Data Lançamento</th>
-                            <th style="width: 5%"></th>
+                            <th class="d-none d-sm-table-cell" style="width: 20%">Data</th>
+                            <th class="text-center" style="width: 5%">Ação</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -59,14 +58,16 @@ verificarSessao();
                     			{
                     	?>
 									<tr>
-										<td>#<?=$query['id'];?></td>
-										<td><?=$query['nome_conta_origem'];?> <i class="fas fa-arrow-right text-warning me-3"></i> <?=$query['nome_conta_destino'];?></td>
-										<td>R$ <?=number_format($query['valor'], 2, ',', '.');?></td>
-                                        <td><?= date('d/m/Y', strtotime($query['data_lancamento'])) ?></td>
-                                        <td>
-                                            <button type="button" class="btn btn-link btn-danger open-delete-modal" data-id="<?=$query['id'];?>" data-id-conta-origem="<?=$query['id_conta_origem'];?>" data-id-conta-destino="<?=$query['id_conta_destino'];?>" data-valor="<?=$query['valor'];?>" data-bs-toggle="modal" data-bs-target="#confirmDeleteModal">
-                                                <i class="fa fa-times"></i>
-                                            </button>
+										<td class="d-none d-md-table-cell" data-label="ID">#<?=$query['id'];?></td>
+										<td data-label="Transferência"><?=$query['nome_conta_origem'];?> <i class="fas fa-arrow-right text-warning mx-2"></i> <?=$query['nome_conta_destino'];?></td>
+										<td data-label="Valor">R$ <?=number_format($query['valor'], 2, ',', '.');?></td>
+                                        <td class="d-none d-sm-table-cell" data-label="Data"><?= date('d/m/Y', strtotime($query['data_lancamento'])) ?></td>
+                                        <td data-label="Ação">
+                                            <div class="d-flex justify-content-center">
+                                                <button type="button" class="btn btn-link btn-danger open-delete-modal p-0" data-id="<?=$query['id'];?>" data-id-conta-origem="<?=$query['id_conta_origem'];?>" data-id-conta-destino="<?=$query['id_conta_destino'];?>" data-valor="<?=$query['valor'];?>" data-bs-toggle="modal" data-bs-target="#confirmDeleteModal">
+                                                    <i class="fa fa-times"></i> <span class="d-md-none">Excluir</span>
+                                                </button>
+                                            </div>
                                         </td>
 									</tr>
 						<?php
@@ -76,62 +77,40 @@ verificarSessao();
 					</tbody>
 				</table>
 			</div>
-            <div class="col-md-12">
-                <div class="card">
-                    <div class="card-body">
-                        <div class="demo">
-                            <ul class="pagination pg-primary">
-                                <?php if ($totalPaginas > 1): ?>
-                                <!-- Link para primeira página -->
-                                <li class="page-item <?= ($pagina == 1) ? 'disabled' : '' ?>">
-                                    <a class="page-link" href="?page=<?= htmlspecialchars($page ?? '') ?>&pagina=1&filtro=<?= urlencode($filtro) ?>&valor=<?= urlencode($valor) ?>&tipo_lancamento=<?= urlencode($tipo_lancamento) ?>">
-                                        &laquo;
-                                    </a>
-                                </li>
-                        
-                                <!-- Link para página anterior -->
-                                <li class="page-item <?= ($pagina == 1) ? 'disabled' : '' ?>">
-                                    <a class="page-link" href="?page=<?= htmlspecialchars($page ?? '') ?>&pagina=<?= ($pagina - 1) ?>&filtro=<?= urlencode($filtro) ?>&valor=<?= urlencode($valor) ?>&tipo_lancamento=<?= urlencode($tipo_lancamento) ?>">
-                                        &lsaquo;
-                                    </a>
-                                </li>
-                        
-                                <?php 
-                                // Definir quantas páginas mostrar antes e depois da atual
-                                $paginas_visiveis = 5;
-                                $inicio = max(1, $pagina - floor($paginas_visiveis/2));
-                                $fim = min($totalPaginas, $inicio + $paginas_visiveis - 1);
-                        
-                                // Ajustar se estiver no final
-                                $inicio = max(1, $fim - $paginas_visiveis + 1);
-                        
-                                // Mostrar páginas próximas
-                                for ($i = $inicio; $i <= $fim; $i++): 
-                                ?>
-                                    <li class="page-item <?= ($pagina == $i) ? 'active' : '' ?>">
-                                        <a class="page-link" href="?page=<?= htmlspecialchars($page ?? '') ?>&pagina=<?= $i ?>&filtro=<?= urlencode($filtro) ?>&valor=<?= urlencode($valor) ?>&tipo_lancamento=<?= urlencode($tipo_lancamento) ?>">
-                                            <?= $i ?>
-                                        </a>
-                                    </li>
-                                <?php endfor; ?>
-                        
-                                <!-- Link para próxima página -->
-                                <li class="page-item <?= ($pagina == $totalPaginas) ? 'disabled' : '' ?>">
-                                    <a class="page-link" href="?page=<?= htmlspecialchars($page ?? '') ?>&pagina=<?= ($pagina + 1) ?>&filtro=<?= urlencode($filtro) ?>&valor=<?= urlencode($valor) ?>&tipo_lancamento=<?= urlencode($tipo_lancamento) ?>">
-                                        &rsaquo;
-                                    </a>
-                                </li>
-                        
-                                <!-- Link para última página -->
-                                <li class="page-item <?= ($pagina == $totalPaginas) ? 'disabled' : '' ?>">
-                                    <a class="page-link" href="?page=<?= htmlspecialchars($page ?? '') ?>&pagina=<?= $totalPaginas ?>&filtro=<?= urlencode($filtro) ?>&valor=<?= urlencode($valor) ?>&tipo_lancamento=<?= urlencode($tipo_lancamento) ?>">
-                                        &raquo;
-                                    </a>
-                                </li>
-                                <?php endif; ?>
-                            </ul>
-                        </div>
-                    </div>
+            <div class="col-md-12 mt-3">
+                <div class="demo d-flex justify-content-center">
+                    <ul class="pagination pg-primary">
+                        <?php if ($totalPaginas > 1): ?>
+                        <li class="page-item <?= ($pagina == 1) ? 'disabled' : '' ?>">
+                            <a class="page-link" href="?page=<?= htmlspecialchars($_GET['page'] ?? '') ?>&pagina=1">&laquo;</a>
+                        </li>
+                
+                        <li class="page-item <?= ($pagina == 1) ? 'disabled' : '' ?>">
+                            <a class="page-link" href="?page=<?= htmlspecialchars($_GET['page'] ?? '') ?>&pagina=<?= ($pagina - 1) ?>">&lsaquo;</a>
+                        </li>
+                
+                        <?php 
+                        $paginas_visiveis = 5;
+                        $inicio = max(1, $pagina - floor($paginas_visiveis/2));
+                        $fim = min($totalPaginas, $inicio + $paginas_visiveis - 1);
+                        $inicio = max(1, $fim - $paginas_visiveis + 1);
+                
+                        for ($i = $inicio; $i <= $fim; $i++): 
+                        ?>
+                            <li class="page-item <?= ($pagina == $i) ? 'active' : '' ?>">
+                                <a class="page-link" href="?page=<?= htmlspecialchars($_GET['page'] ?? '') ?>&pagina=<?= $i ?>"><?= $i ?></a>
+                            </li>
+                        <?php endfor; ?>
+                
+                        <li class="page-item <?= ($pagina == $totalPaginas) ? 'disabled' : '' ?>">
+                            <a class="page-link" href="?page=<?= htmlspecialchars($_GET['page'] ?? '') ?>&pagina=<?= min($totalPaginas, $pagina + 1) ?>">&rsaquo;</a>
+                        </li>
+                
+                        <li class="page-item <?= ($pagina == $totalPaginas) ? 'disabled' : '' ?>">
+                            <a class="page-link" href="?page=<?= htmlspecialchars($_GET['page'] ?? '') ?>&pagina=<?= $totalPaginas ?>">&raquo;</a>
+                        </li>
+                        <?php endif; ?>
+                    </ul>
                 </div>
             </div>
 		</div>
@@ -153,7 +132,7 @@ verificarSessao();
                     <input type="hidden" name="id" id="idTransferencia">
                     <input type="hidden" name="funcao" value="ExcluirTransferencia">
                     <input type="hidden" name="tabela" value="transferencias">
-                    <input type="hidden" name="page" value="<?= htmlspecialchars($page ?? '') ?>">
+                    <input type="hidden" name="page" value="<?= htmlspecialchars($_GET['page'] ?? '') ?>">
                     <input type="hidden" name="id_conta_origem" id="id_conta_origem">
                     <input type="hidden" name="id_conta_destino" id="id_conta_destino">
                     <input type="hidden" name="valor" id="valor">
