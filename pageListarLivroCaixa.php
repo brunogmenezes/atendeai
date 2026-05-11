@@ -281,7 +281,18 @@ verificarSessao();
             if (erros.length > 0)
             {
                 e.preventDefault(); // Impede o envio
-                alert(erros.join("\n"));
+                $.notify({
+                    icon: 'fas fa-exclamation-triangle',
+                    title: 'Atenção',
+                    message: erros.join("<br>"),
+                },{
+                    type: 'danger',
+                    placement: {
+                        from: "top",
+                        align: "right"
+                    },
+                    time: 3000,
+                });
             }
         });
     

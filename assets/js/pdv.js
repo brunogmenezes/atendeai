@@ -26,21 +26,33 @@ function calcularDesconto() {
     }
 }
 
-// Mostrar notificação toast
-function showToast(message) {
+// Mostrar notificação toast elegante
+function showToast(message, type = 'success') {
+    // Remover toasts antigos para não acumular
+    const existingToasts = document.querySelectorAll('.pdv-toast');
+    if (existingToasts.length > 3) existingToasts[0].remove();
+
     const toast = document.createElement('div');
-    toast.className = 'toast show position-fixed bottom-0 end-0 mb-3 me-3';
-    toast.style.zIndex = '9999';
+    toast.className = 'pdv-toast show';
+    
+    const icon = type === 'success' ? 'fa-check-circle' : (type === 'danger' ? 'fa-exclamation-triangle' : 'fa-info-circle');
+    const color = type === 'success' ? '#48bb78' : (type === 'danger' ? '#f56565' : '#ed8936');
+    
     toast.innerHTML = `
-        <div class="toast-body bg-success text-white">
-            <i class="fa fa-check-circle mr-2"></i> ${message}
+        <div class="pdv-toast-content">
+            <div class="pdv-toast-icon" style="background: ${color}">
+                <i class="fa ${icon}"></i>
+            </div>
+            <div class="pdv-toast-body">
+                <div class="pdv-toast-message">${message}</div>
+            </div>
         </div>
     `;
     document.body.appendChild(toast);
     
     setTimeout(() => {
-        toast.classList.remove('show');
-        setTimeout(() => toast.remove(), 300);
+        toast.classList.add('hide');
+        setTimeout(() => toast.remove(), 500);
     }, 3000);
 }
 
@@ -61,15 +73,21 @@ function updateCart() {
     cart.forEach(item => {
         const row = document.createElement('tr');
         row.innerHTML = `
-            <td>${item.nome}</td>
             <td>
-                <button class="btn btn-sm btn-outline-secondary update-qty" data-id="${item.id}" data-action="decrease">-</button>
-                <span class="mx-2">${item.qtd}</span>
-                <button class="btn btn-sm btn-outline-secondary update-qty" data-id="${item.id}" data-action="increase">+</button>
+                <div class="fw-bold">${item.nome}</div>
+                <div class="small text-muted">R$ ${item.preco.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</div>
             </td>
-            <td>R$ ${item.preco.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
-            <td>R$ ${(item.qtd * item.preco).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
-            <td><button class="btn btn-danger btn-sm remove-from-cart" data-id="${item.id}"><i class="fa fa-minus"></i></button></td>
+            <td class="text-center">
+                <div class="input-group input-group-sm justify-content-center" style="width: 100px; margin: 0 auto;">
+                    <button class="btn btn-outline-secondary update-qty p-1" data-id="${item.id}" data-action="decrease" style="width: 25px;">-</button>
+                    <span class="px-2 align-self-center font-weight-bold">${item.qtd}</span>
+                    <button class="btn btn-outline-secondary update-qty p-1" data-id="${item.id}" data-action="increase" style="width: 25px;">+</button>
+                </div>
+            </td>
+            <td class="text-end fw-bold">R$ ${(item.qtd * item.preco).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
+            <td class="text-center">
+                <button class="btn btn-link btn-sm text-danger remove-from-cart" data-id="${item.id}"><i class="fa fa-times"></i></button>
+            </td>
         `;
         cartItems.appendChild(row);
         total += item.qtd * item.preco;
@@ -115,10 +133,54 @@ function addToCart(id, nome, preco) {
 document.addEventListener('DOMContentLoaded', function() {
     const cartItems = document.getElementById('cart-items');
     const clearCartBtn = document.getElementById('clear-cart');
-    const productSearch = document.getElementById('product-search');
     const paymentForm = document.getElementById('paymentForm');
+    const descontoInput = document.getElementById('desconto');
+    const productSearch = document.getElementById('product-search');
 
-    // Evento: Adicionar produtos ao carrinho
+    // Bloquear ajuda do navegador no F1
+    window.onhelp = function() {
+        return false;
+    };
+
+    // Atalhos de teclado globais
+    window.addEventListener('keydown', function(e) {
+        // F1 - Buscar
+        if (e.key === 'F1' || e.keyCode === 112) {
+            e.preventDefault();
+            e.stopPropagation();
+            const input = document.getElementById('product-search');
+            if (input) {
+                input.focus();
+                input.select();
+            }
+            return false;
+        }
+        // F2 - Limpar
+        if (e.key === 'F2' || e.keyCode === 113) {
+            e.preventDefault();
+            document.getElementById('clear-cart')?.click();
+        }
+        // F9 - Receber
+        if (e.key === 'F9' || e.keyCode === 120) {
+            e.preventDefault();
+            document.getElementById('btn-finalizar-venda')?.click();
+        }
+    });
+
+    // Auto-focus no campo de busca
+    setTimeout(() => {
+        const input = document.getElementById('product-search');
+        if (input) {
+            input.focus();
+            input.select();
+        }
+    }, 500);
+
+    // Evento: Desconto mudando
+    if (descontoInput) {
+        descontoInput.addEventListener('input', calcularDesconto);
+        descontoInput.addEventListener('change', calcularDesconto);
+    }
     document.querySelectorAll('.add-to-cart').forEach(button => {
         button.addEventListener('click', function() {
             const id = this.getAttribute('data-id');
@@ -155,14 +217,37 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Evento: Limpar carrinho
     if (clearCartBtn) {
         clearCartBtn.addEventListener('click', function() {
-            if (cart.length > 0) {
-                cart = [];
-                updateCart();
-                showToast('Carrinho limpo');
-            }
+            if (cart.length === 0) return;
+            
+            swal({
+                title: "Limpar Carrinho?",
+                text: "Todos os itens adicionados serão removidos.",
+                icon: "warning",
+                buttons: {
+                    cancel: {
+                        text: "Cancelar",
+                        value: null,
+                        visible: true,
+                        className: "btn btn-secondary",
+                        closeModal: true,
+                    },
+                    confirm: {
+                        text: "Sim, Limpar!",
+                        value: true,
+                        visible: true,
+                        className: "btn btn-danger",
+                        closeModal: true
+                    }
+                }
+            }).then((willClear) => {
+                if (willClear) {
+                    cart = [];
+                    updateCart();
+                    showToast('Carrinho limpo com sucesso');
+                }
+            });
         });
     }
 
@@ -172,8 +257,21 @@ document.addEventListener('DOMContentLoaded', function() {
             const filter = this.value.toLowerCase();
             document.querySelectorAll('#product-table tbody tr').forEach(row => {
                 const productName = row.querySelector('.product-name')?.textContent.toLowerCase() || '';
-                row.style.display = productName.includes(filter) ? '' : 'none';
+                const productId = row.querySelector('td:first-child')?.textContent.toLowerCase() || '';
+                row.style.display = (productName.includes(filter) || productId.includes(filter)) ? '' : 'none';
             });
+        });
+
+        productSearch.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                const visibleRows = document.querySelectorAll('#product-table tbody tr:not([style*="display: none"])');
+                if (visibleRows.length > 0) {
+                    const firstBtn = visibleRows[0].querySelector('.add-to-cart');
+                    if (firstBtn) firstBtn.click();
+                    this.value = '';
+                    this.dispatchEvent(new Event('input'));
+                }
+            }
         });
     }
     // Evento: Botão "Ir para Pagamento"
@@ -181,7 +279,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (btnFinalizarVenda) {
         btnFinalizarVenda.addEventListener('click', function() {
             if (cart.length === 0) {
-                alert('Adicione produtos ao carrinho antes de finalizar a venda!');
+                showToast('Adicione produtos ao carrinho antes de finalizar a venda!', 'warning');
                 return;
             }
             // Abrir modal
@@ -198,23 +296,43 @@ document.addEventListener('DOMContentLoaded', function() {
             
             const selectHtml = document.querySelector('.payment-method')?.innerHTML || '<option value="">Selecione...</option>';
             newRow.innerHTML = `
-                <div class="row">
+                <div class="row align-items-end">
                     <div class="col-md-6">
-                        <select class="form-control payment-method" name="payment_methods[]" required>
+                        <label class="form-label small text-muted fw-bold">Tipo de Pagamento</label>
+                        <select class="form-select form-control-lg payment-method shadow-sm" name="payment_methods[]" required>
                             ${selectHtml}
                         </select>
                     </div>
                     <div class="col-md-4">
-                        <input type="number" class="form-control payment-amount" name="payment_amounts[]" step="0.01" min="0" required placeholder="Valor">
+                        <label class="form-label small text-muted fw-bold">Valor (R$)</label>
+                        <input type="number" class="form-control form-control-lg payment-amount shadow-sm" name="payment_amounts[]" step="0.01" min="0" required placeholder="0.00">
                     </div>
-                    <div class="col-md-2">
-                        <button type="button" class="btn btn-danger btn-sm remove-payment">
-                            <i class="fa fa-times"></i>
+                    <div class="col-md-2 text-center">
+                        <button type="button" class="btn btn-outline-danger btn-lg remove-payment border-0">
+                            <i class="fa fa-trash-alt"></i>
                         </button>
                     </div>
                 </div>
             `;
+            newRow.style.padding = '1rem';
+            newRow.style.background = '#f8f9fa';
+            newRow.style.borderRadius = '0.5rem';
+            newRow.style.border = '1px solid #dee2e6';
             container.appendChild(newRow);
+            
+            // Auto-preencher com o valor restante
+            const totalDescontoEl = document.getElementById('cart-total-compra-com-desconto');
+            if (totalDescontoEl) {
+                const totalComDesconto = parseFloat(totalDescontoEl.textContent.replace(/[^\d,]/g, '').replace(',', '.')) || 0;
+                let paid = 0;
+                // Soma todos os outros inputs (exceto o novo que acabamos de criar)
+                document.querySelectorAll('.payment-amount').forEach((input, idx, arr) => {
+                    if (idx < arr.length - 1) paid += parseFloat(input.value) || 0;
+                });
+                const remaining = Math.max(totalComDesconto - paid, 0);
+                newRow.querySelector('.payment-amount').value = remaining.toFixed(2);
+            }
+
             updateRemainingAmount();
         });
     }
@@ -227,7 +345,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Função para atualizar valor restante
+    // Função para atualizar valor restante e barra de progresso
     function updateRemainingAmount() {
         const totalDescontoEl = document.getElementById('cart-total-compra-com-desconto');
         if (!totalDescontoEl) return;
@@ -243,15 +361,22 @@ document.addEventListener('DOMContentLoaded', function() {
         
         const remaining = totalComDesconto - paid;
         const remainingElement = document.getElementById('remaining-amount');
+        const progressBar = document.getElementById('payment-progress');
+        
         if (remainingElement) {
             remainingElement.textContent = remaining.toLocaleString('pt-BR', {minimumFractionDigits: 2});
-            
-            if (remaining <= 0) {
-                remainingElement.classList.remove('text-danger');
-                remainingElement.classList.add('text-success');
+            remainingElement.classList.toggle('text-danger', remaining > 0);
+            remainingElement.classList.toggle('text-success', remaining <= 0);
+        }
+
+        if (progressBar) {
+            const percent = totalComDesconto > 0 ? Math.min((paid / totalComDesconto) * 100, 100) : 0;
+            progressBar.style.width = percent + '%';
+            if (percent >= 100) {
+                progressBar.classList.remove('bg-success');
+                progressBar.style.backgroundColor = '#2ecc71';
             } else {
-                remainingElement.classList.remove('text-success');
-                remainingElement.classList.add('text-danger');
+                progressBar.classList.add('bg-success');
             }
         }
     }
@@ -262,10 +387,15 @@ document.addEventListener('DOMContentLoaded', function() {
         modalEl.addEventListener('show.bs.modal', function() {
             const totalComDescontoEl = document.getElementById('cart-total-compra-com-desconto');
             if (totalComDescontoEl) {
-                const totalComDesconto = totalComDescontoEl.textContent;
-                const totalCompraEl = document.getElementById('total-compra');
-                if (totalCompraEl) {
-                    totalCompraEl.textContent = totalComDesconto;
+                const totalText = totalComDescontoEl.textContent;
+                const totalVal = parseFloat(totalText.replace(/[^\d,]/g, '').replace(',', '.')) || 0;
+                
+                document.getElementById('total-compra').textContent = totalText;
+                
+                // Preencher o primeiro campo de valor automaticamente
+                const firstAmountInput = document.querySelector('.payment-amount');
+                if (firstAmountInput && !firstAmountInput.value) {
+                    firstAmountInput.value = totalVal.toFixed(2);
                 }
             }
             updateRemainingAmount();
@@ -299,7 +429,7 @@ document.addEventListener('DOMContentLoaded', function() {
             event.preventDefault();
             
             if (cart.length === 0) {
-                alert('Carrinho vazio!');
+                showToast('Carrinho vazio!', 'danger');
                 return;
             }
             
@@ -307,19 +437,21 @@ document.addEventListener('DOMContentLoaded', function() {
             const total = cart.reduce((sum, item) => sum + item.qtd * item.preco, 0);
             const totalComDesconto = parseFloat((total * (1 - desconto / 100)).toFixed(2));
             
-            // Validar pagamentos
+            // Validar pagamentos ANTES de fechar o modal
             let paid = 0;
             const paymentMethods = [];
             const paymentAmounts = [];
-            
+            let selectionError = false;
+
             document.querySelectorAll('.payment-method').forEach((select) => {
                 if (!select.value) {
-                    alert('Selecione todas as formas de pagamento!');
+                    showToast('Selecione todas as formas de pagamento!', 'danger');
                     select.focus();
-                    throw new Error('Forma de pagamento não selecionada');
+                    selectionError = true;
                 }
                 paymentMethods.push(select.value);
             });
+            if (selectionError) return;
             
             document.querySelectorAll('.payment-amount').forEach((input) => {
                 const value = parseFloat(input.value) || 0;
@@ -327,10 +459,28 @@ document.addEventListener('DOMContentLoaded', function() {
                 paid += value;
             });
             
-            if (Math.abs(paid - totalComDesconto) > 0.01) {
-                alert(`Valor pago (R$ ${paid.toFixed(2)}) diferente do total (R$ ${totalComDesconto.toFixed(2)})!`);
+            if (Math.abs(paid - totalComDesconto) > 0.001) {
+                showToast(`Valor pago (R$ ${paid.toFixed(2)}) diferente do total (R$ ${totalComDesconto.toFixed(2)})!`, 'danger');
                 return;
             }
+
+            // SE TUDO ESTIVER CERTO, então procedemos com o bloqueio e fechamento
+            const overlay = document.createElement('div');
+            overlay.id = 'pdv-lock-overlay';
+            overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;color:white;backdrop-filter:blur(5px);';
+            overlay.innerHTML = `
+                <div class="spinner-border text-light mb-3" style="width: 3rem; height: 3rem;" role="status"></div>
+                <h4 class="fw-bold">PROCESSANDO VENDA...</h4>
+                <p>Por favor, aguarde um instante.</p>
+            `;
+            document.body.appendChild(overlay);
+
+            const btnSubmit = document.getElementById('btn-submit-venda');
+            if (btnSubmit) {
+                btnSubmit.disabled = true;
+            }
+
+            $('#finalizarVenda').modal('hide');
             
             const dados = {
                 total: total,
@@ -356,19 +506,45 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 const data = await response.json();
                 
+                // Remover overlay IMEDIATAMENTE após a resposta (Segurança visual)
+                document.getElementById('pdv-lock-overlay')?.remove();
+                
                 if (data.status === 'success') {
-                    imprimirComprovante(data.venda_id);
-                    showToast('Venda finalizada com sucesso!');
-                    cart = [];
-                    updateCart();
-                    $('#finalizarVenda').modal('hide');
-                    window.location.href = 'index.php?page=InicioPVD';
+                    swal({
+                        title: "Venda Finalizada!",
+                        text: "O comprovante será gerado em seguida.",
+                        icon: "success",
+                        buttons: {
+                            confirm: {
+                                text: "OK",
+                                value: true,
+                                visible: true,
+                                className: "btn btn-success",
+                                closeModal: true
+                            }
+                        }
+                    }).then(() => {
+                        imprimirComprovante(data.venda_id);
+                        window.location.href = 'index.php?page=InicioPVD';
+                    });
                 } else {
                     throw new Error(data.message || 'Erro ao finalizar a venda');
                 }
             } catch (error) {
                 console.error('Erro:', error);
-                alert('Erro: ' + error.message);
+                // Remover overlay em caso de erro para permitir correção
+                document.getElementById('pdv-lock-overlay')?.remove();
+                
+                swal({
+                    title: "Erro ao Finalizar",
+                    text: error.message,
+                    icon: "error",
+                    buttons: {
+                        confirm: {
+                            className: "btn btn-danger"
+                        }
+                    }
+                });
             }
         });
     }
@@ -380,7 +556,12 @@ document.addEventListener('DOMContentLoaded', function() {
 function imprimirComprovante(vendaId) {
     if (!vendaId) {
         console.error('ID da venda não fornecido');
-        alert('Não foi possível gerar o comprovante. ID da venda ausente.');
+        swal({
+            title: "Erro de Impressão",
+            text: "Não foi possível gerar o comprovante. ID da venda ausente.",
+            icon: "error",
+            button: "Fechar"
+        });
         return;
     }
 
@@ -388,7 +569,13 @@ function imprimirComprovante(vendaId) {
     const janelaImpressao = window.open(url, '_blank', 'width=600,height=800');
     
     if (!janelaImpressao) {
-        alert('Permita pop-ups para visualizar o comprovante');
-        window.location.href = url;
+        swal({
+            title: "Pop-up Bloqueado",
+            text: "Permita pop-ups para visualizar o comprovante automaticamente.",
+            icon: "warning",
+            button: "Entendido"
+        }).then(() => {
+            window.location.href = url;
+        });
     }
 }

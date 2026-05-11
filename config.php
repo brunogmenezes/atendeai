@@ -6,7 +6,7 @@
 
 	try
 	{
-    	$pdo = new PDO("pgsql:host=45.224.128.87;dbname=atendeai", "postgres", "91lS!&*Ke");
+    	$pdo = new PDO("pgsql:host=45.224.128.87;dbname=atendeaicopia", "postgres", "91lS!&*Ke");
     	$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     }
     catch (PDOException $e)

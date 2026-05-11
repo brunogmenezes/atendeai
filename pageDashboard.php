@@ -681,7 +681,8 @@ else
                                     data: data.data,
                                     backgroundColor: function(context) {
                                         const value = context.dataset.data[context.dataIndex].v;
-                                        const alpha = Math.min(0.9, Math.max(0.2, value / data.maxValue));
+                                        const max = data.maxValue > 0 ? data.maxValue : 1;
+                                        const alpha = Math.min(0.9, Math.max(0.2, value / max));
                                         return `rgba(255, 99, 132, ${alpha})`;
                                     },
                                     borderWidth: 1,
@@ -770,19 +771,42 @@ else
                 }
 
                 function renderLegend(chart) {
-                    if (!legendContainer || !chart || !chart.legend) {
+                    if (!legendContainer || !chart) {
                         return;
                     }
 
-                    const items = chart.legend.legendItems || [];
-                    let legendHtml = '<ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 10px 16px;">';
+                    // For Chart.js v4, items might be in different places depending on plugin state
+                    let items = [];
+                    if (chart.legend && chart.legend.legendItems) {
+                        items = chart.legend.legendItems;
+                    } else if (chart.options.plugins.legend && chart.options.plugins.legend.labels && chart.options.plugins.legend.labels.generateLabels) {
+                        items = chart.options.plugins.legend.labels.generateLabels(chart);
+                    }
+
+                    if (!items || items.length === 0) return;
+
+                    let legendHtml = '<div style="display: flex; flex-wrap: wrap; justify-content: center; width: 100%; padding: 10px 0;">';
                     items.forEach(item => {
                         const color = item.strokeStyle || item.fillStyle || '#999';
-                        legendHtml += `<li style="display:flex; align-items:center;"><span style="display:inline-block; width:12px; height:12px; background:${color}; border-radius:2px; margin-right:8px;"></span>${item.text}</li>`;
+                        legendHtml += `<div style="display: flex; align-items: center; margin: 8px 18px; cursor: pointer; white-space: nowrap; transition: opacity 0.2s;" onclick="toggleDataset(${item.datasetIndex})">` + 
+                                      `<span style="display: inline-block; width: 14px; height: 14px; background: ${color}; border-radius: 3px; margin-right: 10px; opacity: ${item.hidden ? 0.3 : 1}; flex-shrink: 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1);"></span>` +
+                                      `<span style="text-decoration: ${item.hidden ? 'line-through' : 'none'}; opacity: ${item.hidden ? 0.6 : 1}; font-size: 13px; font-weight: 600; color: #4a5b72; user-select: none;">${item.text}</span>` +
+                                      `</div>`;
                     });
-                    legendHtml += '</ul>';
+                    legendHtml += '</div>';
                     legendContainer.innerHTML = legendHtml;
                 }
+
+                window.toggleDataset = function(index) {
+                    if (!statisticsChart) return;
+                    const isVisible = statisticsChart.isDatasetVisible(index);
+                    if (isVisible) {
+                        statisticsChart.hide(index);
+                    } else {
+                        statisticsChart.show(index);
+                    }
+                    renderLegend(statisticsChart);
+                };
 
                 function buildDatasets(series) {
                     const datasets = [];

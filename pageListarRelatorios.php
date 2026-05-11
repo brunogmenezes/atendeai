@@ -366,12 +366,28 @@ verificarSessao();
             
             // Validação
             if (!startDate || !endDate) {
-                alert('⚠️ Por favor, selecione ambas as datas');
+                $.notify({
+                    icon: 'fas fa-calendar-times',
+                    title: 'Atenção',
+                    message: 'Por favor, selecione ambas as datas',
+                },{
+                    type: 'warning',
+                    placement: { from: 'top', align: 'right' },
+                    time: 2000,
+                });
                 return;
             }
             
             if (new Date(startDate) > new Date(endDate)) {
-                alert('⚠️ A data inicial não pode ser maior que a data final');
+                $.notify({
+                    icon: 'fas fa-exclamation-circle',
+                    title: 'Data Inválida',
+                    message: 'A data inicial não pode ser maior que a data final',
+                },{
+                    type: 'danger',
+                    placement: { from: 'top', align: 'right' },
+                    time: 2000,
+                });
                 return;
             }
             
