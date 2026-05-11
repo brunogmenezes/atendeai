@@ -23,13 +23,28 @@ try {
     $dataCompra = $dados['data_compra'] ?? date('Y-m-d H:i:s');
     $totalGeral = (float)$dados['total_geral'];
 
+    // Separar frete e outras despesas para salvar na tabela compras
+    $frete = 0;
+    $outrasDespesas = 0;
+    if (!empty($dados['despesas_extras'])) {
+        foreach ($dados['despesas_extras'] as $desp) {
+            if (stripos($desp['nome'], 'frete') !== false) {
+                $frete += (float)$desp['valor'];
+            } else {
+                $outrasDespesas += (float)$desp['valor'];
+            }
+        }
+    }
+
     // 1. Inserir na tabela de compras
-    $stmtCompra = $pdo->prepare("INSERT INTO compras (fornecedor, data_compra, total, usuario_id, conta_id) VALUES (:fornecedor, :data_compra, :total, :usuario_id, :conta_id) RETURNING id");
+    $stmtCompra = $pdo->prepare("INSERT INTO compras (fornecedor, data_compra, total, usuario_id, conta_id, frete, outras_despesas) VALUES (:fornecedor, :data_compra, :total, :usuario_id, :conta_id, :frete, :outras_despesas) RETURNING id");
     $stmtCompra->bindValue(':fornecedor', $fornecedor);
     $stmtCompra->bindValue(':data_compra', $dataCompra);
     $stmtCompra->bindValue(':total', $totalGeral);
     $stmtCompra->bindValue(':usuario_id', $_SESSION['user_id']);
     $stmtCompra->bindValue(':conta_id', $contaIdPrincipal);
+    $stmtCompra->bindValue(':frete', $frete);
+    $stmtCompra->bindValue(':outras_despesas', $outrasDespesas);
     $stmtCompra->execute();
     $compraId = $stmtCompra->fetch(PDO::FETCH_ASSOC)['id'];
 
@@ -50,26 +65,29 @@ try {
             $qtdAtual = (int)$produtoAtual['quantidade'];
             $custoAtual = (float)$produtoAtual['preco_custo'];
 
-            // Cálculo da Média Ponderada
+            // Cálculo da Média Ponderada usando o Custo Diluído
             $qtdBaseParaMedia = max(0, $qtdAtual);
-            $novaMediaCusto = (($qtdBaseParaMedia * $custoAtual) + ($qtdComprada * $custoDiluido)) / ($qtdBaseParaMedia + $qtdComprada);
+            $totalQtdFinal = $qtdBaseParaMedia + $qtdComprada;
+            $novaMediaCusto = (($qtdBaseParaMedia * $custoAtual) + ($qtdComprada * $custoDiluido)) / $totalQtdFinal;
 
-            // Atualizar Produto: Novo Estoque e Novo Custo Médio
-            $stmtUpdateProd = $pdo->prepare("UPDATE produtos SET quantidade = quantidade + :qtd_nova, preco_custo = :novo_custo WHERE id = :id");
+            // Atualizar Produto: Novo Estoque, Novo Custo Médio e Último Custo Diluído
+            $stmtUpdateProd = $pdo->prepare("UPDATE produtos SET quantidade = quantidade + :qtd_nova, preco_custo = :novo_custo, preco_custo_diluido = :custo_diluido WHERE id = :id");
             $stmtUpdateProd->bindValue(':qtd_nova', $qtdComprada);
             $stmtUpdateProd->bindValue(':novo_custo', round($novaMediaCusto, 4));
+            $stmtUpdateProd->bindValue(':custo_diluido', $custoDiluido);
             $stmtUpdateProd->bindValue(':id', $produtoId);
             $stmtUpdateProd->execute();
         }
 
         // Inserir item da compra (GRAVANDO O CUSTO ANTERIOR PARA POSSÍVEL ESTORNO)
-        $stmtItem = $pdo->prepare("INSERT INTO itens_compra (compra_id, produto_id, quantidade, preco_custo, subtotal, preco_custo_anterior) VALUES (:compra_id, :produto_id, :quantidade, :preco_custo, :subtotal, :preco_custo_anterior)");
+        $stmtItem = $pdo->prepare("INSERT INTO itens_compra (compra_id, produto_id, quantidade, preco_custo, subtotal, preco_custo_anterior, preco_custo_diluido) VALUES (:compra_id, :produto_id, :quantidade, :preco_custo, :subtotal, :preco_custo_anterior, :preco_custo_diluido)");
         $stmtItem->bindValue(':compra_id', $compraId);
         $stmtItem->bindValue(':produto_id', $produtoId);
         $stmtItem->bindValue(':quantidade', $qtdComprada);
-        $stmtItem->bindValue(':preco_custo', $custoDiluido);
-        $stmtItem->bindValue(':subtotal', $qtdComprada * $custoDiluido);
+        $stmtItem->bindValue(':preco_custo', $custoBase); // Salva o custo base original
+        $stmtItem->bindValue(':subtotal', $qtdComprada * $custoDiluido); // O subtotal da compra deve refletir o custo diluído (total com despesas)
         $stmtItem->bindValue(':preco_custo_anterior', $custoAtual ?? 0);
+        $stmtItem->bindValue(':preco_custo_diluido', $custoDiluido); // Salva explicitamente o custo diluído
         $stmtItem->execute();
     }
 

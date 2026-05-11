@@ -243,9 +243,9 @@ CREATE TABLE "public"."compras" (
   "total" numeric(10,2) NOT NULL,
   "usuario_id" int4,
   "created_at" timestamp(6) DEFAULT CURRENT_TIMESTAMP,
+  "conta_id" int4,
   "frete" numeric(10,2) DEFAULT 0,
-  "outras_despesas" numeric(10,2) DEFAULT 0,
-  "conta_id" int4
+  "outras_despesas" numeric(10,2) DEFAULT 0
 )
 ;
 
@@ -438,6 +438,7 @@ CREATE TABLE "public"."produtos" (
   "criado_em" timestamp(6) DEFAULT CURRENT_TIMESTAMP,
   "atualizado_em" timestamp(6) DEFAULT CURRENT_TIMESTAMP,
   "imagem" varchar(255) COLLATE "pg_catalog"."default",
+  "preco_custo_diluido" numeric(10,2) DEFAULT 0,
   "preco_venda" numeric(10,2),
   "quantidade_critico" int4,
   "combo" bool DEFAULT false,

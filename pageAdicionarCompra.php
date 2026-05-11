@@ -348,6 +348,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     renderTable();
 
+    const btnSalvarCompra = document.getElementById('btn-salvar-compra');
+
     document.getElementById('form-finalizar-compra').addEventListener('submit', function(e) {
         e.preventDefault();
         if (itensCompra.length === 0) {
@@ -444,6 +446,10 @@ document.addEventListener('DOMContentLoaded', function() {
             }))
         };
 
+        // Bloquear botão para evitar duplos cliques
+        btnSalvarCompra.disabled = true;
+        btnSalvarCompra.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> PROCESSANDO...';
+
         // Enviar para o servidor
         fetch('finalizar_compra_estoque.php', {
             method: 'POST',
@@ -464,11 +470,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
             } else {
                 swal("Erro!", data.message, "error");
+                btnSalvarCompra.disabled = false;
+                btnSalvarCompra.innerHTML = '<i class="fa fa-check-circle me-2"></i> SALVAR COMPRA';
             }
         })
         .catch(error => {
             console.error('Erro:', error);
             swal("Erro!", "Ocorreu uma falha ao processar a compra.", "error");
+            btnSalvarCompra.disabled = false;
+            btnSalvarCompra.innerHTML = '<i class="fa fa-check-circle me-2"></i> SALVAR COMPRA';
         });
     });
 });

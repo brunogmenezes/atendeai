@@ -116,6 +116,9 @@ $totalPaginas = ceil($totalProdutos / $limite);
                                                     data-bs-toggle="modal" data-bs-target="#editProductModal" title="Editar">
                                                     <i class="fa fa-edit"></i>
                                                 </button>
+                                                <button type="button" class="btn btn-link btn-warning open-history-modal" data-id="<?= $produto['id']; ?>" data-nome="<?= $produto['nome']; ?>" title="Histórico de Custos">
+                                                    <i class="fa fa-history"></i>
+                                                </button>
                                                 <button type="button" class="btn btn-link btn-danger open-delete-modal" data-id="<?= $produto['id']; ?>" data-bs-toggle="modal" data-bs-target="#confirmDeleteModal" title="Excluir">
                                                     <i class="fa fa-times"></i>
                                                 </button>
@@ -326,6 +329,151 @@ document.addEventListener('DOMContentLoaded', function () {
             productCriticalEdit.value = this.getAttribute('data-quantidade_critico');
             productCostEdit.value = this.getAttribute('data-preco_custo');
             productSaleEdit.value = this.getAttribute('data-preco_venda');
+        });
+    });
+});
+</script>
+<!-- Modal Histórico de Custos -->
+<div class="modal fade" id="modalHistoricoCusto" tabindex="-1" aria-labelledby="modalHistoricoCustoLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-white">
+                <h5 class="modal-title fw-bold" id="modalHistoricoCustoLabel"><i class="fas fa-history me-2"></i>Histórico de Custos: <span id="hist-produto-nome"></span></h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div style="height: 400px; width: 100%;">
+                    <canvas id="chartHistoricoCusto"></canvas>
+                </div>
+                <div class="table-responsive mt-4">
+                    <table class="table table-sm table-hover" id="table-historico-custo">
+                        <thead>
+                            <tr>
+                                <th>Data</th>
+                                <th class="text-end">Custo Base</th>
+                                <th class="text-end">Custo Diluído</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Dados via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    let costChart = null;
+
+    document.querySelectorAll('.open-history-modal').forEach(button => {
+        button.addEventListener('click', function() {
+            const id = this.dataset.id;
+            const nome = this.dataset.nome;
+            document.getElementById('hist-produto-nome').textContent = nome;
+
+            fetch(`buscar_historico_custo.php?produto_id=${id}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        swal("Erro!", data.error, "error");
+                        return;
+                    }
+
+                    if (data.length === 0) {
+                        swal("Informação", "Nenhum histórico de compra encontrado para este produto.", "info");
+                        return;
+                    }
+
+                    // Renderizar Tabela
+                    const tbody = document.querySelector('#table-historico-custo tbody');
+                    tbody.innerHTML = '';
+                    data.forEach(item => {
+                        const row = `
+                            <tr>
+                                <td>${new Date(item.data_compra).toLocaleDateString('pt-BR')}</td>
+                                <td class="text-end">R$ ${parseFloat(item.preco_custo).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
+                                <td class="text-end text-success fw-bold">R$ ${parseFloat(item.preco_custo_diluido).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
+                            </tr>
+                        `;
+                        tbody.insertAdjacentHTML('beforeend', row);
+                    });
+
+                    // Renderizar Gráfico
+                    const ctx = document.getElementById('chartHistoricoCusto').getContext('2d');
+                    
+                    if (costChart) {
+                        costChart.destroy();
+                    }
+
+                    costChart = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: data.map(item => new Date(item.data_compra).toLocaleDateString('pt-BR')),
+                            datasets: [
+                                {
+                                    label: 'Custo Base',
+                                    data: data.map(item => parseFloat(item.preco_custo)),
+                                    borderColor: '#17a2b8',
+                                    backgroundColor: 'rgba(23, 162, 184, 0.1)',
+                                    tension: 0.3,
+                                    fill: true
+                                },
+                                {
+                                    label: 'Custo Diluído',
+                                    data: data.map(item => parseFloat(item.preco_custo_diluido)),
+                                    borderColor: '#28a745',
+                                    backgroundColor: 'rgba(40, 167, 69, 0.1)',
+                                    tension: 0.3,
+                                    fill: true
+                                }
+                            ]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    position: 'top',
+                                },
+                                tooltip: {
+                                    mode: 'index',
+                                    intersect: false,
+                                    callbacks: {
+                                        label: function(context) {
+                                            let label = context.dataset.label || '';
+                                            if (label) {
+                                                label += ': ';
+                                            }
+                                            if (context.parsed.y !== null) {
+                                                label += new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(context.parsed.y);
+                                            }
+                                            return label;
+                                        }
+                                    }
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: false,
+                                    ticks: {
+                                        callback: function(value) {
+                                            return 'R$ ' + value.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+
+                    $('#modalHistoricoCusto').modal('show');
+                })
+                .catch(err => {
+                    console.error(err);
+                    swal("Erro!", "Falha ao carregar histórico.", "error");
+                });
         });
     });
 });
