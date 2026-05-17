@@ -21,6 +21,7 @@ $totalPaginas = ceil($totalQuery / $limite);
 $resumoDia = contarNumeroPorVendas($dia, $mes, $ano) ?? 0;
 $totalVendasDia = buscarTotalVendasnoPeriodo($dia, $mes, $ano) ?? 0;
 $totalVendasMes = buscarTotalVendasnoMes($mes, $ano) ?? 0;
+$resumoPagamentos = buscarResumoPagamentosVendas($dia, $mes, $ano);
 ?>
 
 <div class="page-header">
@@ -106,6 +107,34 @@ $totalVendasMes = buscarTotalVendasnoMes($mes, $ano) ?? 0;
         </div>
     </div>
 </div>
+
+<!-- Resumo por Tipo de Pagamento -->
+<?php if (!empty($resumoPagamentos)): ?>
+<div class="row">
+    <div class="col-md-12">
+        <div class="card card-round">
+            <div class="card-header">
+                <div class="card-title">Resumo por Tipo de Pagamento (Período Selecionado)</div>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <?php foreach ($resumoPagamentos as $pagamento): ?>
+                        <div class="col-6 col-md-3 mb-3">
+                            <div class="p-3 border rounded shadow-sm bg-light">
+                                <h5 class="fw-bold text-primary mb-2 text-uppercase" style="letter-spacing: 1px; font-size: 0.9rem;">
+                                    <?= htmlspecialchars($pagamento['tipo_pagamento']) ?>
+                                </h5>
+                                <p class="text-muted mb-1 small"><i class="fas fa-receipt me-1"></i> <?= $pagamento['qtd_vendas'] ?> vendas</p>
+                                <h4 class="text-success fw-bold mb-0">R$ <?= number_format($pagamento['total_valor'], 2, ',', '.') ?></h4>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<?php endif; ?>
 
 <div class="row">
     <div class="col-md-12">

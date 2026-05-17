@@ -279,7 +279,12 @@ document.addEventListener('DOMContentLoaded', function() {
     if (btnFinalizarVenda) {
         btnFinalizarVenda.addEventListener('click', function() {
             if (cart.length === 0) {
-                showToast('Adicione produtos ao carrinho antes de finalizar a venda!', 'warning');
+                swal({
+                    title: "Carrinho Vazio",
+                    text: "Adicione produtos ao carrinho antes de finalizar a venda!",
+                    icon: "warning",
+                    button: "Entendi",
+                });
                 return;
             }
             // Abrir modal
@@ -379,6 +384,21 @@ document.addEventListener('DOMContentLoaded', function() {
                 progressBar.classList.add('bg-success');
             }
         }
+        
+        // Bloqueio do botão de finalizar venda
+        const btnSubmit = document.getElementById('btn-submit-venda');
+        if (btnSubmit) {
+            let allMethodsSelected = true;
+            document.querySelectorAll('.payment-method').forEach(select => {
+                if (!select.value) allMethodsSelected = false;
+            });
+            
+            if (Math.abs(remaining) <= 0.001 && allMethodsSelected) {
+                btnSubmit.disabled = false;
+            } else {
+                btnSubmit.disabled = true;
+            }
+        }
     }
 
     // Evento: Atualizar quando modal abre
@@ -420,7 +440,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Evento: Atualizar valor restante quando input muda
     document.addEventListener('input', function(e) {
-        if (e.target.classList.contains('payment-amount')) {
+        if (e.target.classList.contains('payment-amount') || e.target.classList.contains('payment-method')) {
+            updateRemainingAmount();
+        }
+    });
+    
+    document.addEventListener('change', function(e) {
+        if (e.target.classList.contains('payment-method')) {
             updateRemainingAmount();
         }
     });
@@ -428,8 +454,23 @@ document.addEventListener('DOMContentLoaded', function() {
         paymentForm.addEventListener('submit', async function(event) {
             event.preventDefault();
             
+            const btnSubmit = document.getElementById('btn-submit-venda');
+            if (btnSubmit && btnSubmit.dataset.submitting === 'true') {
+                return; // Impede múltiplos envios
+            }
+            
             if (cart.length === 0) {
-                showToast('Carrinho vazio!', 'danger');
+                swal({
+                    title: "Atenção!",
+                    text: "Carrinho vazio! Adicione produtos antes de finalizar.",
+                    icon: "warning",
+                    button: "Entendi",
+                });
+                
+                const btnSubmitReativar = document.getElementById('btn-submit-venda');
+                if (btnSubmitReativar) {
+                    btnSubmitReativar.dataset.submitting = 'false';
+                }
                 return;
             }
             
@@ -445,13 +486,26 @@ document.addEventListener('DOMContentLoaded', function() {
 
             document.querySelectorAll('.payment-method').forEach((select) => {
                 if (!select.value) {
-                    showToast('Selecione todas as formas de pagamento!', 'danger');
+                    if (!selectionError) { // Mostra o alerta apenas uma vez
+                        swal({
+                            title: "Forma de Pagamento",
+                            text: "Selecione a forma de pagamento para todos os valores inseridos!",
+                            icon: "warning",
+                            button: "Entendi",
+                        });
+                    }
                     select.focus();
                     selectionError = true;
                 }
                 paymentMethods.push(select.value);
             });
-            if (selectionError) return;
+            if (selectionError) {
+                const btnSubmitReativar = document.getElementById('btn-submit-venda');
+                if (btnSubmitReativar) {
+                    btnSubmitReativar.dataset.submitting = 'false';
+                }
+                return;
+            }
             
             document.querySelectorAll('.payment-amount').forEach((input) => {
                 const value = parseFloat(input.value) || 0;
@@ -460,11 +514,26 @@ document.addEventListener('DOMContentLoaded', function() {
             });
             
             if (Math.abs(paid - totalComDesconto) > 0.001) {
-                showToast(`Valor pago (R$ ${paid.toFixed(2)}) diferente do total (R$ ${totalComDesconto.toFixed(2)})!`, 'danger');
+                swal({
+                    title: "Divergência de Valores",
+                    text: `Valor pago (R$ ${paid.toFixed(2)}) é diferente do total da venda (R$ ${totalComDesconto.toFixed(2)})!`,
+                    icon: "error",
+                    button: "Corrigir",
+                });
+                
+                const btnSubmitReativar = document.getElementById('btn-submit-venda');
+                if (btnSubmitReativar) {
+                    btnSubmitReativar.dataset.submitting = 'false';
+                }
                 return;
             }
 
             // SE TUDO ESTIVER CERTO, então procedemos com o bloqueio e fechamento
+            if (btnSubmit) {
+                btnSubmit.dataset.submitting = 'true';
+                btnSubmit.disabled = true;
+            }
+
             const overlay = document.createElement('div');
             overlay.id = 'pdv-lock-overlay';
             overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;color:white;backdrop-filter:blur(5px);';
@@ -474,11 +543,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 <p>Por favor, aguarde um instante.</p>
             `;
             document.body.appendChild(overlay);
-
-            const btnSubmit = document.getElementById('btn-submit-venda');
-            if (btnSubmit) {
-                btnSubmit.disabled = true;
-            }
 
             $('#finalizarVenda').modal('hide');
             
@@ -534,6 +598,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.error('Erro:', error);
                 // Remover overlay em caso de erro para permitir correção
                 document.getElementById('pdv-lock-overlay')?.remove();
+                
+                if (btnSubmit) {
+                    btnSubmit.dataset.submitting = 'false';
+                    updateRemainingAmount(); // Atualiza para reabilitar se estiver tudo certo
+                }
                 
                 swal({
                     title: "Erro ao Finalizar",

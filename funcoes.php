@@ -1617,4 +1617,49 @@ function buscarTabelaVendasCustom($tabela, $data_inicio, $data_fim, $order = 'DE
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
+function buscarResumoPagamentosVendas($dia = '', $mes = '', $ano = '') {
+    global $pdo;
+    $where = [];
+    $params = [];
+    if (!empty($ano)) {
+        if (!empty($mes)) {
+            if (!empty($dia)) {
+                $data_inicio = sprintf('%04d-%02d-%02d', $ano, $mes, $dia);
+                $data_fim = date('Y-m-d', strtotime($data_inicio . ' +1 day'));
+                $where[] = "vnd.data_venda >= :data_inicio AND vnd.data_venda < :data_fim";
+                $params[':data_inicio'] = $data_inicio;
+                $params[':data_fim'] = $data_fim;
+            } else {
+                $where[] = "EXTRACT(YEAR FROM vnd.data_venda) = :ano AND EXTRACT(MONTH FROM vnd.data_venda) = :mes";
+                $params[':ano'] = $ano;
+                $params[':mes'] = $mes;
+            }
+        } else {
+            $where[] = "EXTRACT(YEAR FROM vnd.data_venda) = :ano";
+            $params[':ano'] = $ano;
+        }
+    }
+    $where[] = "vnd.estornado = 'f'";
+    $whereClause = !empty($where) ? "WHERE " . implode(" AND ", $where) : "";
+    $query = "
+        SELECT 
+            tp.nome AS tipo_pagamento,
+            COUNT(pv.venda_id) AS qtd_vendas,
+            SUM(pv.valor) AS total_valor
+        FROM vendas vnd
+        JOIN pagamentos_venda pv ON vnd.id = pv.venda_id
+        JOIN tipopagamento tp ON pv.forma_pagamento_id = tp.id
+        $whereClause
+        GROUP BY tp.id, tp.nome
+        ORDER BY total_valor DESC
+    ";
+    try {
+        $stmt = $pdo->prepare($query);
+        $stmt->execute($params);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        error_log("Erro ao buscar resumo de pagamentos: " . $e->getMessage());
+        return [];
+    }
+}
 ?>
