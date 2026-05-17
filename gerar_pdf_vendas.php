@@ -46,8 +46,8 @@ if (!empty($resumoPagamentos)) {
     
     foreach ($resumoPagamentos as $res) {
         $htmlResumo .= '<tr>';
-        $htmlResumo .= '<td style="padding: 8px 12px; border-bottom: 1px solid #ecf0f1; font-weight: bold; text-transform: uppercase;">' . htmlspecialchars($res['forma_pagamento']) . '</td>';
-        $htmlResumo .= '<td style="padding: 8px 12px; border-bottom: 1px solid #ecf0f1; text-align: center;">' . htmlspecialchars($res['quantidade_vendas']) . ' vendas</td>';
+        $htmlResumo .= '<td style="padding: 8px 12px; border-bottom: 1px solid #ecf0f1; font-weight: bold; text-transform: uppercase;">' . htmlspecialchars($res['tipo_pagamento']) . '</td>';
+        $htmlResumo .= '<td style="padding: 8px 12px; border-bottom: 1px solid #ecf0f1; text-align: center;">' . htmlspecialchars($res['qtd_vendas']) . ' vendas</td>';
         $htmlResumo .= '<td style="padding: 8px 12px; border-bottom: 1px solid #ecf0f1; font-weight: bold; color: #28a745; text-align: right;">R$ ' . number_format($res['total_valor'], 2, ',', '.') . '</td>';
         $htmlResumo .= '</tr>';
     }
