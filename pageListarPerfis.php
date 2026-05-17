@@ -150,13 +150,14 @@ foreach ($perfis as $perfil) {
                         <?php foreach ($permissoesDisponiveis as $permissao): ?>
                             <div class="col-md-6 col-lg-4">
                                 <div class="card h-100 border shadow-none bg-light-hover transition-all">
-                                    <div class="card-body p-3 d-flex align-items-start">
-                                        <div class="form-check m-0">
-                                            <input class="form-check-input permission-checkbox" type="checkbox" name="permissoes[]" 
-                                                   value="<?=$permissao['id'];?>" id="perm_<?=$permissao['id'];?>">
-                                            <label class="form-check-label ps-2 cursor-pointer" for="perm_<?=$permissao['id'];?>" style="white-space: normal !important;">
-                                                <strong class="text-dark d-block"><?=htmlspecialchars($permissao['descricao']);?></strong>
-                                                <span class="text-muted small d-block" style="font-size: 0.75rem;"><?=htmlspecialchars($permissao['nome']);?></span>
+                                    <div class="card-body p-3">
+                                        <div class="d-flex align-items-start gap-2">
+                                            <input class="permission-checkbox mt-1" type="checkbox" name="permissoes[]" 
+                                                   value="<?=$permissao['id'];?>" id="perm_<?=$permissao['id'];?>"
+                                                   style="width: 16px; height: 16px; flex-shrink: 0; cursor: pointer;">
+                                            <label class="cursor-pointer m-0" for="perm_<?=$permissao['id'];?>" style="white-space: normal !important; display: block; line-height: 1.3;">
+                                                <strong class="text-dark d-block fw-bold" style="font-size: 0.85rem;"><?=htmlspecialchars($permissao['descricao']);?></strong>
+                                                <span class="text-muted d-block" style="font-size: 0.75rem;"><?=htmlspecialchars($permissao['nome']);?></span>
                                             </label>
                                         </div>
                                     </div>
