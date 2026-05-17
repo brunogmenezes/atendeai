@@ -257,7 +257,8 @@ verificarSessao(); $stmtPerfis = $pdo->query("SELECT id, nome FROM perfis ORDER 
                 			<form id="editForm" action="formEditar.php" method="POST" enctype="multipart/form-data">
                 				<input type="hidden" name="funcao" value="EditarColaborador">
                                 <input type="hidden" name="page" value="<?=$_GET['page'];?>">
-                                <input type="hidden" name="id" id="colaborad                                <div class="row">
+                                <input type="hidden" name="id" id="colaboradorIDEdit" value="">
+                                <div class="row">
                                     <div class="col-sm-12">
                                         <div class="form-group form-group-default">
                                             <label>Nome</label>
@@ -278,6 +279,12 @@ verificarSessao(); $stmtPerfis = $pdo->query("SELECT id, nome FROM perfis ORDER 
                                     </div>
                                     <div class="col-sm-6">
                                         <div class="form-group form-group-default">
+                                            <label>Nova Senha (Deixe em branco para manter)</label>
+                                            <input id="edit_senha" name="senha" type="password" class="form-control" placeholder="Deixe em branco para não alterar" />
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <div class="form-group form-group-default">
                                             <label>Perfil de Permissão</label>
                                             <select id="edit_perfil_id" name="perfil_id" class="form-control">
                                                 <option value="">Nenhum (Sem Acesso)</option>
@@ -287,8 +294,8 @@ verificarSessao(); $stmtPerfis = $pdo->query("SELECT id, nome FROM perfis ORDER 
                                             </select>
                                         </div>
                                     </div>
-                                    <div class="col-sm-6 d-flex align-items-center ps-4">
-                                        <div class="form-check form-check-inline mt-2">
+                                    <div class="col-sm-12 d-flex align-items-center ps-4 mt-2">
+                                        <div class="form-check form-check-inline">
                                             <input class="form-check-input" type="checkbox" name="is_admin" id="edit_is_admin" value="1">
                                             <label class="form-check-label fw-bold text-success" for="edit_is_admin">
                                                 <i class="fas fa-shield-alt me-1"></i>Administrador (Total)
@@ -296,13 +303,12 @@ verificarSessao(); $stmtPerfis = $pdo->query("SELECT id, nome FROM perfis ORDER 
                                         </div>
                                     </div>
                                 </div>
-                     			<div class="modal-footer border-0">
-                            		<button type="submit" class="btn btn-primary">Salvar</button>
-									<button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cancelar</button>
-								</div>
-								</div>
-                </form>
-            </div>
+                                <div class="modal-footer border-0 pb-0 pe-0">
+                                    <button type="submit" class="btn btn-primary">Salvar</button>
+                                    <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cancelar</button>
+                                </div>
+                			</form>
+            			</div>
         </div>
     </div>
 </div>
@@ -354,6 +360,9 @@ verificarSessao(); $stmtPerfis = $pdo->query("SELECT id, nome FROM perfis ORDER 
                 colaboradorNome.value = this.getAttribute('data-nome');
                 colaboradorSalario.value = this.getAttribute('data-salario');
                 colaboradorDataContratacao.value = this.getAttribute('data-data_contratacao');
+                
+                // Limpar campo de senha
+                document.getElementById('edit_senha').value = '';
                 
                 // Definir campos de permissão no modal de edição
                 const perfilId = this.getAttribute('data-perfil_id');
