@@ -24,6 +24,7 @@ $dompdf = new Dompdf($options);
 $numeroVendasPeriodo = contarNumeroPorVendas($dia, $mes, $ano) ?? 0;
 $totalnoperiodo = buscarTotalVendasnoPeriodo($dia, $mes, $ano) ?? 0;
 $vendas = buscarTabelaVendas('vendas', '', '', 0, 0, 'DESC', $dia, $mes, $ano) ?? [];
+$resumoPagamentos = buscarResumoPagamentosVendas($dia, $mes, $ano) ?? [];
 
 // Formatar período
 $periodo = '';
@@ -31,6 +32,27 @@ if ($dia) $periodo .= str_pad($dia, 2, '0', STR_PAD_LEFT) . '/';
 if ($mes) $periodo .= str_pad($mes, 2, '0', STR_PAD_LEFT) . '/';
 if ($ano) $periodo .= $ano;
 if (empty($periodo)) $periodo = 'Todos os períodos';
+
+// Gerar HTML do Resumo por Tipo de Pagamento
+$htmlResumo = '';
+if (!empty($resumoPagamentos)) {
+    $htmlResumo .= '<h3 style="margin-top: 25px; margin-bottom: 10px; font-size: 13px; border-bottom: 2px solid #667eea; padding-bottom: 5px; color: #2c3e50; font-weight: 700; text-transform: uppercase;">💳 Resumo por Tipo de Pagamento</h3>';
+    $htmlResumo .= '<table style="margin-top: 5px; margin-bottom: 25px; box-shadow: none; border-radius: 4px; border: 1px solid #ecf0f1; font-size: 10px; border-collapse: collapse; width: 100%;">';
+    $htmlResumo .= '<thead><tr style="background: linear-gradient(135deg, #7f8c8d 0%, #95a5a6 100%); color: white;">';
+    $htmlResumo .= '<th style="padding: 8px 12px; font-weight: 700; text-align: left; text-transform: uppercase; font-size: 9px;">Forma de Pagamento</th>';
+    $htmlResumo .= '<th style="padding: 8px 12px; font-weight: 700; text-align: center; text-transform: uppercase; font-size: 9px; width: 30%;">Quantidade de Vendas</th>';
+    $htmlResumo .= '<th style="padding: 8px 12px; font-weight: 700; text-align: right; text-transform: uppercase; font-size: 9px; width: 30%;">Total Acumulado</th>';
+    $htmlResumo .= '</tr></thead><tbody>';
+    
+    foreach ($resumoPagamentos as $res) {
+        $htmlResumo .= '<tr>';
+        $htmlResumo .= '<td style="padding: 8px 12px; border-bottom: 1px solid #ecf0f1; font-weight: bold; text-transform: uppercase;">' . htmlspecialchars($res['forma_pagamento']) . '</td>';
+        $htmlResumo .= '<td style="padding: 8px 12px; border-bottom: 1px solid #ecf0f1; text-align: center;">' . htmlspecialchars($res['quantidade_vendas']) . ' vendas</td>';
+        $htmlResumo .= '<td style="padding: 8px 12px; border-bottom: 1px solid #ecf0f1; font-weight: bold; color: #28a745; text-align: right;">R$ ' . number_format($res['total_valor'], 2, ',', '.') . '</td>';
+        $htmlResumo .= '</tr>';
+    }
+    $htmlResumo .= '</tbody></table>';
+}
 
 $html = '<!DOCTYPE html>
 <html lang="pt-BR">
@@ -210,8 +232,9 @@ $html = '<!DOCTYPE html>
                 <label>Ticket Médio</label>
                 <div class="value">R$ ' . ($numeroVendasPeriodo > 0 ? number_format($totalnoperiodo / $numeroVendasPeriodo, 2, ',', '.') : '0,00') . '</div>
             </div>
-        </div>
+        </div>' . $htmlResumo . '
 
+        <h3 style="margin-top: 20px; margin-bottom: 10px; font-size: 13px; border-bottom: 2px solid #667eea; padding-bottom: 5px; color: #2c3e50; font-weight: 700; text-transform: uppercase;">📋 Detalhamento das Vendas</h3>
         <table>
             <thead>
                 <tr>
