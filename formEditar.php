@@ -25,12 +25,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['funcao'] == 'EditarColabora
         $perfil_id = !empty($_POST['perfil_id']) ? intval($_POST['perfil_id']) : null;
         $is_admin = isset($_POST['is_admin']) && $_POST['is_admin'] === '1';
         $senha = $_POST['senha'] ?? '';
+        $username_input = trim($_POST['username'] ?? '');
         
         $data_contratacao_formatada = !empty($data_contratacao) ? date('Y-m-d', strtotime($data_contratacao)) : null;
 
         $sqlColaborador = "UPDATE colaboradores SET nome = :nome, salario = :salario, data_contratacao = :data_contratacao WHERE id = :id";
         
-        $sqlUsuario = "UPDATE usuarios SET perfil_id = :perfil_id, \"isAdmin\" = :is_admin";
+        $sqlUsuario = "UPDATE usuarios SET username = :username, perfil_id = :perfil_id, \"isAdmin\" = :is_admin";
         if (!empty($senha)) {
             $sqlUsuario .= ", password = :password";
         }
@@ -43,6 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['funcao'] == 'EditarColabora
             $pdo->beginTransaction();
             
             $paramsUsuario = [
+                ':username' => $username_input,
                 ':perfil_id' => $perfil_id,
                 ':is_admin' => $is_admin ? 1 : 0,
                 ':id' => $id
@@ -66,6 +68,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['funcao'] == 'EditarColabora
                 $stmtCheckSelf->execute([':id' => $id]);
                 $selfColab = $stmtCheckSelf->fetch(PDO::FETCH_ASSOC);
                 if ($selfColab && $selfColab['idusuario'] == $_SESSION['user_id']) {
+                    $_SESSION['username'] = $username_input;
                     unset($_SESSION['permissoes']);
                     unset($_SESSION['is_admin']);
                 }

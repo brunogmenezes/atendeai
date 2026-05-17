@@ -103,6 +103,7 @@ verificarSessao(); $stmtPerfis = $pdo->query("SELECT id, nome FROM perfis ORDER 
 												<button type="button" class="btn btn-link btn-primary open-edit-modal" 
                                                         data-id="<?=$colaborador['id'];?>" 
                                                         data-nome="<?=htmlspecialchars($colaborador['nome']);?>" 
+                                                        data-username="<?=htmlspecialchars($colaborador['username'] ?? '');?>" 
                                                         data-salario="<?=$colaborador['salario'];?>" 
                                                         data-data_contratacao="<?=date('Y-m-d', strtotime($colaborador['data_contratacao']));?>" 
                                                         data-perfil_id="<?=$colaborador['perfil_id'] ?? '';?>" 
@@ -259,10 +260,16 @@ verificarSessao(); $stmtPerfis = $pdo->query("SELECT id, nome FROM perfis ORDER 
                                 <input type="hidden" name="page" value="<?=$_GET['page'];?>">
                                 <input type="hidden" name="id" id="colaboradorIDEdit" value="">
                                 <div class="row">
-                                    <div class="col-sm-12">
+                                    <div class="col-sm-6">
                                         <div class="form-group form-group-default">
                                             <label>Nome</label>
                                             <input id="edit_nome" name="nome" type="text" class="form-control" required/>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <div class="form-group form-group-default">
+                                            <label>Usuário / Username</label>
+                                            <input id="edit_username" name="username" type="text" class="form-control" required/>
                                         </div>
                                     </div>
                                     <div class="col-md-6">
@@ -279,12 +286,6 @@ verificarSessao(); $stmtPerfis = $pdo->query("SELECT id, nome FROM perfis ORDER 
                                     </div>
                                     <div class="col-sm-6">
                                         <div class="form-group form-group-default">
-                                            <label>Nova Senha (Deixe em branco para manter)</label>
-                                            <input id="edit_senha" name="senha" type="password" class="form-control" placeholder="Deixe em branco para não alterar" />
-                                        </div>
-                                    </div>
-                                    <div class="col-sm-6">
-                                        <div class="form-group form-group-default">
                                             <label>Perfil de Permissão</label>
                                             <select id="edit_perfil_id" name="perfil_id" class="form-control">
                                                 <option value="">Nenhum (Sem Acesso)</option>
@@ -294,12 +295,18 @@ verificarSessao(); $stmtPerfis = $pdo->query("SELECT id, nome FROM perfis ORDER 
                                             </select>
                                         </div>
                                     </div>
-                                    <div class="col-sm-12 d-flex align-items-center ps-4 mt-2">
+                                    <div class="col-sm-6 d-flex align-items-center ps-4">
                                         <div class="form-check form-check-inline">
                                             <input class="form-check-input" type="checkbox" name="is_admin" id="edit_is_admin" value="1">
-                                            <label class="form-check-label fw-bold text-success" for="edit_is_admin">
+                                            <label class="form-check-label fw-bold text-success" for="edit_is_admin" style="margin-top: 10px;">
                                                 <i class="fas fa-shield-alt me-1"></i>Administrador (Total)
                                             </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-12">
+                                        <div class="form-group form-group-default">
+                                            <label>Nova Senha (Deixe em branco para manter a atual)</label>
+                                            <input id="edit_senha" name="senha" type="password" class="form-control" placeholder="Preencha apenas se desejar alterar a senha deste colaborador" />
                                         </div>
                                     </div>
                                 </div>
@@ -349,6 +356,7 @@ verificarSessao(); $stmtPerfis = $pdo->query("SELECT id, nome FROM perfis ORDER 
         const editButtons = document.querySelectorAll('.open-edit-modal');
         const colaboradorIDEdit = document.getElementById('colaboradorIDEdit');
         const colaboradorNome = document.getElementById('edit_nome');
+        const colaboradorUsername = document.getElementById('edit_username');
         const colaboradorSalario = document.getElementById('edit_salario');
         const colaboradorDataContratacao = document.getElementById('edit_data_contratacao');
         const colaboradorPerfil = document.getElementById('edit_perfil_id');
@@ -358,6 +366,7 @@ verificarSessao(); $stmtPerfis = $pdo->query("SELECT id, nome FROM perfis ORDER 
             button.addEventListener('click', function () {
                 colaboradorIDEdit.value = this.getAttribute('data-id');
                 colaboradorNome.value = this.getAttribute('data-nome');
+                colaboradorUsername.value = this.getAttribute('data-username') ? this.getAttribute('data-username') : '';
                 colaboradorSalario.value = this.getAttribute('data-salario');
                 colaboradorDataContratacao.value = this.getAttribute('data-data_contratacao');
                 
