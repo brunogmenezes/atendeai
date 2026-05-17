@@ -25,21 +25,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['funcao'] == 'EditarColabora
         
         $data_contratacao_formatada = !empty($data_contratacao) ? date('Y-m-d', strtotime($data_contratacao)) : null;
 
-        $sqlColaborador = "UPDATE colaboradores SET nome = :nome, salario = :salario, data_contratacao = :data_contratacao WHERE id = :id";
+        $sqlColaborador = "UPDATE colaboradores SET nome = :nome, salario = :salario, data_contratacao = :data_contratacao WHERE id = :id"; $perfil_id = !empty($_POST['perfil_id']) ? intval($_POST['perfil_id']) : null; $is_admin = isset($_POST['is_admin']) && $_POST['is_admin'] === '1'; $sqlUsuario = "UPDATE usuarios SET perfil_id = :perfil_id, \"isAdmin\" = :is_admin WHERE id = (SELECT idusuario FROM colaboradores WHERE id = :id)"; $stmtUsuario = $pdo->prepare($sqlUsuario);
         $stmt = $pdo->prepare($sqlColaborador);
         
         try {
-            $stmt->execute([
+            $pdo->beginTransaction(); $stmtUsuario->execute([':perfil_id' => $perfil_id, ':is_admin' => $is_admin ? 1 : 0, ':id' => $id]); $stmt->execute([
                 ':nome' => $nome,
                 ':salario' => $salario,
                 ':data_contratacao' => $data_contratacao_formatada,
                 ':id' => $id
             ]);
             
-            $_SESSION['success_message'] = "Colaborador atualizado com sucesso!";
+            $pdo->commit(); if (isset($_SESSION['user_id'])) { $stmtCheckSelf = $pdo->prepare("SELECT idusuario FROM colaboradores WHERE id = :id"); $stmtCheckSelf->execute([':id' => $id]); $selfColab = $stmtCheckSelf->fetch(PDO::FETCH_ASSOC); if ($selfColab && $selfColab['idusuario'] == $_SESSION['user_id']) { unset($_SESSION['permissoes']); unset($_SESSION['is_admin']); } } $_SESSION['success_message'] = "Colaborador atualizado com sucesso!";
             header("Location: index.php" . (!empty($paginaPos) ? "?page=" . urlencode($paginaPos) : ""));
             exit;
-        } catch (PDOException $e) {
+        } catch (Exception $e) { if ($pdo->inTransaction()) { $pdo->rollBack(); }
             die("Erro ao atualizar colaborador: " . $e->getMessage());
         }
     } else {

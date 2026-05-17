@@ -20,12 +20,17 @@ verificarSessao();
 
             try
             {
-                $queryUsuario = "INSERT INTO usuarios (username, password)
-                                    VALUES (:username, :password)";
+                $perfil_id = !empty($_POST['perfil_id']) ? intval($_POST['perfil_id']) : null;
+                $is_admin = isset($_POST['is_admin']) && $_POST['is_admin'] === '1';
+
+                $queryUsuario = "INSERT INTO usuarios (username, password, \"isAdmin\", perfil_id)
+                                    VALUES (:username, :password, :is_admin, :perfil_id)";
                 $stmtUsuario = $pdo->prepare($queryUsuario);
                 $stmtUsuario->execute([
                             ':username' => $usuario,
-                            ':password' => $password_hash
+                            ':password' => $password_hash,
+                            ':is_admin' => $is_admin ? 1 : 0,
+                            ':perfil_id' => $perfil_id
                         ]);
                 $usuarioID = $pdo->lastInsertId();
 

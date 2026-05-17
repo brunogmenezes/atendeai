@@ -116,11 +116,11 @@
                             </div>
                         </div>
                         <ul class="nav nav-secondary">
-                            <li class="nav-section">
-                                <span class="sidebar-mini-icon"><i class="fa fa-ellipsis-h"></i></span>
-                                <h4 class="text-section">Dashboard</h4>
-                            </li>
-                            <?php if($user['isAdmin']==true): ?>
+                            <?php if(temPermissao('ver_dashboard')): ?>
+                                <li class="nav-section">
+                                    <span class="sidebar-mini-icon"><i class="fa fa-ellipsis-h"></i></span>
+                                    <h4 class="text-section">Dashboard</h4>
+                                </li>
                                 <li class="nav-item <?php echo ($page == 'Dashboard') ? 'active' : ''; ?>">
                                     <a href="index.php?page=Dashboard" >
                                         <i class="fas fa-chart-line"></i>
@@ -128,33 +128,41 @@
                                     </a>
                                 </li>
                             <?php endif; ?>
-                            <li class="nav-section">
-                                <span class="sidebar-mini-icon"><i class="fa fa-ellipsis-h"></i></span>
-                                <h4 class="text-section">Operacional</h4>
-                            </li>
-                            <li class="nav-item <?php echo ($page == 'InicioPVD') ? 'active' : ''; ?>">
-                                <a href="index.php?page=InicioPVD">
-                                    <i class="fas fa-dollar-sign"></i>
-                                    <p>PDV</p>
-                                </a>
-                            </li>
-                            <li class="nav-item <?php echo ($page == 'ListarVendas') ? 'active' : ''; ?>">
-                                <a data-bs-toggle="collapse" href="#sidebarVendas">
-                                    <i class="fas fa-briefcase"></i>
-                                    <p>Vendas</p>
-                                    <span class="caret"></span>
-                                </a>
-                                <div class="collapse <?php echo ($page == 'ListarVendas') ? 'show' : ''; ?>" id="sidebarVendas">
-                                     <ul class="nav nav-collapse">
-                                         <li>
-                                             <a href="index.php?page=ListarVendas&dia=<?=date('d');?>&mes=<?=date('m');?>&ano=<?=date('Y');?>">
-                                                 <span class="sub-item">Relatório de Vendas</span>
-                                             </a>
-                                         </li>
-                                     </ul>
-                                 </div>
-                             </li>
-                             <?php if($user['isAdmin']==true): ?>
+
+                            <?php if(temPermissao('acessar_pdv') || temPermissao('listar_vendas')): ?>
+                                <li class="nav-section">
+                                    <span class="sidebar-mini-icon"><i class="fa fa-ellipsis-h"></i></span>
+                                    <h4 class="text-section">Operacional</h4>
+                                </li>
+                                <?php if(temPermissao('acessar_pdv')): ?>
+                                    <li class="nav-item <?php echo ($page == 'InicioPVD') ? 'active' : ''; ?>">
+                                        <a href="index.php?page=InicioPVD">
+                                            <i class="fas fa-dollar-sign"></i>
+                                            <p>PDV</p>
+                                        </a>
+                                    </li>
+                                <?php endif; ?>
+                                <?php if(temPermissao('listar_vendas')): ?>
+                                    <li class="nav-item <?php echo ($page == 'ListarVendas') ? 'active' : ''; ?>">
+                                        <a data-bs-toggle="collapse" href="#sidebarVendas">
+                                            <i class="fas fa-briefcase"></i>
+                                            <p>Vendas</p>
+                                            <span class="caret"></span>
+                                        </a>
+                                        <div class="collapse <?php echo ($page == 'ListarVendas') ? 'show' : ''; ?>" id="sidebarVendas">
+                                             <ul class="nav nav-collapse">
+                                                 <li>
+                                                     <a href="index.php?page=ListarVendas&dia=<?=date('d');?>&mes=<?=date('m');?>&ano=<?=date('Y');?>">
+                                                         <span class="sub-item">Relatório de Vendas</span>
+                                                     </a>
+                                                 </li>
+                                             </ul>
+                                         </div>
+                                     </li>
+                                 <?php endif; ?>
+                             <?php endif; ?>
+
+                             <?php if(temPermissao('listar_produtos') || temPermissao('listar_compras')): ?>
                                  <li class="nav-section">
                                      <span class="sidebar-mini-icon"><i class="fa fa-ellipsis-h"></i></span>
                                      <h4 class="text-section">Gestão de Estoque</h4>
@@ -167,86 +175,104 @@
                                      </a>
                                      <div class="collapse <?php echo ($page == 'ListarProdutos' || $page == 'ListarCompras' || $page == 'AdicionarCompra') ? 'show' : ''; ?>" id="sidebarEstoque">
                                          <ul class="nav nav-collapse">
-                                             <li class="<?php echo ($page == 'ListarProdutos') ? 'active' : ''; ?>">
-                                                 <a href="index.php?page=ListarProdutos">
-                                                     <span class="sub-item">Catálogo de Produtos</span>
-                                                 </a>
-                                             </li>
-                                             <li class="<?php echo ($page == 'ListarCompras' || $page == 'AdicionarCompra') ? 'active' : ''; ?>">
-                                                 <a href="index.php?page=ListarCompras">
-                                                     <span class="sub-item">Entradas / Compras</span>
-                                                 </a>
-                                             </li>
+                                             <?php if(temPermissao('listar_produtos')): ?>
+                                                 <li class="<?php echo ($page == 'ListarProdutos') ? 'active' : ''; ?>">
+                                                     <a href="index.php?page=ListarProdutos">
+                                                         <span class="sub-item">Catálogo de Produtos</span>
+                                                     </a>
+                                                 </li>
+                                             <?php endif; ?>
+                                             <?php if(temPermissao('listar_compras')): ?>
+                                                 <li class="<?php echo ($page == 'ListarCompras' || $page == 'AdicionarCompra') ? 'active' : ''; ?>">
+                                                     <a href="index.php?page=ListarCompras">
+                                                         <span class="sub-item">Entradas / Compras</span>
+                                                     </a>
+                                                 </li>
+                                             <?php endif; ?>
                                          </ul>
                                      </div>
                                  </li>
                              <?php endif; ?>
-                             <li class="nav-section">
-                                 <span class="sidebar-mini-icon"><i class="fa fa-ellipsis-h"></i></span>
-                                 <h4 class="text-section">Pessoas e Finanças</h4>
-                             </li>
-                             <li class="nav-item <?php echo ($page == 'ListarClientes') ? 'active' : ''; ?>">
-                                 <a href="index.php?page=ListarClientes">
-                                     <i class="fas fa-user-friends"></i>
-                                     <p>Clientes</p>
-                                 </a>
-                             </li>
-                             <?php if($user['isAdmin']==true): ?>
-                             <li class="nav-item <?php echo ($page == 'ListarFinanceiro' || $page == 'ListarFechamentos' || $page == 'ListarTransferencias' || $page == 'ListarDespesasFixas' || $page == 'ListarSalarios' || $page == 'ListarTipoPagamento' || $page == 'ListarContas') ? 'active' : ''; ?>">
-                                 <a data-bs-toggle="collapse" href="#financeiro">
-                                     <i class="fas fa-wallet"></i>
-                                     <p>Financeiro</p>
-                                     <span class="caret"></span>
-                                 </a>
-                                 <div class="collapse <?php echo ($page == 'ListarFinanceiro' || $page == 'ListarFechamentos' || $page == 'ListarTransferencias' || $page == 'ListarDespesasFixas' || $page == 'ListarSalarios' || $page == 'ListarTipoPagamento' || $page == 'ListarContas') ? 'show' : ''; ?>" id="financeiro">
-                                     <ul class="nav nav-collapse">
-                                         <li class="<?php echo ($page == 'ListarFinanceiro') ? 'active' : ''; ?>">
-                                             <a href="index.php?page=ListarFinanceiro">
-                                                 <span class="sub-item">Fluxo de Caixa</span>
-                                             </a>
-                                         </li>
-                                         <li class="<?php echo ($page == 'ListarContas') ? 'active' : ''; ?>">
-                                             <a href="index.php?page=ListarContas">
-                                                 <span class="sub-item">Minhas Contas</span>
-                                             </a>
-                                         </li>
-                                         <li class="<?php echo ($page == 'ListarFechamentos') ? 'active' : ''; ?>">
-                                             <a href="index.php?page=ListarFechamentos">
-                                                 <span class="sub-item">Fechamentos</span>
-                                             </a>
-                                         </li>
-                                         <li class="<?php echo ($page == 'ListarTipoPagamento') ? 'active' : ''; ?>">
-                                             <a href="index.php?page=ListarTipoPagamento">
-                                                 <span class="sub-item">Config. Pagamentos</span>
-                                             </a>
-                                         </li>
-                                         <li class="<?php echo ($page == 'ListarSalarios') ? 'active' : ''; ?>">
-                                             <a href="index.php?page=ListarSalarios">
-                                                 <span class="sub-item">Colaboradores</span>
-                                             </a>
-                                         </li>
-                                     </ul>
-                                 </div>
-                             </li>
+
+                             <?php if(temPermissao('listar_clientes') || temPermissao('listar_financeiro')): ?>
+                                 <li class="nav-section">
+                                     <span class="sidebar-mini-icon"><i class="fa fa-ellipsis-h"></i></span>
+                                     <h4 class="text-section">Pessoas e Finanças</h4>
+                                 </li>
+                                 <?php if(temPermissao('listar_clientes')): ?>
+                                     <li class="nav-item <?php echo ($page == 'ListarClientes') ? 'active' : ''; ?>">
+                                         <a href="index.php?page=ListarClientes">
+                                             <i class="fas fa-user-friends"></i>
+                                             <p>Clientes</p>
+                                         </a>
+                                     </li>
+                                 <?php endif; ?>
+                                 <?php if(temPermissao('listar_financeiro')): ?>
+                                     <li class="nav-item <?php echo ($page == 'ListarFinanceiro' || $page == 'ListarFechamentos' || $page == 'ListarTransferencias' || $page == 'ListarDespesasFixas' || $page == 'ListarTipoPagamento' || $page == 'ListarContas') ? 'active' : ''; ?>">
+                                         <a data-bs-toggle="collapse" href="#financeiro">
+                                             <i class="fas fa-wallet"></i>
+                                             <p>Financeiro</p>
+                                             <span class="caret"></span>
+                                         </a>
+                                         <div class="collapse <?php echo ($page == 'ListarFinanceiro' || $page == 'ListarFechamentos' || $page == 'ListarTransferencias' || $page == 'ListarDespesasFixas' || $page == 'ListarTipoPagamento' || $page == 'ListarContas') ? 'show' : ''; ?>" id="financeiro">
+                                             <ul class="nav nav-collapse">
+                                                 <li class="<?php echo ($page == 'ListarFinanceiro') ? 'active' : ''; ?>">
+                                                     <a href="index.php?page=ListarFinanceiro">
+                                                         <span class="sub-item">Fluxo de Caixa</span>
+                                                     </a>
+                                                 </li>
+                                                 <li class="<?php echo ($page == 'ListarContas') ? 'active' : ''; ?>">
+                                                     <a href="index.php?page=ListarContas">
+                                                         <span class="sub-item">Minhas Contas</span>
+                                                     </a>
+                                                 </li>
+                                                 <li class="<?php echo ($page == 'ListarFechamentos') ? 'active' : ''; ?>">
+                                                     <a href="index.php?page=ListarFechamentos">
+                                                         <span class="sub-item">Fechamentos</span>
+                                                     </a>
+                                                 </li>
+                                                 <li class="<?php echo ($page == 'ListarTipoPagamento') ? 'active' : ''; ?>">
+                                                     <a href="index.php?page=ListarTipoPagamento">
+                                                         <span class="sub-item">Config. Pagamentos</span>
+                                                     </a>
+                                                 </li>
+                                             </ul>
+                                         </div>
+                                     </li>
+                                 <?php endif; ?>
                              <?php endif; ?>
-                             <?php if($user['isAdmin']==true): ?>
+
+                             <?php if(temPermissao('listar_relatorios')): ?>
                                 <li class="nav-item <?php echo ($page == 'ListarRelatorios') ? 'active' : ''; ?>">
                                     <a href="index.php?page=ListarRelatorios">
                                         <i class="fas fa-book"></i>
                                         <p>Relatórios</p>
                                     </a>
                                 </li>
-                                <li class="nav-item <?php echo ($page == 'ListarSistema') ? 'active' : ''; ?>">
+                             <?php endif; ?>
+
+                             <?php if(temPermissao('gerenciar_sistema')): ?>
+                                <li class="nav-item <?php echo ($page == 'ListarEmpresa' || $page == 'ListarSalarios' || $page == 'ListarPerfis' || $page == 'ListarSistema') ? 'active' : ''; ?>">
                                     <a data-bs-toggle="collapse" href="#sistema">
                                         <i class="fas fa-cog"></i>
                                         <p>Sistema</p>
                                         <span class="caret"></span>
                                     </a>
-                                    <div class="collapse" id="sistema">
+                                    <div class="collapse <?php echo ($page == 'ListarEmpresa' || $page == 'ListarSalarios' || $page == 'ListarPerfis') ? 'show' : ''; ?>" id="sistema">
                                         <ul class="nav nav-collapse">
-                                            <li>
+                                            <li class="<?php echo ($page == 'ListarEmpresa') ? 'active' : ''; ?>">
                                                 <a href="index.php?page=ListarEmpresa">
                                                     <span class="sub-item">Dados da Empresa</span>
+                                                </a>
+                                            </li>
+                                            <li class="<?php echo ($page == 'ListarSalarios') ? 'active' : ''; ?>">
+                                                <a href="index.php?page=ListarSalarios">
+                                                    <span class="sub-item">Colaboradores</span>
+                                                </a>
+                                            </li>
+                                            <li class="<?php echo ($page == 'ListarPerfis') ? 'active' : ''; ?>">
+                                                <a href="index.php?page=ListarPerfis">
+                                                    <span class="sub-item">Perfis e Permissões</span>
                                                 </a>
                                             </li>
                                         </ul>
@@ -278,23 +304,50 @@
                 <div class="container">
                     <div class="page-inner">
                         <?php
-                            if(!isset($_GET['page'])) { include('pagePVD.php'); }
-                            else if ($page=='Dashboard') { include('pageDashboard.php'); }
-                            else if ($page=='InicioPVD') { include('pagePVD.php'); }
-                            else if ($page=='ListarVendas') { include('pageListarVendas.php'); }
-                            else if ($page=='ListarProdutos') { include('pageListarProdutos.php'); }
-                            else if ($page=='ListarClientes') { include('pageListarClientes.php'); }
-                            else if ($page=='ListarFinanceiro') { include('pageListarFinanceiro.php'); }
-                            else if ($page=='ListarTransferencias') { include('pageListarTransferencias.php'); }
-                            else if ($page=='ListarFechamentos') { include('pageListarFechamentos.php'); }
-                            else if ($page=='ListarDespesasFixas') { include('pageListarDespesasFixas.php'); }
-                            else if ($page=='ListarSalarios') { include('pageListarSalarios.php'); }
-                            else if ($page=='ListarTipoPagamento') { include('pageListarTipoPagamento.php'); }
-                            else if ($page=='ListarContas') { include('pageListarContas.php'); }
-                            else if ($page=='ListarRelatorios') { include('pageListarRelatorios.php'); }
-                            else if ($page=='ListarEmpresa') { include('pageListarEmpresa.php'); }
-                            else if ($page=='ListarCompras') { include('pageListarCompras.php'); }
-                            else if ($page=='AdicionarCompra') { include('pageAdicionarCompra.php'); }
+                            $page_permissions = [
+                                'Dashboard' => 'ver_dashboard',
+                                'InicioPVD' => 'acessar_pdv',
+                                'ListarVendas' => 'listar_vendas',
+                                'ListarProdutos' => 'listar_produtos',
+                                'ListarClientes' => 'listar_clientes',
+                                'ListarFinanceiro' => 'listar_financeiro',
+                                'ListarTransferencias' => 'listar_financeiro',
+                                'ListarFechamentos' => 'listar_financeiro',
+                                'ListarDespesasFixas' => 'listar_financeiro',
+                                'ListarTipoPagamento' => 'listar_financeiro',
+                                'ListarContas' => 'listar_financeiro',
+                                'ListarRelatorios' => 'listar_relatorios',
+                                'ListarEmpresa' => 'gerenciar_sistema',
+                                'ListarSalarios' => 'gerenciar_sistema',
+                                'ListarPerfis' => 'gerenciar_sistema',
+                                'ListarCompras' => 'listar_compras',
+                                'AdicionarCompra' => 'lancar_compras'
+                            ];
+
+                            $active_page = !isset($_GET['page']) ? 'InicioPVD' : $page;
+                            
+                            if (isset($page_permissions[$active_page]) && !temPermissao($page_permissions[$active_page])) {
+                                echo '<div class="alert alert-danger mt-4"><i class="fas fa-exclamation-triangle me-2"></i><b>Acesso Negado:</b> Você não tem permissão para acessar esta página.</div>';
+                            } else {
+                                if(!isset($_GET['page'])) { include('pagePVD.php'); }
+                                else if ($page=='Dashboard') { include('pageDashboard.php'); }
+                                else if ($page=='InicioPVD') { include('pagePVD.php'); }
+                                else if ($page=='ListarVendas') { include('pageListarVendas.php'); }
+                                else if ($page=='ListarProdutos') { include('pageListarProdutos.php'); }
+                                else if ($page=='ListarClientes') { include('pageListarClientes.php'); }
+                                else if ($page=='ListarFinanceiro') { include('pageListarFinanceiro.php'); }
+                                else if ($page=='ListarTransferencias') { include('pageListarTransferencias.php'); }
+                                else if ($page=='ListarFechamentos') { include('pageListarFechamentos.php'); }
+                                else if ($page=='ListarDespesasFixas') { include('pageListarDespesasFixas.php'); }
+                                else if ($page=='ListarSalarios') { include('pageListarSalarios.php'); }
+                                else if ($page=='ListarTipoPagamento') { include('pageListarTipoPagamento.php'); }
+                                else if ($page=='ListarContas') { include('pageListarContas.php'); }
+                                else if ($page=='ListarRelatorios') { include('pageListarRelatorios.php'); }
+                                else if ($page=='ListarEmpresa') { include('pageListarEmpresa.php'); }
+                                else if ($page=='ListarCompras') { include('pageListarCompras.php'); }
+                                else if ($page=='AdicionarCompra') { include('pageAdicionarCompra.php'); }
+                                else if ($page=='ListarPerfis') { include('pageListarPerfis.php'); }
+                            }
                         ?>
                     </div>
                 </div>
