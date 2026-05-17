@@ -36,7 +36,7 @@ if (empty($periodo)) $periodo = 'Todos os períodos';
 // Gerar HTML do Resumo por Tipo de Pagamento
 $htmlResumo = '';
 if (!empty($resumoPagamentos)) {
-    $htmlResumo .= '<h3 style="margin-top: 25px; margin-bottom: 10px; font-size: 13px; border-bottom: 2px solid #667eea; padding-bottom: 5px; color: #2c3e50; font-weight: 700; text-transform: uppercase;">💳 Resumo por Tipo de Pagamento</h3>';
+    $htmlResumo .= '<h3 style="margin-top: 25px; margin-bottom: 10px; font-size: 13px; border-bottom: 2px solid #667eea; padding-bottom: 5px; color: #2c3e50; font-weight: 700; text-transform: uppercase;">Resumo por Tipo de Pagamento</h3>';
     $htmlResumo .= '<table style="margin-top: 5px; margin-bottom: 25px; box-shadow: none; border-radius: 4px; border: 1px solid #ecf0f1; font-size: 10px; border-collapse: collapse; width: 100%;">';
     $htmlResumo .= '<thead><tr style="background: linear-gradient(135deg, #7f8c8d 0%, #95a5a6 100%); color: white;">';
     $htmlResumo .= '<th style="padding: 8px 12px; font-weight: 700; text-align: left; text-transform: uppercase; font-size: 9px;">Forma de Pagamento</th>';
@@ -208,7 +208,7 @@ $html = '<!DOCTYPE html>
 <body>
     <div class="container">
         <div class="header">
-            <h1>📊 Relatório de Vendas</h1>
+            <h1>Relatório de Vendas</h1>
             <p>Emitido em ' . date('d/m/Y \à\s H:i:s') . '</p>
         </div>
 
@@ -234,7 +234,7 @@ $html = '<!DOCTYPE html>
             </div>
         </div>' . $htmlResumo . '
 
-        <h3 style="margin-top: 20px; margin-bottom: 10px; font-size: 13px; border-bottom: 2px solid #667eea; padding-bottom: 5px; color: #2c3e50; font-weight: 700; text-transform: uppercase;">📋 Detalhamento das Vendas</h3>
+        <h3 style="margin-top: 20px; margin-bottom: 10px; font-size: 13px; border-bottom: 2px solid #667eea; padding-bottom: 5px; color: #2c3e50; font-weight: 700; text-transform: uppercase;">Detalhamento das Vendas</h3>
         <table>
             <thead>
                 <tr>
