@@ -24,6 +24,26 @@ foreach ($perfis as $perfil) {
     $stmtMap->execute([':perfil_id' => $perfil['id']]);
     $perfilPermissoesMapa[$perfil['id']] = $stmtMap->fetchAll(PDO::FETCH_COLUMN);
 }
+
+// Definição dos segmentos de permissões para organização visual
+$segmentos = [
+    'Painel & Vendas' => [
+        'icon' => 'fas fa-desktop text-primary',
+        'perms' => ['ver_dashboard', 'acessar_pdv', 'listar_vendas', 'estornar_venda']
+    ],
+    'Estoque & Mercadorias' => [
+        'icon' => 'fas fa-box text-warning',
+        'perms' => ['listar_produtos', 'editar_produtos', 'listar_compras', 'lancar_compras']
+    ],
+    'Pessoas & Financeiro' => [
+        'icon' => 'fas fa-wallet text-success',
+        'perms' => ['listar_clientes', 'editar_clientes', 'listar_financeiro', 'editar_financeiro']
+    ],
+    'Relatórios & Sistema' => [
+        'icon' => 'fas fa-cogs text-secondary',
+        'perms' => ['listar_relatorios', 'gerenciar_sistema']
+    ]
+];
 ?>
 
 <div class="col-md-12">
@@ -146,24 +166,100 @@ foreach ($perfis as $perfil) {
                         <i class="fas fa-list-check me-1"></i>Selecione as Permissões do Grupo
                     </h6>
                     
+                    <style>
+                        .permission-item {
+                            transition: background-color 0.15s ease-in-out;
+                            border-radius: 4px;
+                            padding: 6px 8px;
+                            margin-bottom: 4px;
+                        }
+                        .permission-item:hover {
+                            background-color: rgba(0, 0, 0, 0.03);
+                        }
+                        .permission-item:last-child {
+                            border-bottom: 0 !important;
+                            margin-bottom: 0 !important;
+                        }
+                    </style>
                     <div class="row g-3">
-                        <?php foreach ($permissoesDisponiveis as $permissao): ?>
-                            <div class="col-md-6 col-lg-4">
-                                <div class="card h-100 border shadow-none bg-light-hover transition-all">
+                        <?php 
+                        // Acompanhar quais permissões já foram renderizadas para controle
+                        $permsRenderizadas = [];
+                        foreach ($segmentos as $segInfo) {
+                            $permsRenderizadas = array_merge($permsRenderizadas, $segInfo['perms']);
+                        }
+
+                        // Loop pelos segmentos definidos
+                        foreach ($segmentos as $tituloSegmento => $segInfo): 
+                        ?>
+                            <div class="col-md-6">
+                                <div class="card border border-light-subtle shadow-none h-100 mb-0 bg-white">
+                                    <div class="card-header bg-light py-2 px-3 border-0">
+                                        <h6 class="fw-bold m-0 text-dark" style="font-size: 0.8rem;">
+                                            <i class="<?=$segInfo['icon'];?> me-2"></i><?=$tituloSegmento;?>
+                                        </h6>
+                                    </div>
                                     <div class="card-body p-3">
-                                        <div class="d-flex align-items-start gap-2">
-                                            <input class="permission-checkbox mt-1" type="checkbox" name="permissoes[]" 
-                                                   value="<?=$permissao['id'];?>" id="perm_<?=$permissao['id'];?>"
-                                                   style="width: 16px; height: 16px; flex-shrink: 0; cursor: pointer;">
-                                            <label class="cursor-pointer m-0" for="perm_<?=$permissao['id'];?>" style="white-space: normal !important; display: block; line-height: 1.3;">
-                                                <strong class="text-dark d-block fw-bold" style="font-size: 0.85rem;"><?=htmlspecialchars($permissao['descricao']);?></strong>
-                                                <span class="text-muted d-block" style="font-size: 0.75rem;"><?=htmlspecialchars($permissao['nome']);?></span>
-                                            </label>
-                                        </div>
+                                        <?php 
+                                        $countSeg = 0;
+                                        foreach ($permissoesDisponiveis as $permissao) {
+                                            if (in_array($permissao['nome'], $segInfo['perms'])) {
+                                                $countSeg++;
+                                        ?>
+                                                <div class="permission-item d-flex align-items-start border-bottom border-light-subtle">
+                                                    <input class="permission-checkbox mt-1 me-2" type="checkbox" name="permissoes[]" 
+                                                           value="<?=$permissao['id'];?>" id="perm_<?=$permissao['id'];?>"
+                                                           style="width: 15px; height: 15px; flex-shrink: 0; cursor: pointer;">
+                                                    <label class="cursor-pointer m-0 w-100" for="perm_<?=$permissao['id'];?>" style="line-height: 1.3;">
+                                                        <strong class="text-dark d-block fw-semibold" style="font-size: 0.8rem;"><?=htmlspecialchars($permissao['descricao']);?></strong>
+                                                        <span class="text-muted d-block" style="font-size: 0.7rem;"><?=htmlspecialchars($permissao['nome']);?></span>
+                                                    </label>
+                                                </div>
+                                        <?php 
+                                            }
+                                        }
+                                        if ($countSeg === 0) {
+                                            echo '<span class="text-muted small italic">Nenhuma permissão neste segmento</span>';
+                                        }
+                                        ?>
                                     </div>
                                 </div>
                             </div>
                         <?php endforeach; ?>
+
+                        <?php
+                        // Outras permissões (caso existam e não estejam categorizadas)
+                        $outrasPerms = [];
+                        foreach ($permissoesDisponiveis as $permissao) {
+                            if (!in_array($permissao['nome'], $permsRenderizadas)) {
+                                $outrasPerms[] = $permissao;
+                            }
+                        }
+                        if (!empty($outrasPerms)):
+                        ?>
+                            <div class="col-md-6">
+                                <div class="card border border-light-subtle shadow-none h-100 mb-0 bg-white">
+                                    <div class="card-header bg-light py-2 px-3 border-0">
+                                        <h6 class="fw-bold m-0 text-dark" style="font-size: 0.8rem;">
+                                            <i class="fas fa-question-circle text-muted me-2"></i>Outras Permissões
+                                        </h6>
+                                    </div>
+                                    <div class="card-body p-3">
+                                        <?php foreach ($outrasPerms as $permissao): ?>
+                                            <div class="permission-item d-flex align-items-start border-bottom border-light-subtle">
+                                                <input class="permission-checkbox mt-1 me-2" type="checkbox" name="permissoes[]" 
+                                                       value="<?=$permissao['id'];?>" id="perm_<?=$permissao['id'];?>"
+                                                       style="width: 15px; height: 15px; flex-shrink: 0; cursor: pointer;">
+                                                <label class="cursor-pointer m-0 w-100" for="perm_<?=$permissao['id'];?>" style="line-height: 1.3;">
+                                                    <strong class="text-dark d-block fw-semibold" style="font-size: 0.8rem;"><?=htmlspecialchars($permissao['descricao']);?></strong>
+                                                    <span class="text-muted d-block" style="font-size: 0.7rem;"><?=htmlspecialchars($permissao['nome']);?></span>
+                                                </label>
+                                            </div>
+                                        <?php endforeach; ?>
+                                    </div>
+                                </div>
+                            </div>
+                        <?php endif; ?>
                     </div>
                 </div>
                 <div class="modal-footer border-0 bg-light p-3">
