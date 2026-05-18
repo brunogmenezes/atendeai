@@ -226,6 +226,11 @@
                                                          <span class="sub-item">Minhas Contas</span>
                                                      </a>
                                                  </li>
+                                                 <li class="<?php echo ($page == 'ListarTransferencias') ? 'active' : ''; ?>">
+                                                     <a href="index.php?page=ListarTransferencias">
+                                                         <span class="sub-item">Transferência entre Contas</span>
+                                                     </a>
+                                                 </li>
                                                  <li class="<?php echo ($page == 'ListarFechamentos') ? 'active' : ''; ?>">
                                                      <a href="index.php?page=ListarFechamentos">
                                                          <span class="sub-item">Fechamentos</span>
