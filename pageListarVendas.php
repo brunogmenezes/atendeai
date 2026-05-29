@@ -20,8 +20,12 @@ $totalPaginas = ceil($totalQuery / $limite);
 
 $resumoDia = contarNumeroPorVendas($dia, $mes, $ano) ?? 0;
 $totalVendasDia = buscarTotalVendasnoPeriodo($dia, $mes, $ano) ?? 0;
-$totalVendasMes = buscarTotalVendasnoMes($mes, $ano) ?? 0;
+
+$mostrarTotalMes = ($user['isAdmin'] == true || temPermissao('gerenciar_sistema'));
+$totalVendasMes = $mostrarTotalMes ? (buscarTotalVendasnoMes($mes, $ano) ?? 0) : 0;
+
 $resumoPagamentos = buscarResumoPagamentosVendas($dia, $mes, $ano);
+$colClass = $mostrarTotalMes ? 'col-sm-6 col-md-4' : 'col-sm-6 col-md-6';
 ?>
 
 <div class="page-header">
@@ -49,7 +53,7 @@ $resumoPagamentos = buscarResumoPagamentosVendas($dia, $mes, $ano);
 
 <!-- Resumo do Período -->
 <div class="row">
-    <div class="col-sm-6 col-md-4">
+    <div class="<?= $colClass ?>">
         <div class="card card-stats card-round">
             <div class="card-body">
                 <div class="row align-items-center">
@@ -68,7 +72,7 @@ $resumoPagamentos = buscarResumoPagamentosVendas($dia, $mes, $ano);
             </div>
         </div>
     </div>
-    <div class="col-sm-6 col-md-4">
+    <div class="<?= $colClass ?>">
         <div class="card card-stats card-round">
             <div class="card-body">
                 <div class="row align-items-center">
@@ -87,7 +91,8 @@ $resumoPagamentos = buscarResumoPagamentosVendas($dia, $mes, $ano);
             </div>
         </div>
     </div>
-    <div class="col-sm-6 col-md-4">
+    <?php if ($mostrarTotalMes): ?>
+    <div class="<?= $colClass ?>">
         <div class="card card-stats card-round">
             <div class="card-body">
                 <div class="row align-items-center">
@@ -106,6 +111,7 @@ $resumoPagamentos = buscarResumoPagamentosVendas($dia, $mes, $ano);
             </div>
         </div>
     </div>
+    <?php endif; ?>
 </div>
 
 <!-- Resumo por Tipo de Pagamento -->
