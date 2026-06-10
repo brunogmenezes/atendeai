@@ -236,6 +236,11 @@
                                                          <span class="sub-item">Fechamentos</span>
                                                      </a>
                                                  </li>
+                                                 <li class="<?php echo ($page == 'ListarDespesasFixas') ? 'active' : ''; ?>">
+                                                     <a href="index.php?page=ListarDespesasFixas">
+                                                         <span class="sub-item">Despesas Fixas</span>
+                                                     </a>
+                                                 </li>
                                                  <li class="<?php echo ($page == 'ListarTipoPagamento') ? 'active' : ''; ?>">
                                                      <a href="index.php?page=ListarTipoPagamento">
                                                          <span class="sub-item">Config. Pagamentos</span>
