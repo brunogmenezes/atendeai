@@ -1,0 +1,5 @@
+# Ignorar arquivos de backup e logs (não versionar)
+*.sql
+*.sql.gz
+*.dump
+backup.log

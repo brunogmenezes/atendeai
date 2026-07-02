@@ -282,15 +282,16 @@
                                 </li>
                              <?php endif; ?>
 
-                             <?php if(temPermissao('gerenciar_sistema')): ?>
-                                <li class="nav-item <?php echo ($page == 'ListarEmpresa' || $page == 'ListarSalarios' || $page == 'ListarPerfis' || $page == 'ListarSistema') ? 'active' : ''; ?>">
+                             <?php if(temPermissao('gerenciar_sistema') || temPermissao('gerenciar_backup')): ?>
+                                <li class="nav-item <?php echo ($page == 'ListarEmpresa' || $page == 'ListarSalarios' || $page == 'ListarPerfis' || $page == 'ListarSistema' || $page == 'ListarBackups') ? 'active' : ''; ?>">
                                     <a data-bs-toggle="collapse" href="#sistema">
                                         <i class="fas fa-cog"></i>
                                         <p>Sistema</p>
                                         <span class="caret"></span>
                                     </a>
-                                    <div class="collapse <?php echo ($page == 'ListarEmpresa' || $page == 'ListarSalarios' || $page == 'ListarPerfis') ? 'show' : ''; ?>" id="sistema">
+                                    <div class="collapse <?php echo ($page == 'ListarEmpresa' || $page == 'ListarSalarios' || $page == 'ListarPerfis' || $page == 'ListarBackups') ? 'show' : ''; ?>" id="sistema">
                                         <ul class="nav nav-collapse">
+                                            <?php if(temPermissao('gerenciar_sistema')): ?>
                                             <li class="<?php echo ($page == 'ListarEmpresa') ? 'active' : ''; ?>">
                                                 <a href="index.php?page=ListarEmpresa">
                                                     <span class="sub-item">Dados da Empresa</span>
@@ -306,6 +307,14 @@
                                                     <span class="sub-item">Perfis e Permissões</span>
                                                 </a>
                                             </li>
+                                            <?php endif; ?>
+                                            <?php if(temPermissao('gerenciar_backup')): ?>
+                                            <li class="<?php echo ($page == 'ListarBackups') ? 'active' : ''; ?>">
+                                                <a href="index.php?page=ListarBackups">
+                                                    <span class="sub-item">Backup</span>
+                                                </a>
+                                            </li>
+                                            <?php endif; ?>
                                         </ul>
                                     </div>
                                 </li>
@@ -351,6 +360,7 @@
                                 'ListarEmpresa' => 'gerenciar_sistema',
                                 'ListarSalarios' => 'gerenciar_sistema',
                                 'ListarPerfis' => 'gerenciar_sistema',
+                                'ListarBackups' => 'gerenciar_backup',
                                 'ListarCompras' => 'listar_compras',
                                 'AdicionarCompra' => 'lancar_compras'
                             ];
@@ -378,6 +388,7 @@
                                 else if ($page=='ListarCompras') { include('pageListarCompras.php'); }
                                 else if ($page=='AdicionarCompra') { include('pageAdicionarCompra.php'); }
                                 else if ($page=='ListarPerfis') { include('pageListarPerfis.php'); }
+                                else if ($page=='ListarBackups') { include('pageListarBackups.php'); }
                             }
                         ?>
                     </div>

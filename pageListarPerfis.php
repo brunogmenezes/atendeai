@@ -41,7 +41,7 @@ $segmentos = [
     ],
     'Relatórios & Sistema' => [
         'icon' => 'fas fa-cogs text-secondary',
-        'perms' => ['listar_relatorios', 'gerenciar_sistema']
+        'perms' => ['listar_relatorios', 'gerenciar_sistema', 'gerenciar_backup']
     ]
 ];
 ?>
