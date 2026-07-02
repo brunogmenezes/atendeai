@@ -10,9 +10,14 @@
  * Parâmetro: arquivo=backup_segunda.sql
  */
 
+ob_start();
+error_reporting(0);
+ini_set('display_errors', '0');
+
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/auth.php';
 
+ob_clean();
 header('Content-Type: application/json; charset=utf-8');
 
 verificarSessao();
@@ -113,6 +118,8 @@ if (!empty($output)) $logLine .= ' | ' . implode('; ', array_filter($output));
 file_put_contents($logFile, $logLine . PHP_EOL, FILE_APPEND | LOCK_EX);
 
 // ─── Resposta ─────────────────────────────────────────────────────────────────
+ob_clean(); // Garante JSON puro na resposta
+
 if ($returnCode === 0) {
     echo json_encode([
         'sucesso'  => true,
@@ -125,3 +132,5 @@ if ($returnCode === 0) {
         'mensagem' => "Falha na restauração (código: {$returnCode}). " . ($detalhes ?: 'Verifique o log.'),
     ]);
 }
+
+ob_end_flush();
