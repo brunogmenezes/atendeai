@@ -2,14 +2,13 @@
 /**
  * gerarBackup.php
  * Gera um backup do banco PostgreSQL via pg_dump.
- * Credenciais lidas do config.php.
+ * Credenciais lidas das constantes definidas em config.php (DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD).
  * Rotação de 7 dias: nomeado pelo dia da semana, sobrescreve a cada ciclo.
  * Chamado via AJAX (interface) ou via CLI (cron_backup.php).
  *
  * Requer permissão: gerenciar_backup
  */
 
-// Lê as credenciais do config.php
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/auth.php';
 
@@ -26,16 +25,7 @@ if (!$isCli) {
     }
 }
 
-// ─── Extrair credenciais do DSN do PDO (config.php) ──────────────────────────
-// config.php cria: $pdo = new PDO("pgsql:host=...;dbname=...", $user, $pass)
-// Aqui lemos as mesmas constantes centralizadas:
-define('DB_HOST',     '45.224.128.87');
-define('DB_PORT',     '5432');
-define('DB_NAME',     'atendeaicopia');
-define('DB_USER',     'postgres');
-define('DB_PASSWORD', '91lS!&*Ke');
-
-// ─── Localização do pg_dump (Windows e Linux/Debian) ────────────────────────
+// ─── Localização do pg_dump (Linux/Debian e Windows) ─────────────────────────
 $pgDumpCandidates = [
     // Linux/Debian — via PATH (requer: apt install postgresql-client)
     '/usr/bin/pg_dump',
@@ -43,7 +33,7 @@ $pgDumpCandidates = [
     '/usr/lib/postgresql/16/bin/pg_dump',
     '/usr/lib/postgresql/15/bin/pg_dump',
     '/usr/lib/postgresql/14/bin/pg_dump',
-    // Genérico via PATH (funciona nos dois SOs se o PATH estiver configurado)
+    // Genérico via PATH
     'pg_dump',
     // Windows — caminhos absolutos
     'C:\\Program Files\\PostgreSQL\\17\\bin\\pg_dump.exe',
@@ -62,7 +52,7 @@ foreach ($pgDumpCandidates as $candidate) {
 }
 
 if (!$pgDump) {
-    $msg = 'pg_dump não encontrado. Instale o cliente PostgreSQL no servidor.';
+    $msg = 'pg_dump não encontrado. Instale o cliente PostgreSQL no servidor (apt install postgresql-client).';
     $isCli ? print("[ERRO] $msg\n") : print(json_encode(['sucesso' => false, 'mensagem' => $msg]));
     exit(1);
 }
@@ -74,7 +64,7 @@ $nomeDia    = $diasSemana[$diaN];
 $backupDir  = __DIR__ . DIRECTORY_SEPARATOR . 'backups';
 $backupFile = $backupDir . DIRECTORY_SEPARATOR . "backup_{$nomeDia}.sql";
 
-// ─── Executa o pg_dump ───────────────────────────────────────────────────────
+// ─── Executa o pg_dump usando as constantes do config.php ────────────────────
 putenv('PGPASSWORD=' . DB_PASSWORD);
 
 $cmd = sprintf(
@@ -91,7 +81,7 @@ $output     = [];
 $returnCode = 0;
 exec($cmd, $output, $returnCode);
 
-putenv('PGPASSWORD'); // Limpa imediatamente
+putenv('PGPASSWORD'); // Limpa imediatamente após o uso
 
 // ─── Log ─────────────────────────────────────────────────────────────────────
 $logFile  = $backupDir . DIRECTORY_SEPARATOR . 'backup.log';
