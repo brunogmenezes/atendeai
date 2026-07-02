@@ -102,7 +102,7 @@ $backupFile = $backupDir . DIRECTORY_SEPARATOR . "backup_{$nomeDia}.sql";
 putenv('PGPASSWORD=' . DB_PASSWORD);
 
 $cmd = sprintf(
-    '%s --host=%s --port=%s --username=%s --dbname=%s --format=plain --no-password --file=%s 2>&1',
+    '%s --host=%s --port=%s --username=%s --dbname=%s --format=plain --clean --if-exists --no-password --file=%s 2>&1',
     escapeshellcmd($pgDump),
     escapeshellarg(DB_HOST),
     escapeshellarg(DB_PORT),

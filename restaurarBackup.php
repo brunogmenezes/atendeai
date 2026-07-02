@@ -94,7 +94,7 @@ if (!$psql) {
 putenv('PGPASSWORD=' . DB_PASSWORD);
 
 $cmd = sprintf(
-    '%s --host=%s --port=%s --username=%s --dbname=%s --file=%s 2>&1',
+    '%s --host=%s --port=%s --username=%s --dbname=%s --single-transaction --file=%s 2>&1',
     escapeshellcmd($psql),
     escapeshellarg(DB_HOST),
     escapeshellarg(DB_PORT),
