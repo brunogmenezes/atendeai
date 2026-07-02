@@ -8,6 +8,20 @@
     $stmt->execute([':username' => $_SESSION['username']]);
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
+    // Buscar dados da empresa
+    $stmtEmpresa = $pdo->prepare("SELECT nome, cnpj FROM empresa LIMIT 1");
+    $stmtEmpresa->execute();
+    $empresa = $stmtEmpresa->fetch(PDO::FETCH_ASSOC);
+    $empresaNome = $empresa['nome'] ?? 'Minha Empresa';
+    $empresaCnpj = $empresa['cnpj'] ?? '';
+    // Formatar CNPJ: 00.000.000/0000-00
+    $cnpjNumeros = preg_replace('/\D/', '', $empresaCnpj);
+    if (strlen($cnpjNumeros) === 14) {
+        $empresaCnpjFormatado = substr($cnpjNumeros,0,2).'.'.substr($cnpjNumeros,2,3).'.'.substr($cnpjNumeros,5,3).'/'.substr($cnpjNumeros,8,4).'-'.substr($cnpjNumeros,12,2);
+    } else {
+        $empresaCnpjFormatado = $empresaCnpj;
+    }
+
     $page = $_GET['page'] ?? 'InicioPVD';
 ?>
 
@@ -66,8 +80,15 @@
             <div class="sidebar" data-background-color="dark">
                 <div class="sidebar-logo">
                     <div class="logo-header" data-background-color="dark">
-                        <a href="index.php" class="logo">
-                            <img src="assets/img/testelogo.svg" alt="navbar brand" class="navbar-brand" height="20"/>
+                        <a href="index.php" class="logo" style="display:flex;flex-direction:column;align-items:flex-start;justify-content:center;text-decoration:none;line-height:1.2;padding:2px 0;">
+                            <span style="font-size:14px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px;" title="<?= htmlspecialchars($empresaNome) ?>">
+                                <?= htmlspecialchars($empresaNome) ?>
+                            </span>
+                            <?php if ($empresaCnpjFormatado): ?>
+                            <span style="font-size:10px;color:rgba(255,255,255,0.65);letter-spacing:0.3px;">
+                                <?= htmlspecialchars($empresaCnpjFormatado) ?>
+                            </span>
+                            <?php endif; ?>
                         </a>
                         <div class="nav-toggle">
                             <button class="btn btn-toggle toggle-sidebar">
