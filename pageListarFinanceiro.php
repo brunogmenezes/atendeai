@@ -97,10 +97,10 @@ $totalPaginas = ceil($totalFinanceiro / $limite);
                                 </select>
                             </div>
                         </div>
-                        <!-- Período de Vencimento -->
+                        <!-- Período de Lançamento -->
                         <div class="col-md-3 col-sm-6">
                             <div class="form-group mb-0 p-0">
-                                <label class="small text-muted fw-bold mb-1">Período (Vencimento)</label>
+                                <label class="small text-muted fw-bold mb-1">Período (Lançamento)</label>
                                 <div class="input-group input-group-sm">
                                     <input type="date" name="data_inicio" class="form-control form-control-sm" value="<?= htmlspecialchars($data_inicio) ?>">
                                     <span class="input-group-text bg-light border-0 py-0 px-2" style="font-size:11px;">até</span>
@@ -145,7 +145,7 @@ $totalPaginas = ceil($totalFinanceiro / $limite);
                                 <th>Descrição</th>
                                 <th>Valor</th>
                                 <th>Conta</th>
-                                <th>Vencimento</th>
+                                <th>Lançamento</th>
                                 <th style="width: 100px" class="pe-4 text-end">Ações</th>
                             </tr>
                         </thead>
@@ -168,7 +168,7 @@ $totalPaginas = ceil($totalFinanceiro / $limite);
                                             R$ <?=number_format($financeiro['valor'], 2, ',', '.');?>
                                         </td>
                                         <td><i class="fas fa-university text-muted me-1"></i><?=htmlspecialchars($financeiro['nome_conta'] ?? 'N/A');?></td>
-                                        <td><i class="far fa-calendar-alt text-muted me-1"></i><?= date('d/m/Y', strtotime($financeiro['data_vencimento'])) ?></td>
+                                        <td><i class="far fa-calendar-alt text-muted me-1"></i><?= date('d/m/Y', strtotime($financeiro['data_lancamento'])) ?></td>
                                         <td class="pe-4 text-end">
                                             <?php if ($financeiro['criado_manual'] == true): ?>
                                                 <button type="button" class="btn btn-icon btn-link btn-danger open-delete-modal p-0" 

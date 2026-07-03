@@ -1041,12 +1041,12 @@ function buscarFinanceiro($limite = 10, $offset = 0, $tipo_lancamento = '', $con
     }
     
     if ($data_inicio !== '') {
-        $whereClauses[] = "fin.data_vencimento >= :data_inicio";
+        $whereClauses[] = "fin.data_lancamento >= :data_inicio";
         $params[':data_inicio'] = $data_inicio . ' 00:00:00';
     }
     
     if ($data_fim !== '') {
-        $whereClauses[] = "fin.data_vencimento <= :data_fim";
+        $whereClauses[] = "fin.data_lancamento <= :data_fim";
         $params[':data_fim'] = $data_fim . ' 23:59:59';
     }
     
@@ -1351,12 +1351,12 @@ function contarFinanceiro($tipo_lancamento = '', $conta = '', $pago = '', $data_
     }
     
     if ($data_inicio !== '') {
-        $whereClauses[] = "fin.data_vencimento >= :data_inicio";
+        $whereClauses[] = "fin.data_lancamento >= :data_inicio";
         $params[':data_inicio'] = $data_inicio . ' 00:00:00';
     }
     
     if ($data_fim !== '') {
-        $whereClauses[] = "fin.data_vencimento <= :data_fim";
+        $whereClauses[] = "fin.data_lancamento <= :data_fim";
         $params[':data_fim'] = $data_fim . ' 23:59:59';
     }
     
