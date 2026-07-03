@@ -282,7 +282,7 @@
                                 </li>
                              <?php endif; ?>
 
-                             <?php if(temPermissao('gerenciar_sistema') || temPermissao('gerenciar_backup')): ?>
+                             <?php if(temPermissao('gerenciar_sistema') || temPermissao('visualizar_backup')): ?>
                                 <li class="nav-item <?php echo ($page == 'ListarEmpresa' || $page == 'ListarSalarios' || $page == 'ListarPerfis' || $page == 'ListarSistema' || $page == 'ListarBackups') ? 'active' : ''; ?>">
                                     <a data-bs-toggle="collapse" href="#sistema">
                                         <i class="fas fa-cog"></i>
@@ -308,7 +308,7 @@
                                                 </a>
                                             </li>
                                             <?php endif; ?>
-                                            <?php if(temPermissao('gerenciar_backup')): ?>
+                                            <?php if(temPermissao('visualizar_backup')): ?>
                                             <li class="<?php echo ($page == 'ListarBackups') ? 'active' : ''; ?>">
                                                 <a href="index.php?page=ListarBackups">
                                                     <span class="sub-item">Backup</span>
@@ -360,7 +360,7 @@
                                 'ListarEmpresa' => 'gerenciar_sistema',
                                 'ListarSalarios' => 'gerenciar_sistema',
                                 'ListarPerfis' => 'gerenciar_sistema',
-                                'ListarBackups' => 'gerenciar_backup',
+                                'ListarBackups' => 'visualizar_backup',
                                 'ListarCompras' => 'listar_compras',
                                 'AdicionarCompra' => 'lancar_compras'
                             ];

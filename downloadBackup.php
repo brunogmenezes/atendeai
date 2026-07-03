@@ -4,7 +4,7 @@
  * Força o download seguro de um arquivo de backup.
  * Protegido contra path traversal — só aceita arquivos no padrão esperado dentro de backups/.
  *
- * Requer permissão: gerenciar_backup
+ * Requer permissão: baixar_backup
  * Parâmetro: ?arquivo=backup_segunda.sql
  */
 
@@ -12,7 +12,7 @@ include('config.php');
 require_once 'auth.php';
 verificarSessao();
 
-if (!temPermissao('gerenciar_backup')) {
+if (!temPermissao('baixar_backup')) {
     http_response_code(403);
     die('Acesso negado.');
 }

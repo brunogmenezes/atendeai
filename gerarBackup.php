@@ -6,7 +6,7 @@
  * Rotação de 7 dias: nomeado pelo dia da semana, sobrescreve a cada ciclo.
  * Chamado via AJAX (interface) ou via CLI (cron_backup.php).
  *
- * Requer permissão: gerenciar_backup
+ * Requer permissão: gerar_backup
  */
 
 // ─── Captura QUALQUER saída anterior (warnings, erros, redirects) ─────────────
@@ -31,7 +31,7 @@ if (!$isCli) {
 // ─── Autenticação ─────────────────────────────────────────────────────────────
 if (!$isCli) {
     verificarSessao();
-    if (!temPermissao('gerenciar_backup')) {
+    if (!temPermissao('gerar_backup')) {
         http_response_code(403);
         echo json_encode(['sucesso' => false, 'mensagem' => 'Acesso negado.']);
         ob_end_flush();

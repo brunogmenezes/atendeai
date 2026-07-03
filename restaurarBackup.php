@@ -5,7 +5,7 @@
  * Credenciais lidas das constantes definidas em config.php (DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD).
  * Apenas backups no padrão backup_<dia>.sql são aceitos (anti path-traversal).
  *
- * Requer permissão: gerenciar_backup
+ * Requer permissão: restaurar_backup
  * Método: POST
  * Parâmetro: arquivo=backup_segunda.sql
  */
@@ -22,7 +22,7 @@ header('Content-Type: application/json; charset=utf-8');
 
 verificarSessao();
 
-if (!temPermissao('gerenciar_backup')) {
+if (!temPermissao('restaurar_backup')) {
     http_response_code(403);
     echo json_encode(['sucesso' => false, 'mensagem' => 'Acesso negado.']);
     exit;

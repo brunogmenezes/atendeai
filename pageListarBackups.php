@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * pageListarBackups.php
  * Interface de gestão de backups do banco de dados.
@@ -9,8 +9,8 @@ include('funcoes.php');
 require_once 'auth.php';
 verificarSessao();
 
-if (!temPermissao('gerenciar_backup')) {
-    echo '<div class="alert alert-danger mt-4"><i class="fas fa-exclamation-triangle me-2"></i><b>Acesso Negado.</b> Você não tem permissão para gerenciar backups.</div>';
+if (!temPermissao('visualizar_backup')) {
+    echo '<div class="alert alert-danger mt-4"><i class="fas fa-exclamation-triangle me-2"></i><b>Acesso Negado.</b> Você não tem permissão para visualizar backups.</div>';
     exit;
 }
 
@@ -101,10 +101,12 @@ function formatarTamanhoPage(int $bytes): string {
             </h4>
             <p class="text-muted small mb-0">Backup automático diário — rotação de 7 dias (1 por dia da semana)</p>
         </div>
+        <?php if (temPermissao('gerar_backup')): ?>
         <button id="btnGerarAgora" class="btn btn-backup-now" onclick="gerarBackupAgora()">
             <span id="btnTexto"><i class="fas fa-play-circle me-2"></i>Gerar Backup Agora</span>
             <span id="btnSpinner" class="spinner-btn"></span>
         </button>
+        <?php endif; ?>
     </div>
 
     <!-- Cards de status -->
@@ -241,17 +243,24 @@ function formatarTamanhoPage(int $bytes): string {
                             <td class="py-3 text-end">
                                 <?php if ($b['existe']): ?>
                                 <div class="d-flex gap-2 justify-content-end" id="acoes-<?= $b['slug'] ?>">
+                                    <?php if (temPermissao('baixar_backup')): ?>
                                     <a href="downloadBackup.php?arquivo=<?= urlencode($b['arquivo']) ?>"
                                        class="btn btn-sm btn-outline-primary rounded-pill"
                                        title="Baixar <?= $b['arquivo'] ?>">
                                         <i class="fas fa-download me-1"></i>Baixar
                                     </a>
+                                    <?php endif; ?>
+                                    <?php if (temPermissao('restaurar_backup')): ?>
                                     <button type="button"
                                             class="btn btn-sm btn-outline-warning rounded-pill"
                                             title="Restaurar banco a partir de <?= $b['arquivo'] ?>"
                                             onclick="confirmarRestauracao('<?= $b['arquivo'] ?>', '<?= $b['label'] ?>', '<?= date('d/m/Y H:i', $b['data_mod']) ?>')">
                                         <i class="fas fa-undo-alt me-1"></i>Restaurar
                                     </button>
+                                    <?php endif; ?>
+                                    <?php if (!temPermissao('baixar_backup') && !temPermissao('restaurar_backup')): ?>
+                                    <span class="text-muted small">—</span>
+                                    <?php endif; ?>
                                 </div>
                                 <?php else: ?>
                                 <span id="acoes-<?= $b['slug'] ?>" class="text-muted small">—</span>
@@ -502,17 +511,24 @@ function atualizarLinhaDia(arquivo, tamanho, dataHora) {
 
     const elAcoes = el('acoes-' + slug);
     if (elAcoes) {
-        elAcoes.outerHTML = `
-        <div class="d-flex gap-2 justify-content-end" id="acoes-${slug}">
-            <a href="downloadBackup.php?arquivo=${encodeURIComponent(arquivo)}"
+        let acoesHtml = `<div class="d-flex gap-2 justify-content-end" id="acoes-${slug}">`;
+        <?php if (temPermissao('baixar_backup')): ?>
+        acoesHtml += `<a href="downloadBackup.php?arquivo=${encodeURIComponent(arquivo)}"
                class="btn btn-sm btn-outline-primary rounded-pill">
                <i class="fas fa-download me-1"></i>Baixar
-            </a>
-            <button type="button" class="btn btn-sm btn-outline-warning rounded-pill"
+            </a>`;
+        <?php endif; ?>
+        <?php if (temPermissao('restaurar_backup')): ?>
+        acoesHtml += `<button type="button" class="btn btn-sm btn-outline-warning rounded-pill"
                 onclick="confirmarRestauracao('${arquivo}', '${slug}', '${dataHora}')">
                 <i class="fas fa-undo-alt me-1"></i>Restaurar
-            </button>
-        </div>`;
+            </button>`;
+        <?php endif; ?>
+        <?php if (!temPermissao('baixar_backup') && !temPermissao('restaurar_backup')): ?>
+        acoesHtml += `<span class="text-muted small">—</span>`;
+        <?php endif; ?>
+        acoesHtml += `</div>`;
+        elAcoes.outerHTML = acoesHtml;
     }
 }
 
