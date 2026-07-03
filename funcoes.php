@@ -1051,8 +1051,10 @@ function buscarFinanceiro($limite = 10, $offset = 0, $tipo_lancamento = '', $con
     }
     
     if ($busca !== '') {
-        $whereClauses[] = "(fin.descricao ILIKE :busca OR CAST(fin.valor AS TEXT) LIKE :busca OR CAST(fin.id AS TEXT) LIKE :busca)";
+        $buscaNumerica = str_replace(',', '.', $busca);
+        $whereClauses[] = "(fin.descricao ILIKE :busca OR CAST(fin.valor AS TEXT) LIKE :busca_num OR CAST(fin.id AS TEXT) LIKE :busca)";
         $params[':busca'] = "%$busca%";
+        $params[':busca_num'] = "%$buscaNumerica%";
     }
     
     if (!empty($whereClauses)) {
@@ -1359,8 +1361,10 @@ function contarFinanceiro($tipo_lancamento = '', $conta = '', $pago = '', $data_
     }
     
     if ($busca !== '') {
-        $whereClauses[] = "(fin.descricao ILIKE :busca OR CAST(fin.valor AS TEXT) LIKE :busca OR CAST(fin.id AS TEXT) LIKE :busca)";
+        $buscaNumerica = str_replace(',', '.', $busca);
+        $whereClauses[] = "(fin.descricao ILIKE :busca OR CAST(fin.valor AS TEXT) LIKE :busca_num OR CAST(fin.id AS TEXT) LIKE :busca)";
         $params[':busca'] = "%$busca%";
+        $params[':busca_num'] = "%$buscaNumerica%";
     }
     
     if (!empty($whereClauses)) {
