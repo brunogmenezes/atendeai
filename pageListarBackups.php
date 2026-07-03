@@ -4,8 +4,8 @@
  * Interface de gestão de backups do banco de dados.
  * Exibe os 7 backups semanais, permite gerar, baixar e restaurar.
  */
-include('config.php');
-include('funcoes.php');
+require_once('config.php');
+require_once('funcoes.php');
 require_once 'auth.php';
 verificarSessao();
 

@@ -8,7 +8,7 @@
  * Parâmetro: ?arquivo=backup_segunda.sql
  */
 
-include('config.php');
+require_once('config.php');
 require_once 'auth.php';
 verificarSessao();
 
