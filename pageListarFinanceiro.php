@@ -1,364 +1,374 @@
 <?php
-	include("config.php");
-	include("funcoes.php");
-   require_once 'auth.php';
+/**
+ * pageListarFinanceiro.php
+ * Tela de listagem e controle de lançamentos financeiros.
+ * Inclui filtros robustos e segue o layout padrão premium do sistema.
+ */
+require_once 'config.php';
+require_once 'funcoes.php';
+require_once 'auth.php';
 verificarSessao();
+
+// Coleta de parâmetros dos filtros robustos
+$tipo_lancamento = $_GET['tipo_lancamento'] ?? '';
+$conta           = $_GET['conta'] ?? '';
+$pago            = $_GET['pago'] ?? '';
+$data_inicio     = $_GET['data_inicio'] ?? '';
+$data_fim        = $_GET['data_fim'] ?? '';
+$busca           = $_GET['busca'] ?? '';
+
+$pagina = isset($_GET['pagina']) ? (int)$_GET['pagina'] : 1;
+$limite = 10;
+$offset = ($pagina - 1) * $limite;
+
+// Buscar os dados com os novos filtros robustos
+$financeiros = buscarFinanceiro($limite, $offset, $tipo_lancamento, $conta, $pago, $data_inicio, $data_fim, $busca);
+$totalFinanceiro = contarFinanceiro($tipo_lancamento, $conta, $pago, $data_inicio, $data_fim, $busca);
+$totalPaginas = ceil($totalFinanceiro / $limite);
 ?>
-<style>
-    .form-group {
-        margin-bottom: 1rem;
-    }
-    .form-select, .form-control {
-        height: calc(2.25rem + 8px);
-    }
-    .card-header {
-        padding-bottom: 1.5rem;
-    }
-</style>
-<div class="col-md-12">
-	<div class="card">
-		<div class="card-header">
-            <div class="d-flex flex-column flex-sm-row align-items-center">
-                <h4 class="card-title mb-2 mb-sm-0">Listar Lançamentos</h4>
-                <button class="btn btn-primary btn-round ms-sm-auto w-100 w-sm-auto" data-bs-toggle="modal" data-bs-target="#addRowModal">
-                    <i class="fa fa-plus"></i>
-                    Cadastrar Lançamento
-                </button>
+
+<div class="page-header">
+    <h3 class="fw-bold mb-3">Financeiro</h3>
+    <ul class="breadcrumbs mb-3">
+        <li class="nav-home">
+            <a href="index.php">
+                <i class="fa fa-home"></i>
+            </a>
+        </li>
+        <li class="separator">
+            <i class="fa fa-angle-right"></i>
+        </li>
+        <li class="nav-item">
+            <a href="#">Financeiro</a>
+        </li>
+        <li class="separator">
+            <i class="fa fa-angle-right"></i>
+        </li>
+        <li class="nav-item">
+            <a href="#">Listar Lançamentos</a>
+        </li>
+    </ul>
+</div>
+
+<!-- Filtros Robustos -->
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card card-round shadow-sm border-0 bg-white">
+            <div class="card-body p-3">
+                <form method="GET" action="index.php">
+                    <input type="hidden" name="page" value="ListarFinanceiro">
+                    <div class="row g-2 align-items-end">
+                        <!-- Busca Textual -->
+                        <div class="col-md-3 col-sm-6">
+                            <div class="form-group mb-0 p-0">
+                                <label class="small text-muted fw-bold mb-1">Buscar por texto</label>
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text bg-light border-end-0"><i class="fas fa-search text-muted"></i></span>
+                                    <input type="text" name="busca" class="form-control form-control-sm border-start-0" placeholder="Descrição, valor ou ID..." value="<?= htmlspecialchars($busca) ?>">
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Tipo de Lançamento -->
+                        <div class="col-md-2 col-sm-6">
+                            <div class="form-group mb-0 p-0">
+                                <label class="small text-muted fw-bold mb-1">Tipo</label>
+                                <select name="tipo_lancamento" class="form-select form-select-sm">
+                                    <option value="">Todos</option>
+                                    <option value="1" <?= ($tipo_lancamento == '1' ? 'selected' : '') ?>>Entrada</option>
+                                    <option value="2" <?= ($tipo_lancamento == '2' ? 'selected' : '') ?>>Saída</option>
+                                    <option value="3" <?= ($tipo_lancamento == '3' ? 'selected' : '') ?>>Estorno</option>
+                                </select>
+                            </div>
+                        </div>
+                        <!-- Conta -->
+                        <div class="col-md-2 col-sm-6">
+                            <div class="form-group mb-0 p-0">
+                                <label class="small text-muted fw-bold mb-1">Conta</label>
+                                <select name="conta" class="form-select form-select-sm">
+                                    <option value="">Todas</option>
+                                    <?php
+                                    $contasObj = buscarTodasContasFinanceiro();
+                                    if (!empty($contasObj)) {
+                                        foreach ($contasObj as $c) {
+                                            $selected = ($conta == $c['id'] ? 'selected' : '');
+                                            echo "<option value='" . htmlspecialchars($c['id']) . "' {$selected}>" . htmlspecialchars($c['nome']) . "</option>";
+                                        }
+                                    }
+                                    ?>
+                                </select>
+                            </div>
+                        </div>
+                        <!-- Período de Vencimento -->
+                        <div class="col-md-3 col-sm-6">
+                            <div class="form-group mb-0 p-0">
+                                <label class="small text-muted fw-bold mb-1">Período (Vencimento)</label>
+                                <div class="input-group input-group-sm">
+                                    <input type="date" name="data_inicio" class="form-control form-control-sm" value="<?= htmlspecialchars($data_inicio) ?>">
+                                    <span class="input-group-text bg-light border-0 py-0 px-2" style="font-size:11px;">até</span>
+                                    <input type="date" name="data_fim" class="form-control form-control-sm" value="<?= htmlspecialchars($data_fim) ?>">
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Status de Pagamento -->
+                        <div class="col-md-1 col-sm-6">
+                            <div class="form-group mb-0 p-0">
+                                <label class="small text-muted fw-bold mb-1">Status</label>
+                                <select name="pago" class="form-select form-select-sm">
+                                    <option value="">Todos</option>
+                                    <option value="1" <?= ($pago == '1' ? 'selected' : '') ?>>Pago</option>
+                                    <option value="0" <?= ($pago == '0' ? 'selected' : '') ?>>Aberto</option>
+                                </select>
+                            </div>
+                        </div>
+                        <!-- Ações do Filtro -->
+                        <div class="col-md-1 col-sm-6 d-flex gap-1">
+                            <button type="submit" class="btn btn-primary btn-sm flex-fill py-2" title="Aplicar Filtros"><i class="fas fa-filter"></i></button>
+                            <a href="index.php?page=ListarFinanceiro" class="btn btn-secondary btn-sm flex-fill py-2" title="Limpar Filtros"><i class="fas fa-eraser"></i></a>
+                        </div>
+                    </div>
+                </form>
             </div>
-            <!-- Adicione este formulário de filtro -->
-            <form method="GET" class="mt-3">
-                <input type="hidden" name="page" value="<?= htmlspecialchars($_GET['page'] ?? '') ?>">
-                <div class="row">
-                    <div class="col-md-3">
-                        <div class="form-group">
-                            <label>Tipo de Lançamento</label>
-                            <select name="tipo_lancamento" class="form-select">
-                                <option value="">Todos</option>
-                                <option value="1" <?= (isset($_GET['tipo_lancamento']) && $_GET['tipo_lancamento'] == '1' ? 'selected' : '' )?>>Entrada</option>
-                                <option value="2" <?= (isset($_GET['tipo_lancamento']) && $_GET['tipo_lancamento'] == '2' ? 'selected' : '' )?>>Saída</option>
-                                <option value="3" <?= (isset($_GET['tipo_lancamento']) && $_GET['tipo_lancamento'] == '3' ? 'selected' : '' )?>>Estorno</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="form-group">
-                            <label>Filtrar por</label>
-                            <select name="filtro" class="form-select">
-                                <option value="">Selecione</option>
-                                <option value="descricao" <?= (isset($_GET['filtro']) && $_GET['filtro'] == 'descricao' ? 'selected' : '' )?>>Descrição</option>
-                                <option value="valor" <?= (isset($_GET['filtro']) && $_GET['filtro'] == 'valor' ? 'selected' : '' )?>>Valor</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="form-group">
-                            <label>Valor</label>
-                            <input type="text" name="valor" class="form-control" value="<?= htmlspecialchars($_GET['valor'] ?? '') ?>">
-                        </div>
-                    </div>
-                    <div class="col-md-2 d-flex align-items-end gap-2 mt-2 mt-md-0">
-                        <button type="submit" class="btn btn-primary flex-fill">Filtrar</button>
-                        <a href="?page=<?= htmlspecialchars($_GET['page'] ?? '') ?>" class="btn btn-secondary flex-fill">Limpar</a>
-                    </div>
-                </div>
-            </form>
         </div>
-		<div class="card-body">
-			<div class="table-responsive">
-				<table id="add-row" class="display table table-striped table-hover table-mobile-cards">
-					<thead>
-						<tr>
-							<th class="d-none d-md-table-cell" style="width: 5%">ID</th>
-                            <th style="width: 5%">Tipo</th>
-							<th>Nome</th>
-                            <th>Valor</th>
-                            <th class="d-none d-sm-table-cell" style="width: 20%">Conta</th>
-                            <th class="d-none d-md-table-cell" style="width: 10%">Vencimento</th>
-                            <th style="width: 5%">Pago</th>
-                            <th style="width: 5%">Ação</th>
-						</tr>
-					</thead>
-					<tbody>
-						<?php
-                            $filtro = $_GET['filtro'] ?? '';
-                            $valor = $_GET['valor'] ?? '';
-                            $tipo_lancamento = $_GET['tipo_lancamento'] ?? '';
-                            $pagina = $_GET['pagina'] ?? 1;
-                            $limite = 10;
-                            $offset = ($pagina - 1) * $limite;
-                            
-                            // Buscar os dados com os filtros
-                            $financeiros = buscarFinanceiro($filtro, $valor, $limite, $offset, $tipo_lancamento);
-                            $totalFinanceiro = contarFinanceiro($filtro, $valor, $tipo_lancamento);
-                            $totalPaginas = ceil($totalFinanceiro / $limite);
-			
-                			if ($financeiros)
-                			{
-                    			foreach ($financeiros as $financeiro)
-                    			{
-                    	?>
-									<tr>
-									<tr>
-										<td class="d-none d-md-table-cell" data-label="ID"><?=$financeiro['id'];?></td>
-                                        <td data-label="Tipo">
-                                            <i class=" 
-                                                <?php 
-                                                        echo ($financeiro['tipo'] == '1') ? 'fas fa-arrow-up text-success' : 
-                                                        (($financeiro['tipo'] == '2') ? 'fas fa-arrow-down text-danger' : 
-                                                        (($financeiro['tipo'] == '3') ? 'fas fa-arrow-left text-warning' : ''));
-                                                ?>">
-                                            </i>
-                                            <span class="d-md-none ms-2">
-                                                <?= ($financeiro['tipo'] == '1') ? 'Entrada' : (($financeiro['tipo'] == '2') ? 'Saída' : 'Estorno') ?>
-                                            </span>
-                                        </td>
-										<td data-label="Descrição"><?=$financeiro['descricao'];?></td>
-										<td data-label="Valor">R$ <?=number_format($financeiro['valor'], 2, ',', '.');?></td>
-                                        <td class="d-none d-sm-table-cell" data-label="Conta"><?=$financeiro['nome_conta'];?></td>
-                                        <td class="d-none d-md-table-cell" data-label="Vencimento"><?= date('d/m/Y', strtotime($financeiro['data_vencimento'])) ?></td>
-                                        <td data-label="Pago"><?=$financeiro['pago']; ?></td>
-                                        <td data-label="Ação">
-                                            <?php if ($financeiro['criado_manual']==true): ?>
-                                                <button type="button" class="btn btn-link btn-danger open-delete-modal p-0" data-id="<?=$financeiro['id'];?>" data-tipo="<?=$financeiro['tipo'];?>" data-conta="<?=$financeiro['conta'];?>" data-valor="<?=$financeiro['valor'];?>" data-bs-toggle="modal" data-bs-target="#confirmDeleteModal">
-                                                    <i class="fa fa-times"></i> Excluir
-                                                </button>
-                                            <?php endif; ?>
-                                        </td>
-									</tr>
-						<?php
-								}
-							}
-						?>
-					</tbody>
-				</table>
-			</div>
-<div class="col-md-12 mt-3">
-    <div class="demo d-flex justify-content-center">
-        <ul class="pagination pg-primary">
-            <?php if ($totalPaginas > 1): ?>
-                <li class="page-item <?= ($pagina == 1) ? 'disabled' : '' ?>">
-                    <a class="page-link" href="?page=<?= htmlspecialchars($_GET['page'] ?? '') ?>&pagina=1&filtro=<?= urlencode($filtro) ?>&valor=<?= urlencode($valor) ?>&tipo_lancamento=<?= urlencode($tipo_lancamento) ?>">&laquo;</a>
-                </li>
-                
-                <li class="page-item <?= ($pagina == 1) ? 'disabled' : '' ?>">
-                    <a class="page-link" href="?page=<?= htmlspecialchars($_GET['page'] ?? '') ?>&pagina=<?= ($pagina - 1) ?>&filtro=<?= urlencode($filtro) ?>&valor=<?= urlencode($valor) ?>&tipo_lancamento=<?= urlencode($tipo_lancamento) ?>">&lsaquo;</a>
-                </li>
-                
-                <?php 
-                $paginas_visiveis = 5;
-                $inicio = max(1, $pagina - floor($paginas_visiveis/2));
-                $fim = min($totalPaginas, $inicio + $paginas_visiveis - 1);
-                $inicio = max(1, $fim - $paginas_visiveis + 1);
-                
-                for ($i = $inicio; $i <= $fim; $i++): 
-                ?>
-                    <li class="page-item <?= ($pagina == $i) ? 'active' : '' ?>">
-                        <a class="page-link" href="?page=<?= htmlspecialchars($_GET['page'] ?? '') ?>&pagina=<?= $i ?>&filtro=<?= urlencode($filtro) ?>&valor=<?= urlencode($valor) ?>&tipo_lancamento=<?= urlencode($tipo_lancamento) ?>"><?= $i ?></a>
-                    </li>
-                <?php endfor; ?>
-                
-                <li class="page-item <?= ($pagina == $totalPaginas) ? 'disabled' : '' ?>">
-                    <a class="page-link" href="?page=<?= htmlspecialchars($_GET['page'] ?? '') ?>&pagina=<?= ($pagina + 1) ?>&filtro=<?= urlencode($filtro) ?>&valor=<?= urlencode($valor) ?>&tipo_lancamento=<?= urlencode($tipo_lancamento) ?>">&rsaquo;</a>
-                </li>
-                
-                <li class="page-item <?= ($pagina == $totalPaginas) ? 'disabled' : '' ?>">
-                    <a class="page-link" href="?page=<?= htmlspecialchars($_GET['page'] ?? '') ?>&pagina=<?= $totalPaginas ?>&filtro=<?= urlencode($filtro) ?>&valor=<?= urlencode($valor) ?>&tipo_lancamento=<?= urlencode($tipo_lancamento) ?>">&raquo;</a>
-                </li>
-            <?php endif; ?>
-        </ul>
     </div>
 </div>
-		</div>
-	</div>
+
+<!-- Tabela de Lançamentos -->
+<div class="row">
+    <div class="col-md-12">
+        <div class="card card-round shadow-sm">
+            <div class="card-header bg-white py-3">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <h4 class="card-title fw-bold mb-1" style="font-size: 1.1rem; color:#1a1a2e;">Lançamentos Financeiros</h4>
+                        <p class="text-muted small mb-0">Total de registros encontrados: <strong><?= $totalFinanceiro ?></strong></p>
+                    </div>
+                    <button class="btn btn-primary btn-round" data-bs-toggle="modal" data-bs-target="#addRowModal">
+                        <i class="fa fa-plus me-1"></i> Cadastrar Lançamento
+                    </button>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table align-items-center mb-0 table-striped table-hover">
+                        <thead class="thead-light">
+                            <tr class="text-uppercase font-monospace fs-7 text-secondary">
+                                <th style="width: 80px" class="ps-4">ID</th>
+                                <th style="width: 80px" class="text-center">Tipo</th>
+                                <th>Descrição</th>
+                                <th>Valor</th>
+                                <th>Conta</th>
+                                <th>Vencimento</th>
+                                <th>Pago</th>
+                                <th style="width: 100px" class="pe-4 text-end">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php if ($financeiros): ?>
+                                <?php foreach ($financeiros as $financeiro): ?>
+                                    <tr>
+                                        <td class="ps-4 fw-bold">#<?=$financeiro['id'];?></td>
+                                        <td class="text-center">
+                                            <?php if ($financeiro['tipo'] == '1'): ?>
+                                                <span class="badge badge-success rounded-pill px-2 py-1" title="Entrada"><i class="fas fa-arrow-up me-1"></i>Entrada</span>
+                                            <?php elseif ($financeiro['tipo'] == '2'): ?>
+                                                <span class="badge badge-danger rounded-pill px-2 py-1" title="Saída"><i class="fas fa-arrow-down me-1"></i>Saída</span>
+                                            <?php else: ?>
+                                                <span class="badge badge-warning rounded-pill px-2 py-1" title="Estorno"><i class="fas fa-arrow-left me-1"></i>Estorno</span>
+                                            <?php endif; ?>
+                                        </td>
+                                        <td><strong><?=htmlspecialchars($financeiro['descricao']);?></strong></td>
+                                        <td class="fw-bold <?=($financeiro['tipo'] == '1' ? 'text-success' : ($financeiro['tipo'] == '2' ? 'text-danger' : 'text-warning'))?>">
+                                            R$ <?=number_format($financeiro['valor'], 2, ',', '.');?>
+                                        </td>
+                                        <td><i class="fas fa-university text-muted me-1"></i><?=htmlspecialchars($financeiro['nome_conta'] ?? 'N/A');?></td>
+                                        <td><i class="far fa-calendar-alt text-muted me-1"></i><?= date('d/m/Y', strtotime($financeiro['data_vencimento'])) ?></td>
+                                        <td>
+                                            <?php if ($financeiro['pago'] == 1): ?>
+                                                <span class="badge badge-success"><i class="fas fa-check me-1"></i>Sim</span>
+                                            <?php else: ?>
+                                                <span class="badge badge-danger"><i class="fas fa-times me-1"></i>Não</span>
+                                            <?php endif; ?>
+                                        </td>
+                                        <td class="pe-4 text-end">
+                                            <?php if ($financeiro['criado_manual'] == true): ?>
+                                                <button type="button" class="btn btn-icon btn-link btn-danger open-delete-modal p-0" 
+                                                        data-id="<?=$financeiro['id'];?>" 
+                                                        data-tipo="<?=$financeiro['tipo'];?>" 
+                                                        data-conta="<?=$financeiro['conta'];?>" 
+                                                        data-valor="<?=$financeiro['valor'];?>" 
+                                                        data-bs-toggle="modal" 
+                                                        data-bs-target="#confirmDeleteModal"
+                                                        title="Excluir Lançamento">
+                                                    <i class="fa fa-times fa-lg"></i>
+                                                </button>
+                                            <?php else: ?>
+                                                <span class="text-muted small italic">Automático</span>
+                                            <?php endif; ?>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <tr>
+                                    <td colspan="8" class="text-center py-4 text-muted">Nenhum lançamento financeiro encontrado com os filtros aplicados.</td>
+                                </tr>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Paginação -->
+                <?php if ($totalPaginas > 1): ?>
+                <div class="card-footer bg-white border-0 py-3">
+                    <div class="d-flex justify-content-center">
+                        <ul class="pagination pg-primary mb-0">
+                            <li class="page-item <?= ($pagina == 1) ? 'disabled' : '' ?>">
+                                <a class="page-link" href="?page=ListarFinanceiro&pagina=1&busca=<?= urlencode($busca) ?>&tipo_lancamento=<?= urlencode($tipo_lancamento) ?>&conta=<?= urlencode($conta) ?>&pago=<?= urlencode($pago) ?>&data_inicio=<?= urlencode($data_inicio) ?>&data_fim=<?= urlencode($data_fim) ?>">&laquo; First</a>
+                            </li>
+                            <li class="page-item <?= ($pagina == 1) ? 'disabled' : '' ?>">
+                                <a class="page-link" href="?page=ListarFinanceiro&pagina=<?= ($pagina - 1) ?>&busca=<?= urlencode($busca) ?>&tipo_lancamento=<?= urlencode($tipo_lancamento) ?>&conta=<?= urlencode($conta) ?>&pago=<?= urlencode($pago) ?>&data_inicio=<?= urlencode($data_inicio) ?>&data_fim=<?= urlencode($data_fim) ?>">&lsaquo;</a>
+                            </li>
+                            
+                            <?php 
+                            $paginas_visiveis = 5;
+                            $inicio = max(1, $pagina - floor($paginas_visiveis/2));
+                            $fim = min($totalPaginas, $inicio + $paginas_visiveis - 1);
+                            $inicio = max(1, $fim - $paginas_visiveis + 1);
+                            
+                            for ($i = $inicio; $i <= $fim; $i++): 
+                            ?>
+                                <li class="page-item <?= ($pagina == $i) ? 'active' : '' ?>">
+                                    <a class="page-link" href="?page=ListarFinanceiro&pagina=<?= $i ?>&busca=<?= urlencode($busca) ?>&tipo_lancamento=<?= urlencode($tipo_lancamento) ?>&conta=<?= urlencode($conta) ?>&pago=<?= urlencode($pago) ?>&data_inicio=<?= urlencode($data_inicio) ?>&data_fim=<?= urlencode($data_fim) ?>"><?= $i ?></a>
+                                </li>
+                            <?php endfor; ?>
+                            
+                            <li class="page-item <?= ($pagina == $totalPaginas) ? 'disabled' : '' ?>">
+                                <a class="page-link" href="?page=ListarFinanceiro&pagina=<?= ($pagina + 1) ?>&busca=<?= urlencode($busca) ?>&tipo_lancamento=<?= urlencode($tipo_lancamento) ?>&conta=<?= urlencode($conta) ?>&pago=<?= urlencode($pago) ?>&data_inicio=<?= urlencode($data_inicio) ?>&data_fim=<?= urlencode($data_fim) ?>">&rsaquo;</a>
+                            </li>
+                            <li class="page-item <?= ($pagina == $totalPaginas) ? 'disabled' : '' ?>">
+                                <a class="page-link" href="?page=ListarFinanceiro&pagina=<?= $totalPaginas ?>&busca=<?= urlencode($busca) ?>&tipo_lancamento=<?= urlencode($tipo_lancamento) ?>&conta=<?= urlencode($conta) ?>&pago=<?= urlencode($pago) ?>&data_inicio=<?= urlencode($data_inicio) ?>&data_fim=<?= urlencode($data_fim) ?>">&raquo; Last</a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
 </div>
-<!-- Modal de Confirmação -->
+
+<!-- Modal de Confirmação de Exclusão -->
 <div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Confirmar Exclusão</h5>
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius: 12px; border:none;">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold text-danger"><i class="fas fa-exclamation-triangle me-2"></i>Confirmar Exclusão</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <p>Tem certeza de que deseja excluir o cadastro desse lançamento?</p>
+                <p>Tem certeza de que deseja excluir permanentemente este lançamento financeiro? Essa operação alterará o saldo da conta associada.</p>
             </div>
-            <div class="modal-footer">
+            <div class="modal-footer border-0">
                 <form id="deleteForm" action="formExcluir.php" method="POST">
                     <input type="hidden" name="id" id="productIdToDelete">
                     <input type="hidden" name="funcao" value="ExcluirFinanceiro">
                     <input type="hidden" name="tabela" value="financeiro">
-                    <input type="hidden" name="page" value="<?=$_GET['page'];?>">
+                    <input type="hidden" name="page" value="ListarFinanceiro">
                     <input type="hidden" name="tipo" id="tipoLancamento">
                     <input type="hidden" name="conta" id="contaLancamento">
                     <input type="hidden" name="valor" id="valorLancamento">
-                    <button type="submit" class="btn btn-danger">Excluir</button>
+                    <button type="submit" class="btn btn-danger rounded-pill px-4">Excluir</button>
                 </form>
-                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button>
             </div>
         </div>
     </div>
 </div>
+
 <!-- Modal de Cadastro -->
-			<div class="modal fade" id="addRowModal" tabindex="-1" role="dialog" aria-hidden="true">
-				<div class="modal-dialog" role="document">
-					<div class="modal-content">
-						<div class="modal-header border-0">
-							<h5 class="modal-title">
-								<span class="fw-mediumbold"> Novo</span>
-								<span class="fw-light"> Lançamento </span>
-							</h5>
-							<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-						</div>
-						<div class="modal-body">
-                            <form action="cadastrarFinanceiro.php" method="POST" enctype="multipart/form-data">
-								<div class="row">
-									<div class="col-sm-12">
-										<div class="form-group form-group-default">
-											<label>Nome</label>
-											<input id="nome" name="nome" type="text" class="form-control" required/>
-										</div>
-									</div>
-									<div class="col-md-6 pe-0">
-                                        <div class="form-group form-group-default">
-                                            <label>Tipo</label>
-                                            <select class="form-select" id="tipo" name="tipo" required="">
-                                                <option value="">Selecione</option>
-                                                <option value="1">Entrada</option>
-                                                <option value="2">Saída</option>
-                                                <!--
-                                                <option value="3">Transferência</option>
-                                                -->
-                                            </select>
-                                        </div>
-                                    </div>
-									<div class="col-md-6">
-										<div class="form-group form-group-default">
-											<label>Valor R$</label>
-											<input id="valor" type="number" step="0.01" class="form-control" name="valor" />
-										</div>
-									</div>
-                                    <div class="col-md-6 pe-0">
-                                        <div class="form-group form-group-default">
-                                            <label>Conta</label>
-                                            <select class="form-select" id="conta" name="conta" required="">
-                                                <option value="">Selecione</option>
-                                                <?php
-                                                    $resultado = buscarTodasContasFinanceiro();
-                                                    if (!empty($resultado))
-                                                    {
-                                                        foreach ($resultado as $conta)
-                                                        {
-                                                            echo "<option value='" . htmlspecialchars($conta['id']) . "'>" . htmlspecialchars($conta['nome']) . "</option>";
-                                                        }
-                                                    }
-                                                    else
-                                                    {
-                                                        echo "<option value=''>Nenhuma conta encontrada</option>";
-                                                    }
-
-                                                ?>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="form-group form-group-default">
-                                            <label>Data Vencimento</label>
-                                            <input id="data_vencimento" type="date" class="form-control" name="data_vencimento" />
-                                        </div>
-                                    </div>
-								</div>
-								<div class="modal-footer border-0">
-                            		<button type="submit" class="btn btn-primary">Salvar</button>
-									<button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cancelar</button>
-
-								</div>
-							</form>
-						</div>
-					</div>
-				</div>
-			</div>
-			<!-- Modal de Edição -->
-			<div class="modal fade" id="editModal" tabindex="-1" role="dialog" aria-hidden="true">
-    			<div class="modal-dialog" role="document">
-        			<div class="modal-content">
-            			<div class="modal-header border-0">
-                			<h5 class="modal-title">
-								<span class="fw-mediumbold"> Editar</span>
-								<span class="fw-light"> Lançamento </span>
-							</h5>
-                			<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            			</div>
-            			<div class="modal-body">
-                			<form id="editForm" action="formEditar.php" method="POST" enctype="multipart/form-data">
-                				<div class="row">
-                    				<input type="hidden" name="id" id="idEdit">
-                    				<div class="col-sm-12">
-                    					<div class="form-group form-group-default">
-											<label>Nome</label>
-                        					<input type="text" class="form-control" id="edit_descricao" name="descricao" required>
-                    					</div>
-                    				</div>
-									<div class="col-md-6 pe-0">
-										<div class="form-group form-group-default">
-											<label>Data de Nascimento</label>
-											<input type="date" class="form-control" id="edit_data_nascimento" name="data_nascimento" required>
-										</div>
-									</div>
-									<div class="col-md-6">
-										<div class="form-group form-group-default">
-											<label>Contato</label>
-											<input type="number" class="form-control" id="edit_telefone" name="telefone" required>
-										</div>
-									</div>
-                    			</div>
-                    			<div class="modal-footer border-0">
-                            		<button type="submit" class="btn btn-primary">Salvar</button>
-									<button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cancelar</button>
-								</div>
-                </form>
+<div class="modal fade" id="addRowModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content" style="border-radius: 12px; border:none;">
+            <div class="modal-header border-0 bg-light">
+                <h5 class="modal-title fw-bold text-dark">
+                    <i class="fas fa-plus-circle text-primary me-2"></i>Novo Lançamento Financeiro
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
+            <form action="cadastrarFinanceiro.php" method="POST" enctype="multipart/form-data">
+                <div class="modal-body p-4">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <div class="form-group form-group-default p-2">
+                                <label class="fw-bold small text-muted">Descrição / Nome</label>
+                                <input id="nome" name="nome" type="text" class="form-control border-0 px-1" placeholder="Ex: Pagamento fornecedor, Venda de balcão..." required/>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group form-group-default p-2">
+                                <label class="fw-bold small text-muted">Tipo</label>
+                                <select class="form-select border-0 px-1" id="tipo" name="tipo" required>
+                                    <option value="">Selecione</option>
+                                    <option value="1">Entrada</option>
+                                    <option value="2">Saída</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group form-group-default p-2">
+                                <label class="fw-bold small text-muted">Valor R$</label>
+                                <input id="valor" type="number" step="0.01" class="form-control border-0 px-1" name="valor" placeholder="0,00" required/>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group form-group-default p-2">
+                                <label class="fw-bold small text-muted">Conta</label>
+                                <select class="form-select border-0 px-1" id="conta" name="conta" required>
+                                    <option value="">Selecione</option>
+                                    <?php
+                                    $resultado = buscarTodasContasFinanceiro();
+                                    if (!empty($resultado)) {
+                                        foreach ($resultado as $contaObj) {
+                                            echo "<option value='" . htmlspecialchars($contaObj['id']) . "'>" . htmlspecialchars($contaObj['nome']) . "</option>";
+                                        }
+                                    } else {
+                                        echo "<option value=''>Nenhuma conta encontrada</option>";
+                                    }
+                                    ?>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group form-group-default p-2">
+                                <label class="fw-bold small text-muted">Data Vencimento</label>
+                                <input id="data_vencimento" type="date" class="form-control border-0 px-1" name="data_vencimento" value="<?= date('Y-m-d') ?>" required/>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 bg-light">
+                    <button type="submit" class="btn btn-primary rounded-pill px-4">Salvar</button>
+                    <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function ()
-    {
-        const deleteButtons = document.querySelectorAll('.open-delete-modal');
-        const productIdInput = document.getElementById('productIdToDelete');
-        const tipoLancamentoInput = document.getElementById('tipoLancamento');
-        const contaLancamentoInput = document.getElementById('contaLancamento');
-        const valorLancamentoInput = document.getElementById('valorLancamento');
+document.addEventListener('DOMContentLoaded', function () {
+    const deleteButtons = document.querySelectorAll('.open-delete-modal');
+    const productIdInput = document.getElementById('productIdToDelete');
+    const tipoLancamentoInput = document.getElementById('tipoLancamento');
+    const contaLancamentoInput = document.getElementById('contaLancamento');
+    const valorLancamentoInput = document.getElementById('valorLancamento');
 
-        deleteButtons.forEach(button => {
-            button.addEventListener('click', function () {
-                const productId = this.getAttribute('data-id');
-                const valortipoLancamento = this.getAttribute('data-tipo');
-                const idContaLancamento = this.getAttribute('data-conta');
-                const valorContaLancamento = this.getAttribute('data-valor');
-
-                productIdInput.value = productId;
-                tipoLancamentoInput.value = valortipoLancamento;
-                contaLancamentoInput.value = idContaLancamento;
-                valorLancamentoInput.value = valorContaLancamento;
-            });
-        });
-
-        // Script para edição
-        const editButtons = document.querySelectorAll('.open-edit-modal');
-        const idEdit = document.getElementById('idEdit');
-        const clienteNameEdit = document.getElementById('edit_descricao');
-        const clienteDataNascimento = document.getElementById('edit_data_nascimento');
-        const clienteTelefone = document.getElementById('edit_telefone');
-
-        editButtons.forEach(button => {
-            button.addEventListener('click', function () {
-                idEdit.value = this.getAttribute('data-id');
-                clienteNameEdit.value = this.getAttribute('data-descricao');
-                clienteDataNascimento.value = this.getAttribute('data-data_nascimento');
-                clienteTelefone.value = this.getAttribute('data-telefone');
-            });
+    deleteButtons.forEach(button => {
+        button.addEventListener('click', function () {
+            productIdInput.value = this.getAttribute('data-id');
+            tipoLancamentoInput.value = this.getAttribute('data-tipo');
+            contaLancamentoInput.value = this.getAttribute('data-conta');
+            valorLancamentoInput.value = this.getAttribute('data-valor');
         });
     });
+});
 </script>
-

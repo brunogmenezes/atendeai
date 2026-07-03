@@ -1008,7 +1008,7 @@ function buscarTotaisPorTipoPagamento($dia = null, $mes = null, $ano = null) {
     }
 
 
-function buscarFinanceiro($filtro = '', $valor = '', $limite = 10, $offset = 0, $tipo_lancamento = '') {
+function buscarFinanceiro($limite = 10, $offset = 0, $tipo_lancamento = '', $conta = '', $pago = '', $data_inicio = '', $data_fim = '', $busca = '') {
     global $pdo;
     
     $query = "
@@ -1025,30 +1025,40 @@ function buscarFinanceiro($filtro = '', $valor = '', $limite = 10, $offset = 0, 
     $whereClauses = [];
     $params = [];
     
-    // Filtro por tipo de lançamento
-    if (!empty($tipo_lancamento)) {
+    if ($tipo_lancamento !== '') {
         $whereClauses[] = "fin.tipo = :tipo";
         $params[':tipo'] = $tipo_lancamento;
     }
     
-    // Filtro adicional
-    if ($filtro && $valor) {
-        if ($filtro === 'valor') {
-            $whereClauses[] = "CAST(fin.valor AS TEXT) LIKE :valor";
-            $params[':valor'] = "%$valor%";
-        } else {
-            // Adiciona prefixo 'fin.' para evitar ambiguidade
-            $whereClauses[] = "fin.$filtro ILIKE :valor";
-            $params[':valor'] = "%$valor%";
-        }
+    if ($conta !== '') {
+        $whereClauses[] = "fin.conta = :conta";
+        $params[':conta'] = $conta;
     }
     
-    // Construir a cláusula WHERE se houver filtros
+    if ($pago !== '') {
+        $whereClauses[] = "fin.pago = :pago";
+        $params[':pago'] = $pago;
+    }
+    
+    if ($data_inicio !== '') {
+        $whereClauses[] = "fin.data_vencimento >= :data_inicio";
+        $params[':data_inicio'] = $data_inicio . ' 00:00:00';
+    }
+    
+    if ($data_fim !== '') {
+        $whereClauses[] = "fin.data_vencimento <= :data_fim";
+        $params[':data_fim'] = $data_fim . ' 23:59:59';
+    }
+    
+    if ($busca !== '') {
+        $whereClauses[] = "(fin.descricao ILIKE :busca OR CAST(fin.valor AS TEXT) LIKE :busca OR CAST(fin.id AS TEXT) LIKE :busca)";
+        $params[':busca'] = "%$busca%";
+    }
+    
     if (!empty($whereClauses)) {
         $query .= " WHERE " . implode(" AND ", $whereClauses);
     }
     
-    // Ordenação e paginação
     $query .= " ORDER BY fin.id DESC LIMIT :limite OFFSET :offset";
     $params[':limite'] = $limite;
     $params[':offset'] = $offset;
@@ -1056,7 +1066,6 @@ function buscarFinanceiro($filtro = '', $valor = '', $limite = 10, $offset = 0, 
     try {
         $stmt = $pdo->prepare($query);
         
-        // Bind dos parâmetros
         foreach ($params as $key => $val) {
             if ($key === ':limite' || $key === ':offset') {
                 $stmt->bindValue($key, $val, PDO::PARAM_INT);
@@ -1069,7 +1078,6 @@ function buscarFinanceiro($filtro = '', $valor = '', $limite = 10, $offset = 0, 
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
         
     } catch (PDOException $e) {
-        // Log do erro ou tratamento adequado
         error_log("Erro ao buscar financeiro: " . $e->getMessage());
         return false;
     }
@@ -1318,44 +1326,58 @@ function buscarFechamentos($limite = 10, $offset = 0)
         return $stmt->fetchColumn();
     }
 
-function contarFinanceiro($filtro = '', $valor = '', $tipo_lancamento = '')
+function contarFinanceiro($tipo_lancamento = '', $conta = '', $pago = '', $data_inicio = '', $data_fim = '', $busca = '')
 {
     global $pdo;
-    $query = "SELECT COUNT(*) FROM financeiro";
+    $query = "SELECT COUNT(*) FROM financeiro fin";
     $whereClauses = [];
     $params = [];
     
-    // Filtro por tipo de lançamento
-    if (!empty($tipo_lancamento)) {
-        $whereClauses[] = "tipo = :tipo";
+    if ($tipo_lancamento !== '') {
+        $whereClauses[] = "fin.tipo = :tipo";
         $params[':tipo'] = $tipo_lancamento;
     }
     
-    // Filtro adicional
-    if ($filtro && $valor) {
-        if ($filtro === 'valor') {
-            $whereClauses[] = "CAST(valor AS TEXT) LIKE :valor";
-            $params[':valor'] = "%$valor%";
-        } else {
-            $whereClauses[] = "$filtro ILIKE :valor";
-            $params[':valor'] = "%$valor%";
-        }
+    if ($conta !== '') {
+        $whereClauses[] = "fin.conta = :conta";
+        $params[':conta'] = $conta;
     }
     
-    // Construir a cláusula WHERE se houver filtros
+    if ($pago !== '') {
+        $whereClauses[] = "fin.pago = :pago";
+        $params[':pago'] = $pago;
+    }
+    
+    if ($data_inicio !== '') {
+        $whereClauses[] = "fin.data_vencimento >= :data_inicio";
+        $params[':data_inicio'] = $data_inicio . ' 00:00:00';
+    }
+    
+    if ($data_fim !== '') {
+        $whereClauses[] = "fin.data_vencimento <= :data_fim";
+        $params[':data_fim'] = $data_fim . ' 23:59:59';
+    }
+    
+    if ($busca !== '') {
+        $whereClauses[] = "(fin.descricao ILIKE :busca OR CAST(fin.valor AS TEXT) LIKE :busca OR CAST(fin.id AS TEXT) LIKE :busca)";
+        $params[':busca'] = "%$busca%";
+    }
+    
     if (!empty($whereClauses)) {
         $query .= " WHERE " . implode(" AND ", $whereClauses);
     }
     
-    $stmt = $pdo->prepare($query);
-    
-    // Bind dos parâmetros
-    foreach ($params as $key => $val) {
-        $stmt->bindValue($key, $val);
+    try {
+        $stmt = $pdo->prepare($query);
+        foreach ($params as $key => $val) {
+            $stmt->bindValue($key, $val);
+        }
+        $stmt->execute();
+        return $stmt->fetchColumn();
+    } catch (PDOException $e) {
+        error_log("Erro ao contar financeiro: " . $e->getMessage());
+        return 0;
     }
-    
-    $stmt->execute();
-    return $stmt->fetchColumn();
 }
 
 function contarTransferencias()
