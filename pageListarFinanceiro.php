@@ -12,7 +12,6 @@ verificarSessao();
 // Coleta de parâmetros dos filtros robustos
 $tipo_lancamento = $_GET['tipo_lancamento'] ?? '';
 $conta           = $_GET['conta'] ?? '';
-$pago            = $_GET['pago'] ?? '';
 $data_inicio     = $_GET['data_inicio'] ?? '';
 $data_fim        = $_GET['data_fim'] ?? '';
 $busca           = $_GET['busca'] ?? '';
@@ -22,8 +21,8 @@ $limite = 10;
 $offset = ($pagina - 1) * $limite;
 
 // Buscar os dados com os novos filtros robustos
-$financeiros = buscarFinanceiro($limite, $offset, $tipo_lancamento, $conta, $pago, $data_inicio, $data_fim, $busca);
-$totalFinanceiro = contarFinanceiro($tipo_lancamento, $conta, $pago, $data_inicio, $data_fim, $busca);
+$financeiros = buscarFinanceiro($limite, $offset, $tipo_lancamento, $conta, '', $data_inicio, $data_fim, $busca);
+$totalFinanceiro = contarFinanceiro($tipo_lancamento, $conta, '', $data_inicio, $data_fim, $busca);
 $totalPaginas = ceil($totalFinanceiro / $limite);
 ?>
 
@@ -81,7 +80,7 @@ $totalPaginas = ceil($totalFinanceiro / $limite);
                             </div>
                         </div>
                         <!-- Conta -->
-                        <div class="col-md-2 col-sm-6">
+                        <div class="col-md-3 col-sm-6">
                             <div class="form-group mb-0 p-0">
                                 <label class="small text-muted fw-bold mb-1">Conta</label>
                                 <select name="conta" class="form-select form-select-sm">
@@ -107,17 +106,6 @@ $totalPaginas = ceil($totalFinanceiro / $limite);
                                     <span class="input-group-text bg-light border-0 py-0 px-2" style="font-size:11px;">até</span>
                                     <input type="date" name="data_fim" class="form-control form-control-sm" value="<?= htmlspecialchars($data_fim) ?>">
                                 </div>
-                            </div>
-                        </div>
-                        <!-- Status de Pagamento -->
-                        <div class="col-md-1 col-sm-6">
-                            <div class="form-group mb-0 p-0">
-                                <label class="small text-muted fw-bold mb-1">Status</label>
-                                <select name="pago" class="form-select form-select-sm">
-                                    <option value="">Todos</option>
-                                    <option value="1" <?= ($pago == '1' ? 'selected' : '') ?>>Pago</option>
-                                    <option value="0" <?= ($pago == '0' ? 'selected' : '') ?>>Aberto</option>
-                                </select>
                             </div>
                         </div>
                         <!-- Ações do Filtro -->
@@ -158,7 +146,6 @@ $totalPaginas = ceil($totalFinanceiro / $limite);
                                 <th>Valor</th>
                                 <th>Conta</th>
                                 <th>Vencimento</th>
-                                <th>Pago</th>
                                 <th style="width: 100px" class="pe-4 text-end">Ações</th>
                             </tr>
                         </thead>
@@ -182,13 +169,6 @@ $totalPaginas = ceil($totalFinanceiro / $limite);
                                         </td>
                                         <td><i class="fas fa-university text-muted me-1"></i><?=htmlspecialchars($financeiro['nome_conta'] ?? 'N/A');?></td>
                                         <td><i class="far fa-calendar-alt text-muted me-1"></i><?= date('d/m/Y', strtotime($financeiro['data_vencimento'])) ?></td>
-                                        <td>
-                                            <?php if ($financeiro['pago'] == 1): ?>
-                                                <span class="badge badge-success"><i class="fas fa-check me-1"></i>Sim</span>
-                                            <?php else: ?>
-                                                <span class="badge badge-danger"><i class="fas fa-times me-1"></i>Não</span>
-                                            <?php endif; ?>
-                                        </td>
                                         <td class="pe-4 text-end">
                                             <?php if ($financeiro['criado_manual'] == true): ?>
                                                 <button type="button" class="btn btn-icon btn-link btn-danger open-delete-modal p-0" 
@@ -222,10 +202,10 @@ $totalPaginas = ceil($totalFinanceiro / $limite);
                     <div class="d-flex justify-content-center">
                         <ul class="pagination pg-primary mb-0">
                             <li class="page-item <?= ($pagina == 1) ? 'disabled' : '' ?>">
-                                <a class="page-link" href="?page=ListarFinanceiro&pagina=1&busca=<?= urlencode($busca) ?>&tipo_lancamento=<?= urlencode($tipo_lancamento) ?>&conta=<?= urlencode($conta) ?>&pago=<?= urlencode($pago) ?>&data_inicio=<?= urlencode($data_inicio) ?>&data_fim=<?= urlencode($data_fim) ?>">&laquo; Início</a>
+                                <a class="page-link" href="?page=ListarFinanceiro&pagina=1&busca=<?= urlencode($busca) ?>&tipo_lancamento=<?= urlencode($tipo_lancamento) ?>&conta=<?= urlencode($conta) ?>&data_inicio=<?= urlencode($data_inicio) ?>&data_fim=<?= urlencode($data_fim) ?>">&laquo; Início</a>
                             </li>
                             <li class="page-item <?= ($pagina == 1) ? 'disabled' : '' ?>">
-                                <a class="page-link" href="?page=ListarFinanceiro&pagina=<?= ($pagina - 1) ?>&busca=<?= urlencode($busca) ?>&tipo_lancamento=<?= urlencode($tipo_lancamento) ?>&conta=<?= urlencode($conta) ?>&pago=<?= urlencode($pago) ?>&data_inicio=<?= urlencode($data_inicio) ?>&data_fim=<?= urlencode($data_fim) ?>">&lsaquo;</a>
+                                <a class="page-link" href="?page=ListarFinanceiro&pagina=<?= ($pagina - 1) ?>&busca=<?= urlencode($busca) ?>&tipo_lancamento=<?= urlencode($tipo_lancamento) ?>&conta=<?= urlencode($conta) ?>&data_inicio=<?= urlencode($data_inicio) ?>&data_fim=<?= urlencode($data_fim) ?>">&lsaquo;</a>
                             </li>
                             
                             <?php 
@@ -237,15 +217,15 @@ $totalPaginas = ceil($totalFinanceiro / $limite);
                             for ($i = $inicio; $i <= $fim; $i++): 
                             ?>
                                 <li class="page-item <?= ($pagina == $i) ? 'active' : '' ?>">
-                                    <a class="page-link" href="?page=ListarFinanceiro&pagina=<?= $i ?>&busca=<?= urlencode($busca) ?>&tipo_lancamento=<?= urlencode($tipo_lancamento) ?>&conta=<?= urlencode($conta) ?>&pago=<?= urlencode($pago) ?>&data_inicio=<?= urlencode($data_inicio) ?>&data_fim=<?= urlencode($data_fim) ?>"><?= $i ?></a>
+                                    <a class="page-link" href="?page=ListarFinanceiro&pagina=<?= $i ?>&busca=<?= urlencode($busca) ?>&tipo_lancamento=<?= urlencode($tipo_lancamento) ?>&conta=<?= urlencode($conta) ?>&data_inicio=<?= urlencode($data_inicio) ?>&data_fim=<?= urlencode($data_fim) ?>"><?= $i ?></a>
                                 </li>
                             <?php endfor; ?>
                             
                             <li class="page-item <?= ($pagina == $totalPaginas) ? 'disabled' : '' ?>">
-                                <a class="page-link" href="?page=ListarFinanceiro&pagina=<?= ($pagina + 1) ?>&busca=<?= urlencode($busca) ?>&tipo_lancamento=<?= urlencode($tipo_lancamento) ?>&conta=<?= urlencode($conta) ?>&pago=<?= urlencode($pago) ?>&data_inicio=<?= urlencode($data_inicio) ?>&data_fim=<?= urlencode($data_fim) ?>">&rsaquo;</a>
+                                <a class="page-link" href="?page=ListarFinanceiro&pagina=<?= ($pagina + 1) ?>&busca=<?= urlencode($busca) ?>&tipo_lancamento=<?= urlencode($tipo_lancamento) ?>&conta=<?= urlencode($conta) ?>&data_inicio=<?= urlencode($data_inicio) ?>&data_fim=<?= urlencode($data_fim) ?>">&rsaquo;</a>
                             </li>
                             <li class="page-item <?= ($pagina == $totalPaginas) ? 'disabled' : '' ?>">
-                                <a class="page-link" href="?page=ListarFinanceiro&pagina=<?= $totalPaginas ?>&busca=<?= urlencode($busca) ?>&tipo_lancamento=<?= urlencode($tipo_lancamento) ?>&conta=<?= urlencode($conta) ?>&pago=<?= urlencode($pago) ?>&data_inicio=<?= urlencode($data_inicio) ?>&data_fim=<?= urlencode($data_fim) ?>">&raquo; Fim</a>
+                                <a class="page-link" href="?page=ListarFinanceiro&pagina=<?= $totalPaginas ?>&busca=<?= urlencode($busca) ?>&tipo_lancamento=<?= urlencode($tipo_lancamento) ?>&conta=<?= urlencode($conta) ?>&data_inicio=<?= urlencode($data_inicio) ?>&data_fim=<?= urlencode($data_fim) ?>">&raquo; Fim</a>
                             </li>
                         </ul>
                     </div>
