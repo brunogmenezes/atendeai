@@ -1014,13 +1014,18 @@ function buscarFinanceiro($limite = 10, $offset = 0, $tipo_lancamento = '', $con
     $query = "
     SELECT
         fin.*,
-        cont.nome AS nome_conta
+        cont.nome AS nome_conta,
+        cat.nome AS nome_categoria
     FROM
         financeiro fin
     LEFT JOIN 
         contas cont 
     ON 
-        fin.conta = cont.id";
+        fin.conta = cont.id
+    LEFT JOIN
+        categorias_financeiro cat
+    ON
+        fin.categoria_id = cat.id";
     
     $whereClauses = [];
     $params = [];
@@ -1082,6 +1087,68 @@ function buscarFinanceiro($limite = 10, $offset = 0, $tipo_lancamento = '', $con
     } catch (PDOException $e) {
         error_log("Erro ao buscar financeiro: " . $e->getMessage());
         return false;
+    }
+}
+
+/**
+ * Busca categorias de lançamento financeiro por tipo.
+ * @param int|string $tipo 1=Entrada, 2=Saída, ''=Todos
+ */
+function buscarCategoriasFinanceiro($tipo = '') {
+    global $pdo;
+    $query = "SELECT id, nome, tipo FROM categorias_financeiro WHERE ativo = true";
+    $params = [];
+    if ($tipo !== '') {
+        $query .= " AND tipo = :tipo";
+        $params[':tipo'] = $tipo;
+    }
+    $query .= " ORDER BY nome ASC";
+    try {
+        $stmt = $pdo->prepare($query);
+        $stmt->execute($params);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        error_log("Erro ao buscar categorias: " . $e->getMessage());
+        return [];
+    }
+}
+
+/**
+ * Busca saídas agrupadas por categoria para gráfico de pizza.
+ * @param string $data_inicio
+ * @param string $data_fim
+ * @param int|string $conta
+ */
+function buscarSaidasPorCategoria($data_inicio = '', $data_fim = '', $conta = '') {
+    global $pdo;
+    $query = "
+    SELECT 
+        COALESCE(cat.nome, 'Sem Categoria') AS categoria,
+        SUM(fin.valor) AS total
+    FROM financeiro fin
+    LEFT JOIN categorias_financeiro cat ON fin.categoria_id = cat.id
+    WHERE fin.tipo = 2";
+    $params = [];
+    if ($data_inicio !== '') {
+        $query .= " AND fin.data_lancamento >= :data_inicio";
+        $params[':data_inicio'] = $data_inicio . ' 00:00:00';
+    }
+    if ($data_fim !== '') {
+        $query .= " AND fin.data_lancamento <= :data_fim";
+        $params[':data_fim'] = $data_fim . ' 23:59:59';
+    }
+    if ($conta !== '') {
+        $query .= " AND fin.conta = :conta";
+        $params[':conta'] = $conta;
+    }
+    $query .= " GROUP BY COALESCE(cat.nome, 'Sem Categoria') ORDER BY total DESC";
+    try {
+        $stmt = $pdo->prepare($query);
+        $stmt->execute($params);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        error_log("Erro ao buscar saidas por categoria: " . $e->getMessage());
+        return [];
     }
 }
 

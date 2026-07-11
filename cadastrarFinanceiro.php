@@ -15,19 +15,21 @@ verificarSessao();
         $valor = trim($_POST['valor']);
         $conta = trim($_POST['conta']);
         $data_vencimento = trim($_POST['data_vencimento']);
+        $categoria_id = !empty($_POST['categoria_id']) ? (int)$_POST['categoria_id'] : null;
     
         try {
     
             // Inserindo o novo lançamento
-            $query = "INSERT INTO financeiro (descricao, tipo, valor, conta, data_lancamento, data_vencimento, criado_manual) 
-                      VALUES (:descricao, :tipo, :valor, :conta, NOW(), :data_vencimento, true)";
+            $query = "INSERT INTO financeiro (descricao, tipo, valor, conta, data_lancamento, data_vencimento, criado_manual, categoria_id) 
+                      VALUES (:descricao, :tipo, :valor, :conta, NOW(), :data_vencimento, true, :categoria_id)";
             $stmt = $pdo->prepare($query);
             $stmt->execute([
                 ':descricao' => $descricao,
                 ':tipo' => $tipo,
                 ':valor' => $valor,
                 ':conta' => $conta,
-                ':data_vencimento' => $data_vencimento
+                ':data_vencimento' => $data_vencimento,
+                ':categoria_id' => $categoria_id
             ]);
 
             $resultado = buscarContasFinanceiro($conta);

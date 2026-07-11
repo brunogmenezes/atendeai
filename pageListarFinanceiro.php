@@ -24,6 +24,15 @@ $offset = ($pagina - 1) * $limite;
 $financeiros = buscarFinanceiro($limite, $offset, $tipo_lancamento, $conta, '', $data_inicio, $data_fim, $busca);
 $totalFinanceiro = contarFinanceiro($tipo_lancamento, $conta, '', $data_inicio, $data_fim, $busca);
 $totalPaginas = ceil($totalFinanceiro / $limite);
+
+// Categorias para o modal
+$categoriasEntrada = buscarCategoriasFinanceiro(1);
+$categoriasSaida   = buscarCategoriasFinanceiro(2);
+
+// Dados para gráfico de pizza de saídas
+$saidasPorCategoria = buscarSaidasPorCategoria($data_inicio, $data_fim, $conta);
+$chartLabels = json_encode(array_column($saidasPorCategoria, 'categoria'));
+$chartValues = json_encode(array_map(fn($r) => (float)$r['total'], $saidasPorCategoria));
 ?>
 
 <div class="page-header">
@@ -120,6 +129,76 @@ $totalPaginas = ceil($totalFinanceiro / $limite);
     </div>
 </div>
 
+<!-- Gráfico de Pizza: Saídas por Categoria -->
+<div class="row mb-4">
+    <div class="col-md-5">
+        <div class="card card-round shadow-sm border-0 h-100">
+            <div class="card-header bg-white border-0 pb-0 pt-3 px-4">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center" style="width:36px;height:36px;background:linear-gradient(135deg,#ff6b6b,#ee5a24);">
+                        <i class="fas fa-chart-pie text-white" style="font-size:15px;"></i>
+                    </div>
+                    <div>
+                        <h6 class="fw-bold mb-0" style="color:#1a1a2e;">Saídas por Categoria</h6>
+                        <small class="text-muted">Distribuição dos gastos</small>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body px-3 py-2 d-flex justify-content-center align-items-center">
+                <?php if (!empty($saidasPorCategoria)): ?>
+                <div style="position:relative;width:100%;max-width:320px;">
+                    <canvas id="chartSaidasCategoria" style="max-height:280px;"></canvas>
+                </div>
+                <?php else: ?>
+                <div class="text-center py-4 text-muted">
+                    <i class="fas fa-chart-pie fa-3x mb-3" style="opacity:.2;"></i>
+                    <p class="mb-0 small">Nenhuma saída com categoria registrada no período.</p>
+                </div>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-7">
+        <div class="card card-round shadow-sm border-0 h-100">
+            <div class="card-header bg-white border-0 pb-0 pt-3 px-4">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center" style="width:36px;height:36px;background:linear-gradient(135deg,#6c5ce7,#a29bfe);">
+                        <i class="fas fa-list-ul text-white" style="font-size:15px;"></i>
+                    </div>
+                    <div>
+                        <h6 class="fw-bold mb-0" style="color:#1a1a2e;">Detalhamento</h6>
+                        <small class="text-muted">Valor por categoria</small>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body px-4 py-2">
+                <?php if (!empty($saidasPorCategoria)):
+                    $totalSaidas = array_sum(array_column($saidasPorCategoria, 'total'));
+                    $cores = ['#e74c3c','#e67e22','#f39c12','#8e44ad','#2980b9','#27ae60','#16a085','#d35400','#c0392b','#7f8c8d'];
+                    $i = 0;
+                    foreach ($saidasPorCategoria as $s):
+                        $pct = $totalSaidas > 0 ? round(($s['total'] / $totalSaidas) * 100, 1) : 0;
+                        $cor = $cores[$i % count($cores)];
+                        $i++;
+                ?>
+                <div class="d-flex align-items-center justify-content-between py-2" style="border-bottom: 1px solid #f0f0f0;">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="rounded" style="display:inline-block;width:12px;height:12px;background:<?= $cor ?>;flex-shrink:0;"></span>
+                        <span class="small fw-semibold" style="color:#2d3436;"><?= htmlspecialchars($s['categoria']) ?></span>
+                    </div>
+                    <div class="text-end">
+                        <span class="fw-bold text-danger small">R$ <?= number_format($s['total'], 2, ',', '.') ?></span>
+                        <span class="badge ms-1" style="background:#fff0f0;color:#e74c3c;font-size:10px;"><?= $pct ?>%</span>
+                    </div>
+                </div>
+                <?php endforeach; else: ?>
+                <div class="text-center py-4 text-muted small">Nenhum dado disponível.</div>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Tabela de Lançamentos -->
 <div class="row">
     <div class="col-md-12">
@@ -142,6 +221,7 @@ $totalPaginas = ceil($totalFinanceiro / $limite);
                             <tr class="text-uppercase font-monospace fs-7 text-secondary">
                                 <th style="width: 80px" class="ps-4">ID</th>
                                 <th style="width: 80px" class="text-center">Tipo</th>
+                                <th>Categoria</th>
                                 <th>Descrição</th>
                                 <th>Valor</th>
                                 <th>Conta</th>
@@ -161,6 +241,15 @@ $totalPaginas = ceil($totalFinanceiro / $limite);
                                                 <span class="badge badge-danger rounded-pill px-2 py-1" title="Saída"><i class="fas fa-arrow-down me-1"></i>Saída</span>
                                             <?php else: ?>
                                                 <span class="badge badge-warning rounded-pill px-2 py-1" title="Estorno"><i class="fas fa-arrow-left me-1"></i>Estorno</span>
+                                            <?php endif; ?>
+                                        </td>
+                                        <td>
+                                            <?php if (!empty($financeiro['nome_categoria'])): ?>
+                                                <span class="badge rounded-pill px-2 py-1" style="background:#f0f0ff;color:#6c5ce7;font-size:11px;">
+                                                    <i class="fas fa-tag me-1" style="font-size:9px;"></i><?= htmlspecialchars($financeiro['nome_categoria']) ?>
+                                                </span>
+                                            <?php else: ?>
+                                                <span class="text-muted small">—</span>
                                             <?php endif; ?>
                                         </td>
                                         <td><strong><?=htmlspecialchars($financeiro['descricao']);?></strong></td>
@@ -189,7 +278,7 @@ $totalPaginas = ceil($totalFinanceiro / $limite);
                                 <?php endforeach; ?>
                             <?php else: ?>
                                 <tr>
-                                    <td colspan="8" class="text-center py-4 text-muted">Nenhum lançamento financeiro encontrado com os filtros aplicados.</td>
+                                    <td colspan="9" class="text-center py-4 text-muted">Nenhum lançamento financeiro encontrado com os filtros aplicados.</td>
                                 </tr>
                             <?php endif; ?>
                         </tbody>
@@ -295,6 +384,14 @@ $totalPaginas = ceil($totalFinanceiro / $limite);
                         </div>
                         <div class="col-md-6">
                             <div class="form-group form-group-default p-2">
+                                <label class="fw-bold small text-muted">Categoria</label>
+                                <select class="form-select border-0 px-1" id="categoria_id" name="categoria_id">
+                                    <option value="">Selecione o tipo primeiro</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group form-group-default p-2">
                                 <label class="fw-bold small text-muted">Valor R$</label>
                                 <input id="valor" type="number" step="0.01" class="form-control border-0 px-1" name="valor" placeholder="0,00" required/>
                             </div>
@@ -335,7 +432,12 @@ $totalPaginas = ceil($totalFinanceiro / $limite);
 </div>
 
 <script>
+// Categorias carregadas do PHP
+const categoriasEntrada = <?= json_encode(array_map(fn($c) => ['id' => $c['id'], 'nome' => $c['nome']], $categoriasEntrada)) ?>;
+const categoriasSaida   = <?= json_encode(array_map(fn($c) => ['id' => $c['id'], 'nome' => $c['nome']], $categoriasSaida)) ?>;
+
 document.addEventListener('DOMContentLoaded', function () {
+    // --- Modal de exclusão ---
     const deleteButtons = document.querySelectorAll('.open-delete-modal');
     const productIdInput = document.getElementById('productIdToDelete');
     const tipoLancamentoInput = document.getElementById('tipoLancamento');
@@ -350,5 +452,75 @@ document.addEventListener('DOMContentLoaded', function () {
             valorLancamentoInput.value = this.getAttribute('data-valor');
         });
     });
+
+    // --- Seleção dinâmica de categoria por tipo ---
+    const tipoSelect = document.getElementById('tipo');
+    const categoriaSelect = document.getElementById('categoria_id');
+
+    function atualizarCategorias() {
+        const tipo = tipoSelect ? tipoSelect.value : '';
+        if (!categoriaSelect) return;
+        categoriaSelect.innerHTML = '<option value="">Selecione a categoria</option>';
+        let lista = [];
+        if (tipo === '1') lista = categoriasEntrada;
+        else if (tipo === '2') lista = categoriasSaida;
+
+        lista.forEach(cat => {
+            const opt = document.createElement('option');
+            opt.value = cat.id;
+            opt.textContent = cat.nome;
+            categoriaSelect.appendChild(opt);
+        });
+
+        categoriaSelect.disabled = lista.length === 0;
+        if (lista.length === 0) {
+            categoriaSelect.innerHTML = '<option value="">Selecione o tipo primeiro</option>';
+        }
+    }
+
+    if (tipoSelect) tipoSelect.addEventListener('change', atualizarCategorias);
+    atualizarCategorias();
+
+    // --- Gráfico de Pizza ---
+    <?php if (!empty($saidasPorCategoria)): ?>
+    const ctx = document.getElementById('chartSaidasCategoria');
+    if (ctx) {
+        const coresChart = [
+            '#e74c3c','#e67e22','#f39c12','#8e44ad','#2980b9',
+            '#27ae60','#16a085','#d35400','#c0392b','#7f8c8d'
+        ];
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: <?= $chartLabels ?>,
+                datasets: [{
+                    data: <?= $chartValues ?>,
+                    backgroundColor: coresChart.slice(0, <?= count($saidasPorCategoria) ?>),
+                    borderWidth: 3,
+                    borderColor: '#fff',
+                    hoverOffset: 10
+                }]
+            },
+            options: {
+                responsive: true,
+                cutout: '60%',
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(ctx) {
+                                const val = ctx.parsed;
+                                const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                                const pct = total > 0 ? ((val / total) * 100).toFixed(1) : 0;
+                                return ' R$ ' + val.toLocaleString('pt-BR', {minimumFractionDigits:2}) + '  (' + pct + '%)';
+                            }
+                        }
+                    }
+                },
+                animation: { animateRotate: true, duration: 800 }
+            }
+        });
+    }
+    <?php endif; ?>
 });
 </script>
