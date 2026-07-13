@@ -260,6 +260,9 @@ $chartValues = json_encode(array_map(fn($r) => (float)$r['total'], $saidasPorCat
                                         <td>
                                             <i class="far fa-calendar-alt text-muted me-1"></i><?= date('d/m/Y', strtotime($financeiro['data_lancamento'])) ?>
                                             <br><small class="text-muted"><i class="far fa-clock me-1"></i><?= date('H:i', strtotime($financeiro['data_lancamento'])) ?></small>
+                                            <?php if (!empty($financeiro['nome_usuario']) || !empty($financeiro['username_usuario'])): ?>
+                                            <br><small class="text-muted"><i class="far fa-user me-1"></i><?= htmlspecialchars($financeiro['nome_usuario'] ?: $financeiro['username_usuario']) ?></small>
+                                            <?php endif; ?>
                                         </td>
                                         <td class="pe-4 text-end">
                                             <?php if ($financeiro['criado_manual'] == true): ?>

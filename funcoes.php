@@ -1015,7 +1015,9 @@ function buscarFinanceiro($limite = 10, $offset = 0, $tipo_lancamento = '', $con
     SELECT
         fin.*,
         cont.nome AS nome_conta,
-        cat.nome AS nome_categoria
+        cat.nome AS nome_categoria,
+        usr.nome AS nome_usuario,
+        usr.username AS username_usuario
     FROM
         financeiro fin
     LEFT JOIN 
@@ -1025,7 +1027,11 @@ function buscarFinanceiro($limite = 10, $offset = 0, $tipo_lancamento = '', $con
     LEFT JOIN
         categorias_financeiro cat
     ON
-        fin.categoria_id = cat.id";
+        fin.categoria_id = cat.id
+    LEFT JOIN
+        usuarios usr
+    ON
+        fin.usuario_id = usr.id";
     
     $whereClauses = [];
     $params = [];
