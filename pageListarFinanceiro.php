@@ -70,7 +70,7 @@ $chartValues = json_encode(array_map(fn($r) => (float)$r['total'], $saidasPorCat
             <div class="card-body">
                 <div class="row align-items-center">
                     <div class="col-icon"><div class="icon-big text-center icon-success bubble-shadow-small"><i class="fas fa-arrow-up"></i></div></div>
-                    <div class="col col-stats ms-3 ms-sm-0"><p class="card-category text-muted">Entradas</p><h4 class="card-title">R$ <?= number_format($totais['entradas'] ?? 0, 2, ',', '.') ?></h4></div>
+                    <div class="col col-stats ms-3 ms-sm-0"><p class="card-category text-muted">Entradas</p><h4 class="card-title">R$ <?= number_format($totais['total_entradas'] ?? 0, 2, ',', '.') ?></h4></div>
                 </div>
             </div>
         </div>
@@ -80,7 +80,7 @@ $chartValues = json_encode(array_map(fn($r) => (float)$r['total'], $saidasPorCat
             <div class="card-body">
                 <div class="row align-items-center">
                     <div class="col-icon"><div class="icon-big text-center icon-danger bubble-shadow-small"><i class="fas fa-arrow-down"></i></div></div>
-                    <div class="col col-stats ms-3 ms-sm-0"><p class="card-category text-muted">Saídas</p><h4 class="card-title">R$ <?= number_format($totais['saidas'] ?? 0, 2, ',', '.') ?></h4></div>
+                    <div class="col col-stats ms-3 ms-sm-0"><p class="card-category text-muted">Saídas</p><h4 class="card-title">R$ <?= number_format($totais['total_saidas'] ?? 0, 2, ',', '.') ?></h4></div>
                 </div>
             </div>
         </div>
@@ -90,7 +90,7 @@ $chartValues = json_encode(array_map(fn($r) => (float)$r['total'], $saidasPorCat
             <div class="card-body">
                 <div class="row align-items-center">
                     <div class="col-icon"><div class="icon-big text-center icon-primary bubble-shadow-small"><i class="fas fa-balance-scale"></i></div></div>
-                    <div class="col col-stats ms-3 ms-sm-0"><p class="card-category text-muted">Saldo Período</p><h4 class="card-title">R$ <?= number_format(($totais['entradas'] ?? 0) - ($totais['saidas'] ?? 0), 2, ',', '.') ?></h4></div>
+                    <div class="col col-stats ms-3 ms-sm-0"><p class="card-category text-muted">Saldo Período</p><h4 class="card-title">R$ <?= number_format($totais['saldo'] ?? 0, 2, ',', '.') ?></h4></div>
                 </div>
             </div>
         </div>
