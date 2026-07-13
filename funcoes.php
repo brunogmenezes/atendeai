@@ -1008,7 +1008,7 @@ function buscarTotaisPorTipoPagamento($dia = null, $mes = null, $ano = null) {
     }
 
 
-function buscarFinanceiro($limite = 10, $offset = 0, $tipo_lancamento = '', $conta = '', $pago = '', $data_inicio = '', $data_fim = '', $busca = '') {
+function buscarFinanceiro($limite = 10, $offset = 0, $tipo_lancamento = '', $conta = '', $pago = '', $data_inicio = '', $data_fim = '', $busca = '', $categoria_id = '') {
     global $pdo;
     
     $query = "
@@ -1049,6 +1049,11 @@ function buscarFinanceiro($limite = 10, $offset = 0, $tipo_lancamento = '', $con
     if ($pago !== '') {
         $whereClauses[] = "fin.pago = :pago";
         $params[':pago'] = $pago;
+    }
+    
+    if ($categoria_id !== '') {
+        $whereClauses[] = "fin.categoria_id = :categoria_id";
+        $params[':categoria_id'] = $categoria_id;
     }
     
     if ($data_inicio !== '') {
@@ -1463,7 +1468,7 @@ function buscarFechamentos($limite = 10, $offset = 0)
         return $stmt->fetchColumn();
     }
 
-function contarFinanceiro($tipo_lancamento = '', $conta = '', $pago = '', $data_inicio = '', $data_fim = '', $busca = '')
+function contarFinanceiro($tipo_lancamento = '', $conta = '', $pago = '', $data_inicio = '', $data_fim = '', $busca = '', $categoria_id = '')
 {
     global $pdo;
     $query = "SELECT COUNT(*) FROM financeiro fin";
@@ -1483,6 +1488,11 @@ function contarFinanceiro($tipo_lancamento = '', $conta = '', $pago = '', $data_
     if ($pago !== '') {
         $whereClauses[] = "fin.pago = :pago";
         $params[':pago'] = $pago;
+    }
+    
+    if ($categoria_id !== '') {
+        $whereClauses[] = "fin.categoria_id = :categoria_id";
+        $params[':categoria_id'] = $categoria_id;
     }
     
     if ($data_inicio !== '') {

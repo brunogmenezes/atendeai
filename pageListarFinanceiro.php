@@ -22,8 +22,8 @@ $limite = 10;
 $offset = ($pagina - 1) * $limite;
 
 // Buscar os dados com os novos filtros robustos
-$financeiros = buscarFinanceiro($limite, $offset, $tipo_lancamento, $conta, $categoria_id, $data_inicio, $data_fim, $busca);
-$totalFinanceiro = contarFinanceiro($tipo_lancamento, $conta, $categoria_id, $data_inicio, $data_fim, $busca);
+$financeiros = buscarFinanceiro($limite, $offset, $tipo_lancamento, $conta, '', $data_inicio, $data_fim, $busca, $categoria_id);
+$totalFinanceiro = contarFinanceiro($tipo_lancamento, $conta, '', $data_inicio, $data_fim, $busca, $categoria_id);
 $totalPaginas = ceil($totalFinanceiro / $limite);
 
 // Totalizadores do período
