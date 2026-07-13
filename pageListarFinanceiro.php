@@ -12,8 +12,8 @@ verificarSessao();
 // Coleta de parâmetros dos filtros robustos
 $tipo_lancamento = $_GET['tipo_lancamento'] ?? '';
 $conta           = $_GET['conta'] ?? '';
-$data_inicio     = $_GET['data_inicio'] ?? '';
-$data_fim        = $_GET['data_fim'] ?? '';
+$data_inicio     = $_GET['data_inicio'] ?? date('Y-m-01');  // Padrão: primeiro dia do mês atual
+$data_fim        = $_GET['data_fim']     ?? date('Y-m-d');  // Padrão: hoje
 $busca           = $_GET['busca'] ?? '';
 
 $pagina = isset($_GET['pagina']) ? (int)$_GET['pagina'] : 1;
@@ -257,7 +257,10 @@ $chartValues = json_encode(array_map(fn($r) => (float)$r['total'], $saidasPorCat
                                             R$ <?=number_format($financeiro['valor'], 2, ',', '.');?>
                                         </td>
                                         <td><i class="fas fa-university text-muted me-1"></i><?=htmlspecialchars($financeiro['nome_conta'] ?? 'N/A');?></td>
-                                        <td><i class="far fa-calendar-alt text-muted me-1"></i><?= date('d/m/Y', strtotime($financeiro['data_lancamento'])) ?></td>
+                                        <td>
+                                            <i class="far fa-calendar-alt text-muted me-1"></i><?= date('d/m/Y', strtotime($financeiro['data_lancamento'])) ?>
+                                            <br><small class="text-muted"><i class="far fa-clock me-1"></i><?= date('H:i', strtotime($financeiro['data_lancamento'])) ?></small>
+                                        </td>
                                         <td class="pe-4 text-end">
                                             <?php if ($financeiro['criado_manual'] == true): ?>
                                                 <button type="button" class="btn btn-icon btn-link btn-danger open-delete-modal p-0" 
