@@ -12,6 +12,7 @@ verificarSessao();
 // Coleta de parâmetros dos filtros robustos
 $tipo_lancamento = $_GET['tipo_lancamento'] ?? '';
 $conta           = $_GET['conta'] ?? '';
+$categoria_id    = $_GET['categoria_id'] ?? '';
 $data_inicio     = $_GET['data_inicio'] ?? date('Y-m-01');  // Padrão: primeiro dia do mês atual
 $data_fim        = $_GET['data_fim']     ?? date('Y-m-d');  // Padrão: hoje
 $busca           = $_GET['busca'] ?? '';
@@ -21,13 +22,17 @@ $limite = 10;
 $offset = ($pagina - 1) * $limite;
 
 // Buscar os dados com os novos filtros robustos
-$financeiros = buscarFinanceiro($limite, $offset, $tipo_lancamento, $conta, '', $data_inicio, $data_fim, $busca);
-$totalFinanceiro = contarFinanceiro($tipo_lancamento, $conta, '', $data_inicio, $data_fim, $busca);
+$financeiros = buscarFinanceiro($limite, $offset, $tipo_lancamento, $conta, $categoria_id, $data_inicio, $data_fim, $busca);
+$totalFinanceiro = contarFinanceiro($tipo_lancamento, $conta, $categoria_id, $data_inicio, $data_fim, $busca);
 $totalPaginas = ceil($totalFinanceiro / $limite);
+
+// Totalizadores do período
+$totais = totalizarFinanceiro($tipo_lancamento, $conta, $categoria_id, $data_inicio, $data_fim);
 
 // Categorias para o modal
 $categoriasEntrada = buscarCategoriasFinanceiro(1);
 $categoriasSaida   = buscarCategoriasFinanceiro(2);
+$todasCategorias   = buscarCategoriasFinanceiro();
 
 // Dados para gráfico de pizza de saídas
 $saidasPorCategoria = buscarSaidasPorCategoria($data_inicio, $data_fim, $conta);
@@ -58,6 +63,40 @@ $chartValues = json_encode(array_map(fn($r) => (float)$r['total'], $saidasPorCat
     </ul>
 </div>
 
+<!-- Cards de Resumo -->
+<div class="row">
+    <div class="col-sm-6 col-md-4">
+        <div class="card card-stats card-round">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-icon"><div class="icon-big text-center icon-success bubble-shadow-small"><i class="fas fa-arrow-up"></i></div></div>
+                    <div class="col col-stats ms-3 ms-sm-0"><p class="card-category text-muted">Entradas</p><h4 class="card-title">R$ <?= number_format($totais['entradas'] ?? 0, 2, ',', '.') ?></h4></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-md-4">
+        <div class="card card-stats card-round">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-icon"><div class="icon-big text-center icon-danger bubble-shadow-small"><i class="fas fa-arrow-down"></i></div></div>
+                    <div class="col col-stats ms-3 ms-sm-0"><p class="card-category text-muted">Saídas</p><h4 class="card-title">R$ <?= number_format($totais['saidas'] ?? 0, 2, ',', '.') ?></h4></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-md-4">
+        <div class="card card-stats card-round">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-icon"><div class="icon-big text-center icon-primary bubble-shadow-small"><i class="fas fa-balance-scale"></i></div></div>
+                    <div class="col col-stats ms-3 ms-sm-0"><p class="card-category text-muted">Saldo Período</p><h4 class="card-title">R$ <?= number_format(($totais['entradas'] ?? 0) - ($totais['saidas'] ?? 0), 2, ',', '.') ?></h4></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Filtros Robustos -->
 <div class="row mb-4">
     <div class="col-md-12">
@@ -66,7 +105,6 @@ $chartValues = json_encode(array_map(fn($r) => (float)$r['total'], $saidasPorCat
                 <form method="GET" action="index.php">
                     <input type="hidden" name="page" value="ListarFinanceiro">
                     <div class="row g-2 align-items-end">
-                        <!-- Busca Textual -->
                         <div class="col-md-3 col-sm-6">
                             <div class="form-group mb-0 p-0">
                                 <label class="small text-muted fw-bold mb-1">Buscar por texto</label>
@@ -76,7 +114,6 @@ $chartValues = json_encode(array_map(fn($r) => (float)$r['total'], $saidasPorCat
                                 </div>
                             </div>
                         </div>
-                        <!-- Tipo de Lançamento -->
                         <div class="col-md-2 col-sm-6">
                             <div class="form-group mb-0 p-0">
                                 <label class="small text-muted fw-bold mb-1">Tipo</label>
@@ -88,7 +125,6 @@ $chartValues = json_encode(array_map(fn($r) => (float)$r['total'], $saidasPorCat
                                 </select>
                             </div>
                         </div>
-                        <!-- Conta -->
                         <div class="col-md-3 col-sm-6">
                             <div class="form-group mb-0 p-0">
                                 <label class="small text-muted fw-bold mb-1">Conta</label>
@@ -106,7 +142,6 @@ $chartValues = json_encode(array_map(fn($r) => (float)$r['total'], $saidasPorCat
                                 </select>
                             </div>
                         </div>
-                        <!-- Período de Lançamento -->
                         <div class="col-md-3 col-sm-6">
                             <div class="form-group mb-0 p-0">
                                 <label class="small text-muted fw-bold mb-1">Período (Lançamento)</label>
@@ -117,10 +152,29 @@ $chartValues = json_encode(array_map(fn($r) => (float)$r['total'], $saidasPorCat
                                 </div>
                             </div>
                         </div>
-                        <!-- Ações do Filtro -->
                         <div class="col-md-1 col-sm-6 d-flex gap-1">
                             <button type="submit" class="btn btn-primary btn-sm flex-fill py-2" title="Aplicar Filtros"><i class="fas fa-filter"></i></button>
                             <a href="index.php?page=ListarFinanceiro" class="btn btn-secondary btn-sm flex-fill py-2" title="Limpar Filtros"><i class="fas fa-eraser"></i></a>
+                        </div>
+                    </div>
+                    <div class="row g-2 mt-1">
+                        <div class="col-md-4 col-sm-6">
+                            <div class="form-group mb-0 p-0">
+                                <label class="small text-muted fw-bold mb-1">Categoria</label>
+                                <select name="categoria_id" class="form-select form-select-sm">
+                                    <option value="">Todas as categorias</option>
+                                    <optgroup label="── Entrada">
+                                    <?php foreach ($categoriasEntrada as $cat): ?>
+                                        <option value="<?= $cat['id'] ?>" <?= ($categoria_id == $cat['id'] ? 'selected' : '') ?>><?= htmlspecialchars($cat['nome']) ?></option>
+                                    <?php endforeach; ?>
+                                    </optgroup>
+                                    <optgroup label="── Saída">
+                                    <?php foreach ($categoriasSaida as $cat): ?>
+                                        <option value="<?= $cat['id'] ?>" <?= ($categoria_id == $cat['id'] ? 'selected' : '') ?>><?= htmlspecialchars($cat['nome']) ?></option>
+                                    <?php endforeach; ?>
+                                    </optgroup>
+                                </select>
+                            </div>
                         </div>
                     </div>
                 </form>
@@ -226,7 +280,7 @@ $chartValues = json_encode(array_map(fn($r) => (float)$r['total'], $saidasPorCat
                                 <th>Valor</th>
                                 <th>Conta</th>
                                 <th>Lançamento</th>
-                                <th style="width: 100px" class="pe-4 text-end">Ações</th>
+                                <th style="width: 130px" class="pe-4 text-end">Ações</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -266,6 +320,19 @@ $chartValues = json_encode(array_map(fn($r) => (float)$r['total'], $saidasPorCat
                                         </td>
                                         <td class="pe-4 text-end">
                                             <?php if ($financeiro['criado_manual'] == true): ?>
+                                                <button type="button" class="btn btn-icon btn-link btn-primary open-edit-modal p-0 me-1"
+                                                        data-id="<?= $financeiro['id'] ?>"
+                                                        data-nome="<?= htmlspecialchars($financeiro['descricao']) ?>"
+                                                        data-tipo="<?= $financeiro['tipo'] ?>"
+                                                        data-valor="<?= $financeiro['valor'] ?>"
+                                                        data-conta="<?= $financeiro['conta'] ?>"
+                                                        data-categoria="<?= $financeiro['categoria_id'] ?? '' ?>"
+                                                        data-vencimento="<?= substr($financeiro['data_vencimento'] ?? '', 0, 10) ?>"
+                                                        data-bs-toggle="modal"
+                                                        data-bs-target="#editRowModal"
+                                                        title="Editar Lançamento">
+                                                    <i class="fa fa-edit fa-lg"></i>
+                                                </button>
                                                 <button type="button" class="btn btn-icon btn-link btn-danger open-delete-modal p-0" 
                                                         data-id="<?=$financeiro['id'];?>" 
                                                         data-tipo="<?=$financeiro['tipo'];?>" 
@@ -284,7 +351,7 @@ $chartValues = json_encode(array_map(fn($r) => (float)$r['total'], $saidasPorCat
                                 <?php endforeach; ?>
                             <?php else: ?>
                                 <tr>
-                                    <td colspan="9" class="text-center py-4 text-muted">Nenhum lançamento financeiro encontrado com os filtros aplicados.</td>
+                                    <td colspan="8" class="text-center py-4 text-muted">Nenhum lançamento financeiro encontrado com os filtros aplicados.</td>
                                 </tr>
                             <?php endif; ?>
                         </tbody>
@@ -297,30 +364,26 @@ $chartValues = json_encode(array_map(fn($r) => (float)$r['total'], $saidasPorCat
                     <div class="d-flex justify-content-center">
                         <ul class="pagination pg-primary mb-0">
                             <li class="page-item <?= ($pagina == 1) ? 'disabled' : '' ?>">
-                                <a class="page-link" href="?page=ListarFinanceiro&pagina=1&busca=<?= urlencode($busca) ?>&tipo_lancamento=<?= urlencode($tipo_lancamento) ?>&conta=<?= urlencode($conta) ?>&data_inicio=<?= urlencode($data_inicio) ?>&data_fim=<?= urlencode($data_fim) ?>">&laquo; Início</a>
+                                <a class="page-link" href="?page=ListarFinanceiro&pagina=1&busca=<?= urlencode($busca) ?>&tipo_lancamento=<?= urlencode($tipo_lancamento) ?>&conta=<?= urlencode($conta) ?>&categoria_id=<?= urlencode($categoria_id) ?>&data_inicio=<?= urlencode($data_inicio) ?>&data_fim=<?= urlencode($data_fim) ?>">&laquo; Início</a>
                             </li>
                             <li class="page-item <?= ($pagina == 1) ? 'disabled' : '' ?>">
-                                <a class="page-link" href="?page=ListarFinanceiro&pagina=<?= ($pagina - 1) ?>&busca=<?= urlencode($busca) ?>&tipo_lancamento=<?= urlencode($tipo_lancamento) ?>&conta=<?= urlencode($conta) ?>&data_inicio=<?= urlencode($data_inicio) ?>&data_fim=<?= urlencode($data_fim) ?>">&lsaquo;</a>
+                                <a class="page-link" href="?page=ListarFinanceiro&pagina=<?= ($pagina - 1) ?>&busca=<?= urlencode($busca) ?>&tipo_lancamento=<?= urlencode($tipo_lancamento) ?>&conta=<?= urlencode($conta) ?>&categoria_id=<?= urlencode($categoria_id) ?>&data_inicio=<?= urlencode($data_inicio) ?>&data_fim=<?= urlencode($data_fim) ?>">&lsaquo;</a>
                             </li>
-                            
                             <?php 
                             $paginas_visiveis = 5;
                             $inicio = max(1, $pagina - floor($paginas_visiveis/2));
                             $fim = min($totalPaginas, $inicio + $paginas_visiveis - 1);
                             $inicio = max(1, $fim - $paginas_visiveis + 1);
-                            
-                            for ($i = $inicio; $i <= $fim; $i++): 
-                            ?>
+                            for ($i = $inicio; $i <= $fim; $i++): ?>
                                 <li class="page-item <?= ($pagina == $i) ? 'active' : '' ?>">
-                                    <a class="page-link" href="?page=ListarFinanceiro&pagina=<?= $i ?>&busca=<?= urlencode($busca) ?>&tipo_lancamento=<?= urlencode($tipo_lancamento) ?>&conta=<?= urlencode($conta) ?>&data_inicio=<?= urlencode($data_inicio) ?>&data_fim=<?= urlencode($data_fim) ?>"><?= $i ?></a>
+                                    <a class="page-link" href="?page=ListarFinanceiro&pagina=<?= $i ?>&busca=<?= urlencode($busca) ?>&tipo_lancamento=<?= urlencode($tipo_lancamento) ?>&conta=<?= urlencode($conta) ?>&categoria_id=<?= urlencode($categoria_id) ?>&data_inicio=<?= urlencode($data_inicio) ?>&data_fim=<?= urlencode($data_fim) ?>"><?= $i ?></a>
                                 </li>
                             <?php endfor; ?>
-                            
                             <li class="page-item <?= ($pagina == $totalPaginas) ? 'disabled' : '' ?>">
-                                <a class="page-link" href="?page=ListarFinanceiro&pagina=<?= ($pagina + 1) ?>&busca=<?= urlencode($busca) ?>&tipo_lancamento=<?= urlencode($tipo_lancamento) ?>&conta=<?= urlencode($conta) ?>&data_inicio=<?= urlencode($data_inicio) ?>&data_fim=<?= urlencode($data_fim) ?>">&rsaquo;</a>
+                                <a class="page-link" href="?page=ListarFinanceiro&pagina=<?= ($pagina + 1) ?>&busca=<?= urlencode($busca) ?>&tipo_lancamento=<?= urlencode($tipo_lancamento) ?>&conta=<?= urlencode($conta) ?>&categoria_id=<?= urlencode($categoria_id) ?>&data_inicio=<?= urlencode($data_inicio) ?>&data_fim=<?= urlencode($data_fim) ?>">&rsaquo;</a>
                             </li>
                             <li class="page-item <?= ($pagina == $totalPaginas) ? 'disabled' : '' ?>">
-                                <a class="page-link" href="?page=ListarFinanceiro&pagina=<?= $totalPaginas ?>&busca=<?= urlencode($busca) ?>&tipo_lancamento=<?= urlencode($tipo_lancamento) ?>&conta=<?= urlencode($conta) ?>&data_inicio=<?= urlencode($data_inicio) ?>&data_fim=<?= urlencode($data_fim) ?>">&raquo; Fim</a>
+                                <a class="page-link" href="?page=ListarFinanceiro&pagina=<?= $totalPaginas ?>&busca=<?= urlencode($busca) ?>&tipo_lancamento=<?= urlencode($tipo_lancamento) ?>&conta=<?= urlencode($conta) ?>&categoria_id=<?= urlencode($categoria_id) ?>&data_inicio=<?= urlencode($data_inicio) ?>&data_fim=<?= urlencode($data_fim) ?>">&raquo; Fim</a>
                             </li>
                         </ul>
                     </div>
@@ -355,6 +418,81 @@ $chartValues = json_encode(array_map(fn($r) => (float)$r['total'], $saidasPorCat
                 </form>
                 <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Edição -->
+<div class="modal fade" id="editRowModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content" style="border-radius: 12px; border:none;">
+            <div class="modal-header border-0 bg-light">
+                <h5 class="modal-title fw-bold text-dark">
+                    <i class="fas fa-edit text-primary me-2"></i>Editar Lançamento Financeiro
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="editarFinanceiro.php" method="POST">
+                <input type="hidden" name="id" id="edit_id">
+                <div class="modal-body p-4">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <div class="form-group form-group-default p-2">
+                                <label class="fw-bold small text-muted">Descrição / Nome</label>
+                                <input id="edit_nome" name="nome" type="text" class="form-control border-0 px-1" placeholder="Descrição..." required/>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group form-group-default p-2">
+                                <label class="fw-bold small text-muted">Tipo</label>
+                                <select class="form-select border-0 px-1" id="edit_tipo" name="tipo" required>
+                                    <option value="1">Entrada</option>
+                                    <option value="2">Saída</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group form-group-default p-2">
+                                <label class="fw-bold small text-muted">Categoria</label>
+                                <select class="form-select border-0 px-1" id="edit_categoria_id" name="categoria_id">
+                                    <option value="">Sem categoria</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group form-group-default p-2">
+                                <label class="fw-bold small text-muted">Valor R$</label>
+                                <input id="edit_valor" type="number" step="0.01" class="form-control border-0 px-1" name="valor" placeholder="0,00" required/>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group form-group-default p-2">
+                                <label class="fw-bold small text-muted">Conta</label>
+                                <select class="form-select border-0 px-1" id="edit_conta" name="conta" required>
+                                    <?php
+                                    $contasEdit = buscarTodasContasFinanceiro();
+                                    if (!empty($contasEdit)) {
+                                        foreach ($contasEdit as $ce) {
+                                            echo "<option value='" . htmlspecialchars($ce['id']) . "'>" . htmlspecialchars($ce['nome']) . "</option>";
+                                        }
+                                    }
+                                    ?>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group form-group-default p-2">
+                                <label class="fw-bold small text-muted">Data Vencimento</label>
+                                <input id="edit_vencimento" type="date" class="form-control border-0 px-1" name="data_vencimento" required/>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 bg-light">
+                    <button type="submit" class="btn btn-primary rounded-pill px-4">Salvar Alterações</button>
+                    <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
@@ -459,7 +597,49 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // --- Seleção dinâmica de categoria por tipo ---
+    // --- Modal de edição ---
+    const editButtons = document.querySelectorAll('.open-edit-modal');
+    editButtons.forEach(btn => {
+        btn.addEventListener('click', function () {
+            document.getElementById('edit_id').value        = this.dataset.id;
+            document.getElementById('edit_nome').value      = this.dataset.nome;
+            document.getElementById('edit_valor').value     = this.dataset.valor;
+            document.getElementById('edit_vencimento').value = this.dataset.vencimento;
+
+            const editTipo = document.getElementById('edit_tipo');
+            editTipo.value = this.dataset.tipo;
+
+            const editConta = document.getElementById('edit_conta');
+            editConta.value = this.dataset.conta;
+
+            // Atualizar categorias e pré-selecionar
+            const catId = this.dataset.categoria;
+            atualizarCategoriasEdit(editTipo.value, catId);
+        });
+    });
+
+    const editTipoSelect = document.getElementById('edit_tipo');
+    if (editTipoSelect) {
+        editTipoSelect.addEventListener('change', function () {
+            atualizarCategoriasEdit(this.value, '');
+        });
+    }
+
+    function atualizarCategoriasEdit(tipo, selectedId) {
+        const sel = document.getElementById('edit_categoria_id');
+        if (!sel) return;
+        sel.innerHTML = '<option value="">Sem categoria</option>';
+        let lista = tipo === '1' ? categoriasEntrada : (tipo === '2' ? categoriasSaida : []);
+        lista.forEach(cat => {
+            const opt = document.createElement('option');
+            opt.value = cat.id;
+            opt.textContent = cat.nome;
+            if (String(cat.id) === String(selectedId)) opt.selected = true;
+            sel.appendChild(opt);
+        });
+    }
+
+    // --- Seleção dinâmica de categoria por tipo (Cadastro) ---
     const tipoSelect = document.getElementById('tipo');
     const categoriaSelect = document.getElementById('categoria_id');
 

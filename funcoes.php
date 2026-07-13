@@ -1158,6 +1158,68 @@ function buscarSaidasPorCategoria($data_inicio = '', $data_fim = '', $conta = ''
     }
 }
 
+/**
+ * Totaliza entradas e saídas para exibição nos cards de resumo.
+ */
+function totalizarFinanceiro($tipo_lancamento = '', $conta = '', $categoria_id = '', $data_inicio = '', $data_fim = '') {
+    global $pdo;
+    $query = "
+    SELECT
+        COALESCE(SUM(CASE WHEN fin.tipo = 1 THEN fin.valor ELSE 0 END), 0) AS total_entradas,
+        COALESCE(SUM(CASE WHEN fin.tipo = 2 THEN fin.valor ELSE 0 END), 0) AS total_saidas,
+        COALESCE(SUM(CASE WHEN fin.tipo = 1 THEN fin.valor ELSE 0 END), 0) -
+        COALESCE(SUM(CASE WHEN fin.tipo = 2 THEN fin.valor ELSE 0 END), 0) AS saldo
+    FROM financeiro fin";
+    $whereClauses = [];
+    $params = [];
+    if ($tipo_lancamento !== '') {
+        $whereClauses[] = "fin.tipo = :tipo";
+        $params[':tipo'] = $tipo_lancamento;
+    }
+    if ($conta !== '') {
+        $whereClauses[] = "fin.conta = :conta";
+        $params[':conta'] = $conta;
+    }
+    if ($categoria_id !== '') {
+        $whereClauses[] = "fin.categoria_id = :categoria_id";
+        $params[':categoria_id'] = $categoria_id;
+    }
+    if ($data_inicio !== '') {
+        $whereClauses[] = "fin.data_lancamento >= :data_inicio";
+        $params[':data_inicio'] = $data_inicio . ' 00:00:00';
+    }
+    if ($data_fim !== '') {
+        $whereClauses[] = "fin.data_lancamento <= :data_fim";
+        $params[':data_fim'] = $data_fim . ' 23:59:59';
+    }
+    if (!empty($whereClauses)) {
+        $query .= " WHERE " . implode(" AND ", $whereClauses);
+    }
+    try {
+        $stmt = $pdo->prepare($query);
+        $stmt->execute($params);
+        return $stmt->fetch(PDO::FETCH_ASSOC) ?: ['total_entradas' => 0, 'total_saidas' => 0, 'saldo' => 0];
+    } catch (PDOException $e) {
+        error_log("Erro ao totalizar financeiro: " . $e->getMessage());
+        return ['total_entradas' => 0, 'total_saidas' => 0, 'saldo' => 0];
+    }
+}
+
+/**
+ * Busca um único lançamento pelo ID (para o modal de edição).
+ */
+function buscarFinanceiroPorId($id) {
+    global $pdo;
+    try {
+        $stmt = $pdo->prepare("SELECT * FROM financeiro WHERE id = :id LIMIT 1");
+        $stmt->execute([':id' => $id]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        error_log("Erro ao buscar lancamento por id: " . $e->getMessage());
+        return null;
+    }
+}
+
 function buscarTransferencias($limite = 10, $offset = 0)
 {
     global $pdo;
