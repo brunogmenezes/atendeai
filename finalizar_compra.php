@@ -59,11 +59,14 @@ try {
         throw new Exception("O valor total pago (R$ $totalPago) não confere com o total calculado (R$ " . number_format($totalLiquidoCalculado, 2) . ").");
     }
 
+    $tipoAtendimento = $dados['tipo_atendimento'] ?? 'presencial';
+
     // Inserir na tabela "vendas"
-    $stmtVenda = $pdo->prepare("INSERT INTO vendas (total, vendedor, desconto) VALUES (:total, :vendedor, :desconto) RETURNING id");
+    $stmtVenda = $pdo->prepare("INSERT INTO vendas (total, vendedor, desconto, tipo_atendimento) VALUES (:total, :vendedor, :desconto, :tipo_atendimento) RETURNING id");
     $stmtVenda->bindValue(':total', $totalCalculado); // Salva o total BRUTO no banco, o desconto é uma coluna separada
     $stmtVenda->bindValue(':vendedor', $_SESSION['user_id']);
     $stmtVenda->bindValue(':desconto', $descontoPercentual);
+    $stmtVenda->bindValue(':tipo_atendimento', $tipoAtendimento);
     $stmtVenda->execute();
     $vendaId = $stmtVenda->fetch(PDO::FETCH_ASSOC)['id'];
 

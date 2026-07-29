@@ -405,6 +405,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const modalEl = document.getElementById('finalizarVenda');
     if (modalEl) {
         modalEl.addEventListener('show.bs.modal', function() {
+            // Reset tipo_atendimento select box
+            const tipoAtendimentoEl = document.getElementById('tipo_atendimento');
+            if (tipoAtendimentoEl) {
+                tipoAtendimentoEl.value = '';
+            }
+
             const totalComDescontoEl = document.getElementById('cart-total-compra-com-desconto');
             if (totalComDescontoEl) {
                 const totalText = totalComDescontoEl.textContent;
@@ -457,6 +463,21 @@ document.addEventListener('DOMContentLoaded', function() {
             const btnSubmit = document.getElementById('btn-submit-venda');
             if (btnSubmit && btnSubmit.dataset.submitting === 'true') {
                 return; // Impede múltiplos envios
+            }
+            
+            const tipoAtendimentoEl = document.getElementById('tipo_atendimento');
+            if (tipoAtendimentoEl && !tipoAtendimentoEl.value) {
+                swal({
+                    title: "Tipo de Atendimento",
+                    text: "Por favor, selecione o tipo de atendimento (Presencial ou Online)!",
+                    icon: "warning",
+                    button: "Entendi",
+                });
+                tipoAtendimentoEl.focus();
+                if (btnSubmit) {
+                    btnSubmit.dataset.submitting = 'false';
+                }
+                return;
             }
             
             if (cart.length === 0) {
@@ -528,99 +549,108 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
 
-            // SE TUDO ESTIVER CERTO, então procedemos com o bloqueio e fechamento
-            if (btnSubmit) {
-                btnSubmit.dataset.submitting = 'true';
-                btnSubmit.disabled = true;
-            }
-
-            const overlay = document.createElement('div');
-            overlay.id = 'pdv-lock-overlay';
-            overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;color:white;backdrop-filter:blur(5px);';
-            overlay.innerHTML = `
-                <div class="spinner-border text-light mb-3" style="width: 3rem; height: 3rem;" role="status"></div>
-                <h4 class="fw-bold">PROCESSANDO VENDA...</h4>
-                <p>Por favor, aguarde um instante.</p>
-            `;
-            document.body.appendChild(overlay);
-
-            $('#finalizarVenda').modal('hide');
-            
-            const dados = {
-                total: total,
-                desconto: desconto,
-                paymentMethods: paymentMethods,
-                paymentAmounts: paymentAmounts,
-                itens: cart.map(item => ({
-                    id: item.id,
-                    nome: item.nome,
-                    qtd: item.qtd,
-                    preco: item.preco
-                }))
-            };
-            
-            try {
-                const response = await fetch('finalizar_compra.php', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(dados)
-                });
-                
-                const data = await response.json();
-                
-                // Remover overlay IMEDIATAMENTE após a resposta (Segurança visual)
-                document.getElementById('pdv-lock-overlay')?.remove();
-                
-                if (data.status === 'success') {
-                    swal({
-                        title: "Venda Finalizada!",
-                        text: "O comprovante será gerado em seguida.",
-                        icon: "success",
-                        buttons: {
-                            confirm: {
-                                text: "OK",
-                                value: true,
-                                visible: true,
-                                className: "btn btn-success",
-                                closeModal: true
-                            }
-                        }
-                    }).then(() => {
-                        imprimirComprovante(data.venda_id);
-                        window.location.href = 'index.php?page=InicioPVD';
-                    });
-                } else {
-                    throw new Error(data.message || 'Erro ao finalizar a venda');
+            // Verificar se alguma das formas de pagamento é PIX
+            let hasPix = false;
+            document.querySelectorAll('.payment-method').forEach(select => {
+                if (select.options[select.selectedIndex] && select.options[select.selectedIndex].text.toLowerCase().includes('pix')) {
+                    hasPix = true;
                 }
-            } catch (error) {
-                console.error('Erro:', error);
-                // Remover overlay em caso de erro para permitir correção
-                document.getElementById('pdv-lock-overlay')?.remove();
-                
+            });
+
+            const proceedWithFinalization = async (pix_txid = null) => {
+                // SE TUDO ESTIVER CERTO, então procedemos com o bloqueio e fechamento
                 if (btnSubmit) {
-                    btnSubmit.dataset.submitting = 'false';
-                    updateRemainingAmount(); // Atualiza para reabilitar se estiver tudo certo
+                    btnSubmit.dataset.submitting = 'true';
+                    btnSubmit.disabled = true;
                 }
+
+                const overlay = document.createElement('div');
+                overlay.id = 'pdv-lock-overlay';
+                overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;color:white;backdrop-filter:blur(5px);';
+                overlay.innerHTML = `
+                    <div class="spinner-border text-light mb-3" style="width: 3rem; height: 3rem;" role="status"></div>
+                    <h4 class="fw-bold">PROCESSANDO VENDA...</h4>
+                    <p>Por favor, aguarde um instante.</p>
+                `;
+                document.body.appendChild(overlay);
+
+                $('#finalizarVenda').modal('hide');
                 
-                swal({
-                    title: "Erro ao Finalizar",
-                    text: error.message,
-                    icon: "error",
-                    buttons: {
-                        confirm: {
-                            className: "btn btn-danger"
-                        }
+                const dados = {
+                    total: total,
+                    desconto: desconto,
+                    paymentMethods: paymentMethods,
+                    paymentAmounts: paymentAmounts,
+                    pix_txid: pix_txid,
+                    tipo_atendimento: tipoAtendimentoEl ? tipoAtendimentoEl.value : null,
+                    itens: cart.map(item => ({
+                        id: item.id,
+                        nome: item.nome,
+                        qtd: item.qtd,
+                        preco: item.preco
+                    }))
+                };
+                
+                try {
+                    const response = await fetch('finalizar_compra.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(dados)
+                    });
+                    
+                    const data = await response.json();
+                    
+                    document.getElementById('pdv-lock-overlay')?.remove();
+                    
+                    if (data.status === 'success') {
+                        swal({
+                            title: "Venda Finalizada!",
+                            text: "O comprovante será gerado em seguida.",
+                            icon: "success",
+                            buttons: {
+                                confirm: {
+                                    text: "OK",
+                                    value: true,
+                                    visible: true,
+                                    className: "btn btn-success",
+                                    closeModal: true
+                                }
+                            }
+                        }).then(() => {
+                            imprimirComprovante(data.venda_id);
+                            window.location.href = 'index.php?page=InicioPVD';
+                        });
+                    } else {
+                        throw new Error(data.message || 'Erro ao finalizar a venda');
                     }
-                });
-            }
+                } catch (error) {
+                    console.error('Erro:', error);
+                    document.getElementById('pdv-lock-overlay')?.remove();
+                    
+                    if (btnSubmit) {
+                        btnSubmit.dataset.submitting = 'false';
+                        updateRemainingAmount();
+                    }
+                    
+                    swal({
+                        title: "Erro ao Finalizar",
+                        text: error.message,
+                        icon: "error",
+                        buttons: { confirm: { className: "btn btn-danger" } }
+                    });
+                }
+            };
+
+            proceedWithFinalization();
         });
     }
     
     // Inicializar carrinho
     updateCart();
 });
+    
 
 function imprimirComprovante(vendaId) {
     if (!vendaId) {

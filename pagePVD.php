@@ -246,6 +246,8 @@ try {
     </div>
 </div>
 
+
+
 <!-- Modal de Finalização de Venda -->
 <div class="modal fade" id="finalizarVenda" tabindex="-1" role="dialog" aria-labelledby="finalizarVendaLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
@@ -296,6 +298,15 @@ try {
                 </div>
 
                 <form id="paymentForm" class="bg-white p-4 rounded-4 shadow-sm">
+                    <div class="mb-4">
+                        <label class="form-label small text-muted fw-bold"><i class="fa fa-handshake me-1"></i>Tipo de Atendimento <span class="text-danger">*</span></label>
+                        <select class="form-select form-control-lg shadow-sm" id="tipo_atendimento" name="tipo_atendimento" required>
+                            <option value="">Selecione...</option>
+                            <option value="presencial">Presencial</option>
+                            <option value="online">Online</option>
+                        </select>
+                    </div>
+
                     <h6 class="fw-bold mb-3"><i class="fa fa-credit-card me-2"></i>Formas de Pagamento</h6>
                     
                     <div id="paymentMethodsContainer">

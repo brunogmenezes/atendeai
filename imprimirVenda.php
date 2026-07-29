@@ -6,11 +6,7 @@
     require_once 'auth.php';
     verificarSessao();
 
-    require 'api_pix/vendor/autoload.php';
 
-    use \App\Pix\Payload;
-    use Mpdf\QrCode\QrCode;
-    use Mpdf\QrCode\Output;
 
     // Função auxiliar para tratamento seguro de strings
     function safe_print($value, $default = '')
@@ -268,39 +264,7 @@
                         
                     </span>
                 </div>
-                <?php
-                if($pagamento['forma_pagamento']=='PIX')
-                {
-                ?>
-                    <div class="qrcode">
-                        <?php
-                        
-                        //INSTANCIA PRINCIPAL DO PAYLOAD PIX
-                        $obPayload = (new Payload)->setPixKey($dadosEmpresa['chave_pix'])
-                                                    ->setDescription('#Pagamento do pedido '.$venda_id.'#')
-                                                    ->setMerchantName('BIJU20')
-                                                    ->setMerchantCity('IMPERATRIZ')
-                                                    ->setAmount($pagamento['valor'])
-                                                    ->setTxid('pedido'.$venda_id.'');
 
-                        //CODIGO DE PAGAMENTO PIX
-                        $payloadQrCode = $obPayload->getPayload();
-
-                        //QR CODE
-                        $obQrCode = new QrCode($payloadQrCode);
-
-                        //IMAGEM DO QRCODE
-                        $image = (new Output\Png)->output($obQrCode,130);
-                        ?>
-                        <img src="data:image/png;base64, <?=base64_encode($image)?>">
-                        <br>
-                        <strong><?=$payloadQrCode?></strong>
-                        <br>
-                    </div>
-                    <br>
-                <?php
-                }
-                ?>
             <?php endforeach; ?>
             
             <?php if (count($pagamentos) > 1): ?>

@@ -34,8 +34,8 @@ $categoriasEntrada = buscarCategoriasFinanceiro(1);
 $categoriasSaida   = buscarCategoriasFinanceiro(2);
 $todasCategorias   = buscarCategoriasFinanceiro();
 
-// Dados para gráfico de pizza de saídas
-$saidasPorCategoria = buscarSaidasPorCategoria($data_inicio, $data_fim, $conta);
+// Dados para gráfico de pizza — respeitando todos os filtros ativos
+$saidasPorCategoria = buscarSaidasPorCategoria($data_inicio, $data_fim, $conta, $tipo_lancamento ?: '2', $categoria_id);
 $chartLabels = json_encode(array_column($saidasPorCategoria, 'categoria'));
 $chartValues = json_encode(array_map(fn($r) => (float)$r['total'], $saidasPorCategoria));
 ?>

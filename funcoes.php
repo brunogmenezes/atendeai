@@ -703,13 +703,13 @@ function calcularValorTotalEstoqueRelatorio()
    $query = "
     SELECT
         vnd.*,
-        u.username AS usuariovendedor,
-        STRING_AGG(tppgmt.nome, ', ') AS tipos_pagamento
+        COALESCE(u.username, 'Usuário removido') AS usuariovendedor,
+        COALESCE(STRING_AGG(tppgmt.nome, ', '), 'N/A') AS tipos_pagamento
     FROM
         vendas vnd
-    JOIN usuarios u ON vnd.vendedor = u.ID
-    JOIN pagamentos_venda pgmtvnd ON vnd.ID = pgmtvnd.venda_id
-    JOIN tipopagamento tppgmt ON pgmtvnd.forma_pagamento_id = tppgmt.ID
+    LEFT JOIN usuarios u ON vnd.vendedor = u.ID
+    LEFT JOIN pagamentos_venda pgmtvnd ON vnd.ID = pgmtvnd.venda_id
+    LEFT JOIN tipopagamento tppgmt ON pgmtvnd.forma_pagamento_id = tppgmt.ID
 ";
 
 // Filtros de data
@@ -1130,7 +1130,7 @@ function buscarCategoriasFinanceiro($tipo = '') {
  * @param string $data_fim
  * @param int|string $conta
  */
-function buscarSaidasPorCategoria($data_inicio = '', $data_fim = '', $conta = '') {
+function buscarSaidasPorCategoria($data_inicio = '', $data_fim = '', $conta = '', $tipo_lancamento = '2', $categoria_id = '') {
     global $pdo;
     $query = "
     SELECT 
@@ -1138,8 +1138,8 @@ function buscarSaidasPorCategoria($data_inicio = '', $data_fim = '', $conta = ''
         SUM(fin.valor) AS total
     FROM financeiro fin
     LEFT JOIN categorias_financeiro cat ON fin.categoria_id = cat.id
-    WHERE fin.tipo = 2";
-    $params = [];
+    WHERE fin.tipo = :tipo";
+    $params = [':tipo' => ($tipo_lancamento !== '' ? $tipo_lancamento : '2')];
     if ($data_inicio !== '') {
         $query .= " AND fin.data_lancamento >= :data_inicio";
         $params[':data_inicio'] = $data_inicio . ' 00:00:00';
@@ -1151,6 +1151,10 @@ function buscarSaidasPorCategoria($data_inicio = '', $data_fim = '', $conta = ''
     if ($conta !== '') {
         $query .= " AND fin.conta = :conta";
         $params[':conta'] = $conta;
+    }
+    if ($categoria_id !== '') {
+        $query .= " AND fin.categoria_id = :categoria_id";
+        $params[':categoria_id'] = $categoria_id;
     }
     $query .= " GROUP BY COALESCE(cat.nome, 'Sem Categoria') ORDER BY total DESC";
     try {

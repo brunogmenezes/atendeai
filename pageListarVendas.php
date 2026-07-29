@@ -211,6 +211,7 @@ $colClass = $mostrarTotalMes ? 'col-sm-6 col-md-4' : 'col-sm-6 col-md-6';
                                 <th class="text-start">Total Líquido</th>
                                 <th class="text-start">Pagamento</th>
                                 <th class="text-start">Vendedor</th>
+                                <th class="text-center">Atendimento</th>
                                 <th class="text-center">Data / Hora</th>
                                 <th class="text-center">Status</th>
                                 <th class="text-center">Ações</th>
@@ -230,6 +231,16 @@ $colClass = $mostrarTotalMes ? 'col-sm-6 col-md-4' : 'col-sm-6 col-md-6';
                                         </td>
                                         <td class="text-start small"><?= $retorno['tipos_pagamento'] ?></td>
                                         <td class="text-start"><?= $retorno['usuariovendedor'] ?></td>
+                                        <td class="text-center">
+                                            <?php
+                                            $tipoAtend = strtolower($retorno['tipo_atendimento'] ?? 'presencial');
+                                            if ($tipoAtend === 'online'):
+                                            ?>
+                                                <span class="badge" style="background:#2ecc71;color:#fff;"><i class="fas fa-wifi me-1"></i>Online</span>
+                                            <?php else: ?>
+                                                <span class="badge" style="background:#2b5298;color:#fff;"><i class="fas fa-store me-1"></i>Presencial</span>
+                                            <?php endif; ?>
+                                        </td>
                                         <td class="text-center small"><?= date('d/m/Y H:i', strtotime($retorno['data_venda'])) ?></td>
                                         <td class="text-center">
                                             <?php if($estornado): ?>
@@ -254,7 +265,7 @@ $colClass = $mostrarTotalMes ? 'col-sm-6 col-md-4' : 'col-sm-6 col-md-6';
                                 <?php endforeach; ?>
                             <?php else: ?>
                                 <tr>
-                                    <td colspan="7" class="text-center p-5 text-muted">Nenhuma venda encontrada para este período.</td>
+                                    <td colspan="8" class="text-center p-5 text-muted">Nenhuma venda encontrada para este período.</td>
                                 </tr>
                             <?php endif; ?>
                         </tbody>

@@ -346,7 +346,7 @@ if($user['isAdmin']==true)
         </div>
         <!-- Row 4: Gráficos de Análise de Vendas -->
         <div class="row mb-3">
-            <div class="col-lg-6">
+            <div class="col-lg-4">
                 <div class="card card-round">
                     <div class="card-header">
                         <h5 class="card-title">
@@ -361,7 +361,7 @@ if($user['isAdmin']==true)
                 </div>
             </div>
 
-            <div class="col-lg-6">
+            <div class="col-lg-4">
                 <div class="card card-round">
                     <div class="card-header">
                         <h5 class="card-title">
@@ -371,6 +371,21 @@ if($user['isAdmin']==true)
                     <div class="card-body">
                         <div class="chart-container" style="position: relative; height: 350px;">
                             <canvas id="donutChartTiposdePagamentos"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="card card-round">
+                    <div class="card-header">
+                        <h5 class="card-title">
+                            <i class="fas fa-users me-2 text-info"></i>Tipo de Atendimento (Mês Atual)
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container" style="position: relative; height: 350px;">
+                            <canvas id="pieChartAtendimento"></canvas>
                         </div>
                     </div>
                 </div>
@@ -623,6 +638,54 @@ else
                     });
                 })
                 .catch(error => console.error('Erro ao carregar dados:', error));
+            });
+
+            document.addEventListener('DOMContentLoaded', function()
+            {
+                fetch('endpointTipoAtendimento.php')
+                .then(response => response.json())
+                .then(data => {
+                    const ctx = document.getElementById('pieChartAtendimento').getContext('2d');
+                    const totalVendas = data.data.reduce((a, b) => a + b, 0);
+                    
+                    new Chart(ctx, {
+                        type: 'pie',
+                        data: {
+                            labels: data.labels,
+                            datasets: [{
+                                data: data.data,
+                                backgroundColor: data.backgroundColor,
+                                borderColor: '#fff',
+                                borderWidth: 2
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    position: 'bottom',
+                                    labels: {
+                                        font: { size: 12 },
+                                        padding: 15,
+                                        usePointStyle: true,
+                                        color: '#666'
+                                    }
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            const value = context.parsed;
+                                            const percentage = totalVendas > 0 ? ((value / totalVendas) * 100).toFixed(1) : 0;
+                                            return `${context.label}: ${value} (${percentage}%)`;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                })
+                .catch(error => console.error('Erro ao carregar dados de tipo de atendimento:', error));
             });
 
             document.addEventListener('DOMContentLoaded', function()
