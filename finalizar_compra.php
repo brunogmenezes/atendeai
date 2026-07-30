@@ -59,7 +59,11 @@ try {
         throw new Exception("O valor total pago (R$ $totalPago) não confere com o total calculado (R$ " . number_format($totalLiquidoCalculado, 2) . ").");
     }
 
-    $tipoAtendimento = $dados['tipo_atendimento'] ?? 'presencial';
+    $tipoAtendimento = !empty($dados['tipo_atendimento']) ? $dados['tipo_atendimento'] : 'presencial';
+    // Garantir valor válido (segurança contra valores inesperados)
+    if (!in_array($tipoAtendimento, ['presencial', 'online'])) {
+        $tipoAtendimento = 'presencial';
+    }
 
     // Inserir na tabela "vendas"
     $stmtVenda = $pdo->prepare("INSERT INTO vendas (total, vendedor, desconto, tipo_atendimento) VALUES (:total, :vendedor, :desconto, :tipo_atendimento) RETURNING id");

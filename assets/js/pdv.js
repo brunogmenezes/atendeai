@@ -558,6 +558,12 @@ document.addEventListener('DOMContentLoaded', function() {
             });
 
             const proceedWithFinalization = async (pix_txid = null) => {
+                // Captura o valor do tipo de atendimento ANTES de fechar o modal
+                // (o Bootstrap pode redefinir elementos do DOM ao esconder o modal)
+                const tipoAtendimentoValue = (tipoAtendimentoEl && tipoAtendimentoEl.value)
+                    ? tipoAtendimentoEl.value
+                    : 'presencial';
+
                 // SE TUDO ESTIVER CERTO, então procedemos com o bloqueio e fechamento
                 if (btnSubmit) {
                     btnSubmit.dataset.submitting = 'true';
@@ -574,15 +580,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 `;
                 document.body.appendChild(overlay);
 
-                $('#finalizarVenda').modal('hide');
-                
                 const dados = {
                     total: total,
                     desconto: desconto,
                     paymentMethods: paymentMethods,
                     paymentAmounts: paymentAmounts,
                     pix_txid: pix_txid,
-                    tipo_atendimento: tipoAtendimentoEl ? tipoAtendimentoEl.value : null,
+                    tipo_atendimento: tipoAtendimentoValue,
                     itens: cart.map(item => ({
                         id: item.id,
                         nome: item.nome,
@@ -590,6 +594,8 @@ document.addEventListener('DOMContentLoaded', function() {
                         preco: item.preco
                     }))
                 };
+
+                $('#finalizarVenda').modal('hide');
                 
                 try {
                     const response = await fetch('finalizar_compra.php', {
