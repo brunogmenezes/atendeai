@@ -59,10 +59,11 @@ try {
         throw new Exception("O valor total pago (R$ $totalPago) não confere com o total calculado (R$ " . number_format($totalLiquidoCalculado, 2) . ").");
     }
 
-    $tipoAtendimento = !empty($dados['tipo_atendimento']) ? $dados['tipo_atendimento'] : 'presencial';
-    // Garantir valor válido (segurança contra valores inesperados)
+    $tipoAtendimento = !empty($dados['tipo_atendimento']) ? $dados['tipo_atendimento'] : null;
+    // Rejeita a venda se o tipo não for válido — nunca assume um valor silenciosamente
     if (!in_array($tipoAtendimento, ['presencial', 'online'])) {
-        $tipoAtendimento = 'presencial';
+        echo json_encode(['status' => 'error', 'message' => 'Tipo de atendimento inválido. Selecione Presencial ou Online.']);
+        exit;
     }
 
     // Inserir na tabela "vendas"

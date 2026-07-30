@@ -559,11 +559,18 @@ document.addEventListener('DOMContentLoaded', function() {
 
             const proceedWithFinalization = async (pix_txid = null) => {
                 // Captura o valor do tipo de atendimento ANTES de fechar o modal
-                // (o Bootstrap pode redefinir elementos do DOM ao esconder o modal)
-                const tipoAtendimentoValue = (tipoAtendimentoEl && tipoAtendimentoEl.value)
-                    ? tipoAtendimentoEl.value
-                    : 'presencial';
+                const tipoAtendimentoValue = tipoAtendimentoEl ? tipoAtendimentoEl.value : '';
 
+                if (!tipoAtendimentoValue || !['presencial', 'online'].includes(tipoAtendimentoValue)) {
+                    swal({
+                        title: "Tipo de Atendimento",
+                        text: "Por favor, selecione o tipo de atendimento (Presencial ou Online)!",
+                        icon: "warning",
+                        button: "Entendi",
+                    });
+                    if (btnSubmit) btnSubmit.dataset.submitting = 'false';
+                    return;
+                }
                 // SE TUDO ESTIVER CERTO, então procedemos com o bloqueio e fechamento
                 if (btnSubmit) {
                     btnSubmit.dataset.submitting = 'true';
