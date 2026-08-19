@@ -1,6 +1,6 @@
 <?php
-    include('config.php');
-    include('funcoes.php');
+    require_once 'config.php';
+    require_once 'funcoes.php';
 
     require_once 'auth.php';
 verificarSessao();

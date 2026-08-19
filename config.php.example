@@ -1,0 +1,25 @@
+<?php
+    date_default_timezone_set('America/Sao_Paulo');
+    //ini_set('session.gc_maxlifetime', 28800);
+    //ini_set('session.cookie_lifetime', 28800);
+    //session_set_cookie_params(28800);
+
+    // ─── Credenciais do banco de dados (Exemplo) ──────────────────────────────
+    if (!defined('DB_HOST'))     define('DB_HOST',     'localhost');
+    if (!defined('DB_PORT'))     define('DB_PORT',     '5432');
+    if (!defined('DB_NAME'))     define('DB_NAME',     'nome_do_banco');
+    if (!defined('DB_USER'))     define('DB_USER',     'seu_usuario');
+    if (!defined('DB_PASSWORD')) define('DB_PASSWORD', 'sua_senha');
+
+    if (!isset($pdo)) {
+        try
+        {
+            $pdo = new PDO("pgsql:host=" . DB_HOST . ";port=" . DB_PORT . ";dbname=" . DB_NAME, DB_USER, DB_PASSWORD);
+            $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        }
+        catch (PDOException $e)
+        {
+            echo "Erro: " . $e->getMessage();
+        }
+    }
+?>
