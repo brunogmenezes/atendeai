@@ -16,16 +16,15 @@ function fetchDashboardData($pdo)
     
     // Formatar com zero à esquerda para meses < 10
     $mesSeguinteFormatado = str_pad($mesSeguinte, 2, '0', STR_PAD_LEFT);
-    
-    $query = "
+       $query = "
     SELECT 
         (SELECT COUNT(*) 
-        FROM vendas 
-        WHERE estornado = 'f' 
-        AND data_venda >= :inicio_mes 
-        AND data_venda < :inicio_mes_seguinte) AS total_vendas,
+         FROM vendas 
+         WHERE estornado = 'f' 
+           AND data_venda >= :inicio_mes 
+           AND data_venda < :inicio_mes_seguinte) AS total_vendas,
 
-                (SELECT SUM(total * (1 - COALESCE(desconto, 0) / 100.0)) 
+        (SELECT SUM(total * (1 - COALESCE(desconto, 0) / 100.0)) 
          FROM vendas 
          WHERE estornado = 'f' 
            AND data_venda >= :inicio_mes 
@@ -38,9 +37,19 @@ function fetchDashboardData($pdo)
            AND vnd.data_venda >= :inicio_mes 
            AND vnd.data_venda < :inicio_mes_seguinte) AS total_itens_vendidos,
 
+        (SELECT SUM(itmvnd.quantidade * COALESCE(prd.preco_custo, 0))
+         FROM vendas vnd
+         JOIN itens_venda itmvnd ON vnd.id = itmvnd.venda_id
+         JOIN produtos prd ON itmvnd.produto_id = prd.id
+         WHERE vnd.estornado = 'f'
+           AND vnd.data_venda >= :inicio_mes
+           AND vnd.data_venda < :inicio_mes_seguinte) AS total_cmv_mes,
+
         (SELECT COUNT(*) FROM clientes) AS total_clientes,
 
         (SELECT SUM(quantidade) FROM produtos) AS total_produtos,
+
+        (SELECT SUM(preco_custo * quantidade) FROM produtos) AS capital_imobilizado_estoque,
 
         (SELECT SUM(preco_venda * quantidade) / NULLIF(SUM(quantidade), 0) 
          FROM produtos) AS media_preco_venda,
@@ -52,9 +61,8 @@ function fetchDashboardData($pdo)
         (SELECT SUM(valor) FROM despesasfixas) AS total_despesasfixas,
 
         (SELECT SUM(saldo) FROM contas) AS total_saldo_contas;
-";
+    ";
 
-    
     $stmt = $pdo->prepare($query);
     
     // Usando parâmetros nomeados para segurança
@@ -70,15 +78,17 @@ function fetchDashboardData($pdo)
     {
         $results = fetchDashboardData($pdo);
         
-        $totalVendas = $results['total_vendas'] ?? 0;
-        $totalValorVendas = $results['total_valor_vendas'] ?? 0;
-        $totalItensVendidos = $results['total_itens_vendidos'] ?? 0;
-        $totalClientes = $results['total_clientes'] ?? 0;
-        $totalProdutos = $results['total_produtos'] ?? 0;
-        $totalMediaPrecoVenda = $results['media_preco_venda'] ?? 0;
-        $totalCritico = $results['total_critico'] ?? 0;
-        $totalDespesasFixas = $results['total_despesasfixas'] ?? 0;
-        $totalSaldoContas = $results['total_saldo_contas'] ?? 0;
+        $totalVendas = (int)($results['total_vendas'] ?? 0);
+        $totalValorVendas = (float)($results['total_valor_vendas'] ?? 0);
+        $totalItensVendidos = (int)($results['total_itens_vendidos'] ?? 0);
+        $totalCmvMes = (float)($results['total_cmv_mes'] ?? 0);
+        $totalClientes = (int)($results['total_clientes'] ?? 0);
+        $totalProdutos = (int)($results['total_produtos'] ?? 0);
+        $capitalImobilizado = (float)($results['capital_imobilizado_estoque'] ?? 0);
+        $totalMediaPrecoVenda = (float)($results['media_preco_venda'] ?? 0);
+        $totalCritico = (int)($results['total_critico'] ?? 0);
+        $totalDespesasFixas = (float)($results['total_despesasfixas'] ?? 0);
+        $totalSaldoContas = (float)($results['total_saldo_contas'] ?? 0);
     }
     catch (PDOException $e)
     {
@@ -87,25 +97,40 @@ function fetchDashboardData($pdo)
         echo "Erro ao carregar dados. Por favor, tente novamente mais tarde.";
     }
 
-    $somaSalarioColaboradores = BuscarSomaPorTabela('colaboradores', 'salario');
-    $somaDespesasFixas = BuscarSomaPorTabela('despesasfixas', 'valor');
-    $totalCustoMensal = $somaSalarioColaboradores+$somaDespesasFixas;
+    $somaSalarioColaboradores = (float)BuscarSomaPorTabela('colaboradores', 'salario');
+    $somaDespesasFixas = (float)BuscarSomaPorTabela('despesasfixas', 'valor');
+    $totalCustoMensal = $somaSalarioColaboradores + $somaDespesasFixas;
 
-    $custoMedioProduto = BuscarCustoMedioProdutos('produtos') ?? 0;
-
-    $lucroMedio = BuscarLucroMedioProdutos('produtos', 'salario') ?? 0;
+    $custoMedioProduto = (float)(BuscarCustoMedioProdutos('produtos') ?? 0);
+    $lucroMedio = (float)(BuscarLucroMedioProdutos('produtos', 'salario') ?? 0);
 
     // Verifica se as variáveis estão definidas e se $lucroMedio não é zero
-    if (isset($totalDespesasFixas, $somaSalarioColaboradores, $lucroMedio) && $lucroMedio != 0)
+    if ($lucroMedio > 0)
     {
-        $pecasAVender = ceil(($totalDespesasFixas + $somaSalarioColaboradores) / $lucroMedio);
+        $pecasAVender = (int)ceil($totalCustoMensal / $lucroMedio);
     }
     else
     {
         $pecasAVender = 0; // Valor padrão caso as condições não sejam atendidas
     }
 
-    $MetaMensalDesejada = $pecasAVender*$totalMediaPrecoVenda ?? 0;
+    $MetaMensalDesejada = $pecasAVender * $totalMediaPrecoVenda;
+
+    // 1. Métricas Comerciais
+    $ticketMedio = ($totalVendas > 0) ? ($totalValorVendas / $totalVendas) : 0;
+    $itensPorVenda = ($totalVendas > 0) ? ($totalItensVendidos / $totalVendas) : 0;
+
+    // 2. Rentabilidade Real do Mês
+    $lucroBrutoMes = $totalValorVendas - $totalCmvMes;
+    $margemBrutaPercentual = ($totalValorVendas > 0) ? (($lucroBrutoMes / $totalValorVendas) * 100) : 0;
+    $lucroLiquidoMes = $lucroBrutoMes - $totalCustoMensal;
+
+    // 3. Projeção & Giro
+    $diaHoje = (int)date('j');
+    $diasNoMes = (int)date('t');
+    $projecaoFaturamento = ($diaHoje > 0) ? (($totalValorVendas / $diaHoje) * $diasNoMes) : 0;
+    $mediaItensPorDia = ($diaHoje > 0) ? ($totalItensVendidos / $diaHoje) : 0;
+    $diasCoberturaEstoque = ($mediaItensPorDia > 0) ? (int)round($totalProdutos / $mediaItensPorDia) : ($totalProdutos > 0 ? 999 : 0);
 ?>
 <?php
 if($user['isAdmin']==true)
@@ -114,11 +139,11 @@ if($user['isAdmin']==true)
     <div class="page-inner">
         <!-- Seção KPIs Principais -->
         <div class="dashboard-header mb-4">
-            <h2 class="page-title">Dashboard de Vendas</h2>
-            <p class="text-muted">Acompanhe os indicadores do seu negócio</p>
+            <h2 class="page-title">Dashboard Executivo & Inteligência de Negócio</h2>
+            <p class="text-muted">Acompanhe vendas, rentabilidade real, metas e gestão patrimonial</p>
         </div>
 
-        <!-- Row 1: Principais Métricas -->
+        <!-- Row 1: Eficiência Comercial e Vendas -->
         <div class="row mb-3">
             <!-- Total de Vendas -->
             <div class="col-sm-6 col-lg-3">
@@ -134,7 +159,7 @@ if($user['isAdmin']==true)
                                 <div class="numbers">
                                     <p class="card-category">Total de Vendas</p>
                                     <h4 class="card-title"><?=$totalVendas;?></h4>
-                                    <span class="card-subtitle">Este mês</span>
+                                    <span class="card-subtitle"><i class="fas fa-calculator me-1"></i>Pedidos no Mês</span>
                                 </div>
                             </div>
                         </div>
@@ -142,7 +167,7 @@ if($user['isAdmin']==true)
                 </div>
             </div>
 
-            <!-- Valor Total Vendido -->
+            <!-- Faturamento -->
             <div class="col-sm-6 col-lg-3">
                 <div class="card card-stats card-round gradient-green">
                     <div class="card-body">
@@ -156,7 +181,7 @@ if($user['isAdmin']==true)
                                 <div class="numbers">
                                     <p class="card-category">Faturamento</p>
                                     <h4 class="card-title">R$ <?=number_format($totalValorVendas, 2, ',', '.');?></h4>
-                                    <span class="card-subtitle">Mês atual</span>
+                                    <span class="card-subtitle"><i class="fas fa-calculator me-1"></i>Total Líquido Vendido</span>
                                 </div>
                             </div>
                         </div>
@@ -164,21 +189,21 @@ if($user['isAdmin']==true)
                 </div>
             </div>
 
-            <!-- Itens Vendidos -->
+            <!-- Ticket Médio -->
             <div class="col-sm-6 col-lg-3">
                 <div class="card card-stats card-round gradient-orange">
                     <div class="card-body">
                         <div class="row align-items-center">
                             <div class="col-icon">
                                 <div class="icon-big text-center icon-warning bubble-shadow-small">
-                                    <i class="fas fa-boxes"></i>
+                                    <i class="fas fa-shopping-basket"></i>
                                 </div>
                             </div>
                             <div class="col col-stats ms-3">
                                 <div class="numbers">
-                                    <p class="card-category">Itens Vendidos</p>
-                                    <h4 class="card-title"><?=$totalItensVendidos;?></h4>
-                                    <span class="card-subtitle">Unidades</span>
+                                    <p class="card-category">Ticket Médio</p>
+                                    <h4 class="card-title">R$ <?=number_format($ticketMedio, 2, ',', '.');?></h4>
+                                    <span class="card-subtitle" title="Faturamento Total ÷ Total de Vendas"><i class="fas fa-calculator me-1"></i>Faturamento ÷ Vendas</span>
                                 </div>
                             </div>
                         </div>
@@ -186,21 +211,21 @@ if($user['isAdmin']==true)
                 </div>
             </div>
 
-            <!-- Saldo em Contas -->
+            <!-- Itens por Venda (PA) -->
             <div class="col-sm-6 col-lg-3">
                 <div class="card card-stats card-round gradient-purple">
                     <div class="card-body">
                         <div class="row align-items-center">
                             <div class="col-icon">
                                 <div class="icon-big text-center icon-info bubble-shadow-small">
-                                    <i class="fas fa-wallet"></i>
+                                    <i class="fas fa-layer-group"></i>
                                 </div>
                             </div>
                             <div class="col col-stats ms-3">
                                 <div class="numbers">
-                                    <p class="card-category">Saldo em Contas</p>
-                                    <h4 class="card-title">R$ <?=number_format($totalSaldoContas, 2, ',', '.');?></h4>
-                                    <span class="card-subtitle">Total</span>
+                                    <p class="card-category">Peças / Venda (PA)</p>
+                                    <h4 class="card-title"><?=number_format($itensPorVenda, 1, ',', '.');?> <small style="font-size:0.8rem;">un</small></h4>
+                                    <span class="card-subtitle" title="Total Itens Vendidos ÷ Total de Vendas"><i class="fas fa-calculator me-1"></i>Itens ÷ Vendas</span>
                                 </div>
                             </div>
                         </div>
@@ -209,14 +234,72 @@ if($user['isAdmin']==true)
             </div>
         </div>
 
-        <!-- Row 2: Meta e Status -->
+        <!-- Row 2: Rentabilidade Real do Mês -->
         <div class="row mb-3">
-            <div class="col-lg-6">
+            <div class="col-lg-3 col-md-6">
                 <div class="card card-round">
-                    <div class="card-header">
-                        <h5 class="card-title">Meta Mensal</h5>
-                    </div>
                     <div class="card-body">
+                        <div class="stat-icon mb-3">
+                            <i class="fas fa-truck-loading fa-lg text-warning"></i>
+                        </div>
+                        <p class="card-category">Custo das Vendas (CMV)</p>
+                        <h4 class="card-title">R$ <?=number_format($totalCmvMes, 2, ',', '.');?></h4>
+                        <p class="text-muted small mb-0" title="Soma(Custo × Quantidade Vendida no Mês)"><i class="fas fa-calculator me-1"></i>Σ(Custo × Qtd Vendida)</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6">
+                <div class="card card-round">
+                    <div class="card-body">
+                        <div class="stat-icon mb-3">
+                            <i class="fas fa-coins fa-lg text-primary"></i>
+                        </div>
+                        <p class="card-category">Lucro Bruto Realizado</p>
+                        <h4 class="card-title">R$ <?=number_format($lucroBrutoMes, 2, ',', '.');?></h4>
+                        <p class="text-muted small mb-0" title="Faturamento Total - Custo das Mercadorias Vendidas"><i class="fas fa-calculator me-1"></i>Faturamento - CMV</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6">
+                <div class="card card-round">
+                    <div class="card-body">
+                        <div class="stat-icon mb-3">
+                            <i class="fas fa-percentage fa-lg text-info"></i>
+                        </div>
+                        <p class="card-category">Margem Bruta Real</p>
+                        <h4 class="card-title"><?=number_format($margemBrutaPercentual, 1, ',', '.');?>%</h4>
+                        <p class="text-muted small mb-0" title="(Lucro Bruto ÷ Faturamento) × 100"><i class="fas fa-calculator me-1"></i>(Lucro Bruto ÷ Fatur.) × 100</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6">
+                <div class="card card-round <?= $lucroLiquidoMes >= 0 ? 'border-success' : 'border-danger'; ?>">
+                    <div class="card-body">
+                        <div class="stat-icon mb-3">
+                            <i class="fas fa-balance-scale fa-lg <?= $lucroLiquidoMes >= 0 ? 'text-success' : 'text-danger'; ?>"></i>
+                        </div>
+                        <p class="card-category">Lucro Líquido Real (Mês)</p>
+                        <h4 class="card-title <?= $lucroLiquidoMes >= 0 ? 'text-success' : 'text-danger'; ?>">
+                            R$ <?=number_format($lucroLiquidoMes, 2, ',', '.');?>
+                        </h4>
+                        <p class="text-muted small mb-0" title="Lucro Bruto - Total Despesas Fixas"><i class="fas fa-calculator me-1"></i>Lucro Bruto - Despesas</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Row 3: Meta e Planejamento -->
+        <div class="row mb-3">
+            <!-- Meta Mensal -->
+            <div class="col-lg-6">
+                <div class="card card-round h-100">
+                    <div class="card-header">
+                        <h5 class="card-title"><i class="fas fa-bullseye me-2 text-primary"></i>Meta Mensal de Vendas</h5>
+                    </div>
+                    <div class="card-body d-flex flex-column justify-content-between">
                         <div class="progress-container">
                             <div class="progress-info mb-3">
                                 <div class="progress-label">
@@ -226,8 +309,8 @@ if($user['isAdmin']==true)
                                     <span><?=number_format(($totalValorVendas / max($MetaMensalDesejada, 1)) * 100, 1, ',', '.');?>%</span>
                                 </div>
                             </div>
-                            <div class="progress" style="height: 8px;">
-                                <div class="progress-bar" role="progressbar" 
+                            <div class="progress" style="height: 10px; border-radius: 5px;">
+                                <div class="progress-bar bg-success" role="progressbar" 
                                      style="width: <?=min(100, ($totalValorVendas / max($MetaMensalDesejada, 1)) * 100);?>%;" 
                                      aria-valuenow="<?=min(100, ($totalValorVendas / max($MetaMensalDesejada, 1)) * 100);?>" 
                                      aria-valuemin="0" aria-valuemax="100"></div>
@@ -236,15 +319,15 @@ if($user['isAdmin']==true)
                         <div class="meta-info mt-4">
                             <div class="meta-item">
                                 <span class="meta-label">Meta Desejada:</span>
-                                <span class="meta-value">R$ <?=number_format($MetaMensalDesejada, 2, ',', '.');?></span>
+                                <span class="meta-value fw-bold">R$ <?=number_format($MetaMensalDesejada, 2, ',', '.');?></span>
                             </div>
                             <div class="meta-item">
                                 <span class="meta-label">Alcançado:</span>
-                                <span class="meta-value text-success">R$ <?=number_format($totalValorVendas, 2, ',', '.');?></span>
+                                <span class="meta-value text-success fw-bold">R$ <?=number_format($totalValorVendas, 2, ',', '.');?></span>
                             </div>
                             <div class="meta-item">
                                 <span class="meta-label">Diferença:</span>
-                                <span class="meta-value <?= $totalValorVendas >= $MetaMensalDesejada ? 'text-success' : 'text-danger'; ?>">
+                                <span class="meta-value fw-bold <?= $totalValorVendas >= $MetaMensalDesejada ? 'text-success' : 'text-danger'; ?>">
                                     <?php
                                         if ($totalValorVendas < $MetaMensalDesejada) {
                                             echo "Faltam R$ " . number_format($MetaMensalDesejada - $totalValorVendas, 2, ',', '.');
@@ -259,30 +342,54 @@ if($user['isAdmin']==true)
                 </div>
             </div>
 
-            <!-- Estoque e Produtos -->
+            <!-- Projeção, Despesas, Break-even & Contas -->
             <div class="col-lg-6">
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="card card-round">
-                            <div class="card-body text-center">
-                                <div class="stat-icon mb-3">
-                                    <i class="fas fa-box fa-2x text-primary"></i>
+                <div class="row h-100">
+                    <div class="col-md-6 mb-3">
+                        <div class="card card-round h-100">
+                            <div class="card-body">
+                                <div class="stat-icon mb-2">
+                                    <i class="fas fa-chart-line fa-lg text-primary"></i>
                                 </div>
-                                <h5 class="card-title">Estoque Total</h5>
-                                <h2 class="stat-value"><?=$totalProdutos;?></h2>
-                                <p class="text-muted small">Unidades em estoque</p>
+                                <p class="card-category">Projeção Mês (Run Rate)</p>
+                                <h4 class="card-title">R$ <?=number_format($projecaoFaturamento, 2, ',', '.');?></h4>
+                                <p class="text-muted small mb-0" title="(Faturamento Atual ÷ Dias Decorridos) × Dias do Mês"><i class="fas fa-calculator me-1"></i>(Fatur. ÷ Dia) × Dias Mês</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="card card-round h-100">
+                            <div class="card-body">
+                                <div class="stat-icon mb-2">
+                                    <i class="fas fa-money-bill-wave fa-lg text-warning"></i>
+                                </div>
+                                <p class="card-category">Total Despesas Fixas</p>
+                                <h4 class="card-title">R$ <?=number_format($totalCustoMensal, 2, ',', '.');?></h4>
+                                <p class="text-muted small mb-0" title="Salários + Despesas Fixas"><i class="fas fa-calculator me-1"></i>Salários + Despesas</p>
                             </div>
                         </div>
                     </div>
                     <div class="col-md-6">
-                        <div class="card card-round">
-                            <div class="card-body text-center <?= $totalCritico > 0 ? 'bg-light-danger' : ''; ?>">
-                                <div class="stat-icon mb-3">
-                                    <i class="fas fa-exclamation-triangle fa-2x text-danger"></i>
+                        <div class="card card-round h-100">
+                            <div class="card-body">
+                                <div class="stat-icon mb-2">
+                                    <i class="fas fa-shopping-cart fa-lg text-danger"></i>
                                 </div>
-                                <h5 class="card-title">Nível Crítico</h5>
-                                <h2 class="stat-value text-danger"><?=$totalCritico;?></h2>
-                                <p class="text-muted small">Produtos abaixo do limite</p>
+                                <p class="card-category">Unidades Break-Even</p>
+                                <h4 class="card-title"><?= $pecasAVender; ?> un</h4>
+                                <p class="text-muted small mb-0" title="Total Despesas ÷ Lucro Médio por Peça"><i class="fas fa-calculator me-1"></i>Total Despesas ÷ Lucro Médio</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card card-round h-100">
+                            <div class="card-body">
+                                <div class="stat-icon mb-2">
+                                    <i class="fas fa-wallet fa-lg text-info"></i>
+                                </div>
+                                <p class="card-category">Saldo em Contas</p>
+                                <h4 class="card-title">R$ <?=number_format($totalSaldoContas, 2, ',', '.');?></h4>
+                                <p class="text-muted small mb-0"><i class="fas fa-university me-1"></i>Disponível em Bancos/Caixa</p>
                             </div>
                         </div>
                     </div>
@@ -290,17 +397,17 @@ if($user['isAdmin']==true)
             </div>
         </div>
 
-        <!-- Row 3: Análise Financeira -->
+        <!-- Row 4: Gestão de Estoque & Capital Imobilizado -->
         <div class="row mb-3">
             <div class="col-lg-3 col-md-6">
                 <div class="card card-round">
                     <div class="card-body">
                         <div class="stat-icon mb-3">
-                            <i class="fas fa-money-bill-wave fa-lg text-warning"></i>
+                            <i class="fas fa-boxes fa-lg text-primary"></i>
                         </div>
-                        <p class="card-category">Total Despesas</p>
-                        <h4 class="card-title">R$ <?=number_format($totalCustoMensal, 2, ',', '.');?></h4>
-                        <p class="text-muted small">Salários + Despesas</p>
+                        <p class="card-category">Estoque Total</p>
+                        <h4 class="card-title"><?=$totalProdutos;?> <small style="font-size:0.8rem;">un</small></h4>
+                        <p class="text-muted small mb-0"><i class="fas fa-calculator me-1"></i>Unidades Físicas</p>
                     </div>
                 </div>
             </div>
@@ -309,11 +416,11 @@ if($user['isAdmin']==true)
                 <div class="card card-round">
                     <div class="card-body">
                         <div class="stat-icon mb-3">
-                            <i class="fas fa-tags fa-lg text-info"></i>
+                            <i class="fas fa-vault fa-lg text-warning"></i>
                         </div>
-                        <p class="card-category">Custo Médio</p>
-                        <h4 class="card-title">R$ <?= number_format($custoMedioProduto, 2, ',', '.'); ?></h4>
-                        <p class="text-muted small">Por unidade</p>
+                        <p class="card-category">Capital em Estoque</p>
+                        <h4 class="card-title">R$ <?=number_format($capitalImobilizado, 2, ',', '.');?></h4>
+                        <p class="text-muted small mb-0" title="Soma(Preço de Custo × Quantidade em Estoque)"><i class="fas fa-calculator me-1"></i>Σ(Custo × Qtd Estoque)</p>
                     </div>
                 </div>
             </div>
@@ -322,29 +429,29 @@ if($user['isAdmin']==true)
                 <div class="card card-round">
                     <div class="card-body">
                         <div class="stat-icon mb-3">
-                            <i class="fas fa-arrow-up fa-lg text-success"></i>
+                            <i class="fas fa-calendar-alt fa-lg text-info"></i>
                         </div>
-                        <p class="card-category">Lucro Médio</p>
-                        <h4 class="card-title">R$ <?=number_format($lucroMedio, 2, ',', '.');?></h4>
-                        <p class="text-muted small">Por unidade</p>
+                        <p class="card-category">Cobertura de Estoque</p>
+                        <h4 class="card-title"><?= ($diasCoberturaEstoque > 365 ? '> 365' : $diasCoberturaEstoque); ?> <small style="font-size:0.8rem;">dias</small></h4>
+                        <p class="text-muted small mb-0" title="Estoque Total ÷ Média de Vendas Diárias"><i class="fas fa-calculator me-1"></i>Estoque ÷ Vendas/Dia</p>
                     </div>
                 </div>
             </div>
 
             <div class="col-lg-3 col-md-6">
-                <div class="card card-round">
+                <div class="card card-round <?= $totalCritico > 0 ? 'border-danger' : ''; ?>">
                     <div class="card-body">
                         <div class="stat-icon mb-3">
-                            <i class="fas fa-shopping-cart fa-lg text-danger"></i>
+                            <i class="fas fa-exclamation-triangle fa-lg text-danger"></i>
                         </div>
-                        <p class="card-category">Unidades Break-Even</p>
-                        <h4 class="card-title"><?= $pecasAVender; ?></h4>
-                        <p class="text-muted small">Para cobrir custos</p>
+                        <p class="card-category">Estoque Crítico</p>
+                        <h4 class="card-title text-danger"><?=$totalCritico;?> <small style="font-size:0.8rem;">produtos</small></h4>
+                        <p class="text-muted small mb-0"><i class="fas fa-shield-alt me-1"></i>Abaixo do Limite Mínimo</p>
                     </div>
                 </div>
             </div>
         </div>
-        <!-- Row 4: Gráficos de Análise de Vendas -->
+        <!-- Row 5: Gráficos de Análise de Vendas -->
         <div class="row mb-3">
             <div class="col-lg-4">
                 <div class="card card-round">
