@@ -5,38 +5,22 @@ require_once 'auth.php';
 verificarSessao();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $id = intval($_POST['id'] ?? 0);
     $nome = trim($_POST['nome'] ?? '');
     $cnpj = preg_replace('/[^0-9]/', '', $_POST['cnpj'] ?? '');
     $endereco = trim($_POST['endereco'] ?? '');
     $telefone = preg_replace('/[^0-9]/', '', $_POST['telefone'] ?? '');
     $email = trim($_POST['email'] ?? '');
-    $removerLogo = !empty($_POST['remover_logo']) && $_POST['remover_logo'] === '1';
+    $logoNome = null;
 
-    if ($id <= 0) {
-        header("Location: index.php?page=ListarEmpresa&status=error&message=" . urlencode("ID da empresa inválido."));
+    if (empty($nome) || empty($cnpj) || empty($endereco)) {
+        header("Location: index.php?page=ListarEmpresa&status=error&message=" . urlencode("Preencha todos os campos obrigatórios."));
         exit;
     }
 
     try {
-        // Buscar dados atuais da empresa para gerenciar arquivos
-        $stmtAtual = $pdo->prepare("SELECT logo FROM empresa WHERE id = :id");
-        $stmtAtual->execute([':id' => $id]);
-        $empresaAtual = $stmtAtual->fetch(PDO::FETCH_ASSOC);
-        $logoNome = $empresaAtual['logo'] ?? null;
-
         $diretorioUpload = __DIR__ . '/uploads/';
         if (!is_dir($diretorioUpload)) {
             mkdir($diretorioUpload, 0755, true);
-        }
-
-        // Se o usuário marcou para remover a logo atual
-        if ($removerLogo && !empty($logoNome)) {
-            $caminhoAntigo = $diretorioUpload . $logoNome;
-            if (file_exists($caminhoAntigo)) {
-                @unlink($caminhoAntigo);
-            }
-            $logoNome = null;
         }
 
         // Processar upload de novo arquivo de logo se enviado
@@ -52,33 +36,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 exit;
             }
 
-            // Limite de 5MB
             if ($fileSize > 5 * 1024 * 1024) {
                 header("Location: index.php?page=ListarEmpresa&status=error&message=" . urlencode("O arquivo da logo deve ter no máximo 5MB."));
                 exit;
             }
 
-            // Excluir arquivo anterior se houver
-            if (!empty($logoNome)) {
-                $caminhoAntigo = $diretorioUpload . $logoNome;
-                if (file_exists($caminhoAntigo)) {
-                    @unlink($caminhoAntigo);
-                }
-            }
-
-            $novoNomeArquivo = "logo_empresa_" . $id . "_" . time() . "." . $extensao;
+            $novoNomeArquivo = "logo_empresa_" . time() . "_" . uniqid() . "." . $extensao;
             $destino = $diretorioUpload . $novoNomeArquivo;
 
             if (move_uploaded_file($fileTmp, $destino)) {
                 $logoNome = $novoNomeArquivo;
-            } else {
-                header("Location: index.php?page=ListarEmpresa&status=error&message=" . urlencode("Falha ao salvar a imagem no servidor."));
-                exit;
             }
         }
 
         $dados = [
-            'id' => $id,
             'nome' => $nome,
             'cnpj' => $cnpj,
             'endereco' => $endereco,
@@ -88,27 +59,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'data_atualizacao' => date('Y-m-d H:i:s')
         ];
 
-        $stmt = $pdo->prepare("UPDATE empresa SET 
-                              nome = :nome, 
-                              cnpj = :cnpj, 
-                              endereco = :endereco, 
-                              telefone = :telefone,
-                              email = :email,
-                              logo = :logo,
-                              data_atualizacao = :data_atualizacao
-                              WHERE id = :id");
+        $stmt = $pdo->prepare("INSERT INTO empresa (nome, cnpj, endereco, telefone, email, logo, data_atualizacao) 
+                              VALUES (:nome, :cnpj, :endereco, :telefone, :email, :logo, :data_atualizacao)");
         $stmt->execute($dados);
 
         if (function_exists('registrarAuditoria')) {
             registrarAuditoria(
                 $_SESSION['user_id'] ?? null,
-                'Atualizou Dados da Empresa',
+                'Cadastrou Nova Empresa',
                 $_SERVER['REMOTE_ADDR'] ?? '',
-                ['empresa_id' => $id, 'nome' => $nome, 'tem_logo' => !empty($logoNome)]
+                ['nome' => $nome, 'tem_logo' => !empty($logoNome)]
             );
         }
 
-        header("Location: index.php?page=ListarEmpresa&status=success&message=" . urlencode("Dados da empresa atualizados com sucesso!"));
+        header("Location: index.php?page=ListarEmpresa&status=success&message=" . urlencode("Empresa cadastrada com sucesso!"));
         exit;
     } catch (PDOException $e) {
         header("Location: index.php?page=ListarEmpresa&status=error&message=" . urlencode($e->getMessage()));

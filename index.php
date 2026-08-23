@@ -9,10 +9,11 @@
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
     // Buscar dados da empresa
-    $stmtEmpresa = $pdo->prepare("SELECT nome, cnpj FROM empresa LIMIT 1");
+    $stmtEmpresa = $pdo->prepare("SELECT nome, cnpj, logo FROM empresa LIMIT 1");
     $stmtEmpresa->execute();
     $empresa = $stmtEmpresa->fetch(PDO::FETCH_ASSOC);
     $empresaNome = $empresa['nome'] ?? 'Minha Empresa';
+    $empresaLogo = $empresa['logo'] ?? null;
     $empresaCnpj = $empresa['cnpj'] ?? '';
     // Formatar CNPJ: 00.000.000/0000-00
     $cnpjNumeros = preg_replace('/\D/', '', $empresaCnpj);
@@ -80,15 +81,20 @@
             <div class="sidebar" data-background-color="dark">
                 <div class="sidebar-logo">
                     <div class="logo-header" data-background-color="dark">
-                        <a href="index.php" class="logo" style="display:flex;flex-direction:column;align-items:flex-start;justify-content:center;text-decoration:none;line-height:1.2;padding:2px 0;">
-                            <span style="font-size:14px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px;" title="<?= htmlspecialchars($empresaNome) ?>">
-                                <?= htmlspecialchars($empresaNome) ?>
-                            </span>
-                            <?php if ($empresaCnpjFormatado): ?>
-                            <span style="font-size:10px;color:rgba(255,255,255,0.65);letter-spacing:0.3px;">
-                                <?= htmlspecialchars($empresaCnpjFormatado) ?>
-                            </span>
+                        <a href="index.php" class="logo" style="display:flex;align-items:center;gap:10px;text-decoration:none;line-height:1.2;padding:2px 0;">
+                            <?php if (!empty($empresaLogo) && file_exists(__DIR__ . '/uploads/' . $empresaLogo)): ?>
+                                <img src="uploads/<?= htmlspecialchars($empresaLogo) ?>" alt="Logo" style="height:32px;max-width:38px;object-fit:contain;border-radius:6px;background:#fff;padding:2px;box-shadow:0 1px 3px rgba(0,0,0,0.2);">
                             <?php endif; ?>
+                            <div style="display:flex;flex-direction:column;align-items:flex-start;justify-content:center;overflow:hidden;">
+                                <span style="font-size:14px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:145px;" title="<?= htmlspecialchars($empresaNome) ?>">
+                                    <?= htmlspecialchars($empresaNome) ?>
+                                </span>
+                                <?php if ($empresaCnpjFormatado): ?>
+                                <span style="font-size:10px;color:rgba(255,255,255,0.65);letter-spacing:0.3px;">
+                                    <?= htmlspecialchars($empresaCnpjFormatado) ?>
+                                </span>
+                                <?php endif; ?>
+                            </div>
                         </a>
                         <div class="nav-toggle">
                             <button class="btn btn-toggle toggle-sidebar">
