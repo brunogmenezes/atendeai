@@ -457,7 +457,7 @@ if($user['isAdmin']==true)
                 <div class="card card-round">
                     <div class="card-header">
                         <h5 class="card-title">
-                            <i class="fas fa-chart-pie me-2 text-primary"></i>Top 5 Produtos Mais Vendidos
+                            <i class="fas fa-chart-pie me-2 text-primary"></i>Top 5 Produtos Mais Vendidos (Mês Atual)
                         </h5>
                     </div>
                     <div class="card-body">
@@ -472,7 +472,7 @@ if($user['isAdmin']==true)
                 <div class="card card-round">
                     <div class="card-header">
                         <h5 class="card-title">
-                            <i class="fas fa-credit-card me-2 text-success"></i>Formas de Pagamento
+                            <i class="fas fa-credit-card me-2 text-success"></i>Formas de Pagamento (Mês Atual)
                         </h5>
                     </div>
                     <div class="card-body">
@@ -662,7 +662,18 @@ else
                 fetch('endpointProdutosMaisVendidos.php')
                 .then(response => response.json())
                 .then(data => {
-                    const ctx = document.getElementById('donutChart').getContext('2d');
+                    const canvas = document.getElementById('donutChart');
+                    if (!canvas) return;
+
+                    if (!data.success || !data.data || data.data.length === 0) {
+                        const container = canvas.parentElement;
+                        if (container) {
+                            container.innerHTML = '<div class="d-flex flex-column align-items-center justify-content-center h-100 text-muted"><i class="fas fa-box-open fa-2x mb-2 text-secondary opacity-50"></i><span>Nenhum produto vendido no mês atual</span></div>';
+                        }
+                        return;
+                    }
+
+                    const ctx = canvas.getContext('2d');
                     
                     new Chart(ctx, {
                         type: 'doughnut',
@@ -707,7 +718,18 @@ else
                 fetch('endpointTiposdePagamentos.php')
                 .then(response => response.json())
                 .then(data => {
-                    const ctx = document.getElementById('donutChartTiposdePagamentos').getContext('2d');
+                    const canvas = document.getElementById('donutChartTiposdePagamentos');
+                    if (!canvas) return;
+
+                    if (!data.success || !data.data || data.data.length === 0) {
+                        const container = canvas.parentElement;
+                        if (container) {
+                            container.innerHTML = '<div class="d-flex flex-column align-items-center justify-content-center h-100 text-muted"><i class="fas fa-credit-card fa-2x mb-2 text-secondary opacity-50"></i><span>Nenhum pagamento registrado no mês atual</span></div>';
+                        }
+                        return;
+                    }
+
+                    const ctx = canvas.getContext('2d');
                     
                     new Chart(ctx, {
                         type: 'doughnut',

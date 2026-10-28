@@ -6,8 +6,8 @@ verificarSessao();
 header('Content-Type: application/json');
 
 // Habilita exibi��o de erros
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
+ini_set('display_errors', 0);
+ini_set('display_startup_errors', 0);
 error_reporting(E_ALL);
 
 // Inicializa a resposta
@@ -21,7 +21,16 @@ try {
         throw new Exception("Erro: Conex�o com o banco de dados n�o estabelecida");
     }
 
-    // Consulta os produtos mais vendidos
+    // Define o período do mês atual
+    $anoHoje = date('Y');
+    $mesHoje = date('m');
+    $mesSeguinte = ($mesHoje == 12) ? 1 : $mesHoje + 1;
+    $anoSeguinte = ($mesHoje == 12) ? $anoHoje + 1 : $anoHoje;
+    $mesSeguinteFormatado = str_pad($mesSeguinte, 2, '0', STR_PAD_LEFT);
+    $inicioMes = "$anoHoje-$mesHoje-01";
+    $inicioMesSeguinte = "$anoSeguinte-$mesSeguinteFormatado-01";
+
+    // Consulta os produtos mais vendidos do mês atual
     $query = "
     SELECT 
         p.nome AS produto,
@@ -33,7 +42,9 @@ try {
     JOIN 
         vendas v ON iv.venda_id = v.id
     WHERE 
-        v.estornado = false
+        v.estornado = 'f'
+        AND v.data_venda >= :inicio_mes
+        AND v.data_venda < :inicio_mes_seguinte
     GROUP BY 
         p.nome
     ORDER BY 
@@ -41,14 +52,13 @@ try {
     LIMIT 5";
 
     $stmt = $pdo->prepare($query);
-    $stmt->execute();
+    $stmt->execute([
+        ':inicio_mes' => $inicioMes,
+        ':inicio_mes_seguinte' => $inicioMesSeguinte
+    ]);
     $resultados = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    if (empty($resultados)) {
-        throw new Exception("Nenhum dado encontrado na consulta");
-    }
-
-    // Prepara os dados para o gr�fico
+    // Prepara os dados para o gráfico
     $labels = [];
     $data = [];
     $backgroundColors = [
@@ -59,9 +69,11 @@ try {
         'rgba(153, 102, 255, 0.7)'
     ];
 
-    foreach ($resultados as $row) {
-        $labels[] = $row['produto'];
-        $data[] = (int)$row['total_vendido'];
+    if (!empty($resultados)) {
+        foreach ($resultados as $row) {
+            $labels[] = $row['produto'];
+            $data[] = (int)$row['total_vendido'];
+        }
     }
 
     // Monta a resposta de sucesso
