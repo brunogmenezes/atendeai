@@ -110,16 +110,14 @@ try {
     }
 
     foreach ($series as $ano => $dadosAno) {
-        $saldoAnterior = 0.0;
         for ($mes = 1; $mes <= 12; $mes++) {
             $entrada = (float)$dadosAno['entradas'][$mes];
             $saida = (float)$dadosAno['saidas'][$mes];
-            $saldoMensal = $entrada - $saida;
-            $saldoAnterior = round($saldoAnterior + $saldoMensal, 2);
+            $saldoMensal = round($entrada - $saida, 2);
 
             $series[$ano]['entradas'][$mes] = round($entrada, 2);
             $series[$ano]['saidas'][$mes] = round($saida, 2);
-            $series[$ano]['saldoAcumulado'][$mes] = $saldoAnterior;
+            $series[$ano]['saldoAcumulado'][$mes] = $saldoMensal;
         }
 
         $series[$ano]['entradas'] = array_values($series[$ano]['entradas']);

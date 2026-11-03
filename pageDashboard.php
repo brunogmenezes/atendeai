@@ -1064,7 +1064,58 @@ else
                         statisticsChart.destroy();
                     }
 
+                    const monthlyBalanceShadingPlugin = {
+                        id: 'monthlyBalanceShading',
+                        beforeDatasetsDraw(chart) {
+                            const { ctx: chartCtx, chartArea, scales, data } = chart;
+                            if (!chartArea || !scales.x) return;
+
+                            const xScale = scales.x;
+                            const saldoDatasets = data.datasets
+                                .map((ds, idx) => ({ ds, idx }))
+                                .filter(({ ds, idx }) => ds.yAxisID === 'y-axis-saldo' && chart.isDatasetVisible(idx));
+
+                            const activeSaldoDs = saldoDatasets.length > 0
+                                ? saldoDatasets[0].ds
+                                : data.datasets.find(ds => ds.yAxisID === 'y-axis-saldo');
+
+                            if (!activeSaldoDs || !Array.isArray(activeSaldoDs.data)) return;
+
+                            const totalMonths = monthsLabels.length;
+                            chartCtx.save();
+
+                            for (let i = 0; i < totalMonths; i++) {
+                                const val = Number(activeSaldoDs.data[i] || 0);
+                                if (val === 0) continue;
+
+                                const center = xScale.getPixelForValue(i);
+                                const left = i === 0
+                                    ? chartArea.left
+                                    : (xScale.getPixelForValue(i - 1) + center) / 2;
+                                const right = i === totalMonths - 1
+                                    ? chartArea.right
+                                    : (center + xScale.getPixelForValue(i + 1)) / 2;
+
+                                chartCtx.fillStyle = val > 0
+                                    ? 'rgba(40, 167, 69, 0.14)'
+                                    : 'rgba(243, 84, 93, 0.14)';
+
+                                const colLeft = Math.max(chartArea.left, left + 1);
+                                const colWidth = Math.max(0, Math.min(chartArea.right, right - 1) - colLeft);
+                                chartCtx.fillRect(
+                                    colLeft,
+                                    chartArea.top,
+                                    colWidth,
+                                    chartArea.bottom - chartArea.top
+                                );
+                            }
+
+                            chartCtx.restore();
+                        }
+                    };
+
                     statisticsChart = new Chart(ctx, {
+                        plugins: [monthlyBalanceShadingPlugin],
                         type: 'line',
                         data: {
                             labels: monthsLabels,
@@ -1117,6 +1168,7 @@ else
                                     }
                                 },
                                 x: {
+                                    offset: true,
                                     grid: {
                                         display: false
                                     }
